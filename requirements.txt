@@ -1,0 +1,18 @@
+# Data Ingestion
+databento==0.40.0
+pandas==2.2.3
+
+# Data Processing & Storage
+polars==1.0.0
+pyarrow==17.0.0
+numpy==2.0.0
+
+# Neural Network Architecture
+torch==2.4.0
+
+# Configuration & Utilities
+PyYAML==6.0.2
+tqdm==4.66.1
+
+# Testing & Verification
+pytest==8.3.2

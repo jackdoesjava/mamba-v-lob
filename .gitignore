@@ -1,0 +1,12 @@
+# Prerequisites
+.venv/
+__pycache__/
+*.pyc
+
+# Data Tier (Strictly Local)
+data/raw/
+data/processed/
+
+# IDE and OS metadata
+.vscode/
+.DS_Storedata/

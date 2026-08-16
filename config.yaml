@@ -1,0 +1,26 @@
+data:
+  processed_file: "data/processed/GME_features_20210128.parquet"
+  batch_size: 256
+  seq_length: 100         # The H=100 tick horizon we defined in the pipeline
+  train_split: 0.8
+
+model:
+  active_model: "mamba"   # Options: 'mlp', 'lstm', 'mamba'
+  
+  # Baseline: LSTM
+  lstm:
+    hidden_size: 64
+    num_layers: 2
+    dropout: 0.1
+  
+  # Core: Mamba SSM
+  mamba:
+    d_model: 64
+    d_state: 16
+    d_conv: 4
+    expand: 2
+
+training:
+  learning_rate: 0.001
+  epochs: 50
+  device: "cuda"          # Fallback to 'cpu' if no GPU

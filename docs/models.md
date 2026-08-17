@@ -1,34 +1,36 @@
 # Model Architecture Zoo
 
-This directory contains the PyTorch implementations for the three sequential models evaluated in the project. The primary focus is exploring the Mamba State Space Model, with a standard Transformer and LSTM serving as performance and stability baselines.
+This directory (`python/models/`) contains the PyTorch implementations for the three sequential architectures evaluated in this pipeline. The primary focus is the explicitly unrolled Mamba State Space Model (SSM), benchmarked against Transformer and LSTM baselines for expressivity and theoretical stability.
 
 ---
 
-## Mamba (Pure PyTorch Implementation)
+## Mamba SSM (Verification-Exposed Implementation)
 **Location:** `python/models/mamba.py`
 
-This is a pure PyTorch implementation of the Mamba State Space Model (SSM) adapted for limit order book time-series. 
+This is a custom PyTorch implementation of the Mamba architecture tailored for high-frequency limit order book dynamics. 
 
-Standard Mamba relies on custom CUDA-fused kernels for hardware-aware parallel scans. While highly efficient, those kernels obscure the internal state matrices and can cause thread deadlocks in standard CPU environments. Because the downstream formal verification stage requires proving properties about the model's stability boundaries, we need explicit access to the underlying parameters. 
+The official Mamba release relies on custom CUDA-fused kernels to execute hardware-aware parallel scans. While computationally optimal for GPU throughput, fused kernels abstract away intermediate state transition dynamics and frequently trigger OpenMP deadlocks in CPU-bound environments. More importantly, the downstream formal verification stage requires topological access to the internal continuous-time parameters.
 
-To achieve this, this implementation drops the fused kernels and manually unrolls the sequential discretization:
+To satisfy the verification constraints, this implementation explicitly bypasses the parallel scan, opting for a manual, sequential unrolling of the discretized state:
 
-$$h_t = \bar{A}h_{t-1} + \bar{B}x_t$$
+$$
+h_t = \bar{A}h_{t-1} + \bar{B}x_t
+$$
 
-While this sacrifices the training speed of the official implementation, keeping the continuous-time matrices ($A, B, C, \Delta$) explicitly exposed in memory allows us to extract them for the external verification engine. To maintain gradient flow during this sequential unrolling, the block uses standard Pre-Layer Normalization and SiLU (Swish) activations.
+Sacrificing raw training throughput allows the continuous-time parameter matrices ($A, B, C, \Delta$) to remain explicitly exposed in memory for extraction. The architecture maintains gradient flow during unrolling via standard Pre-Layer Normalization and SiLU (Swish) gating.
 
 ---
 
-## Causal Transformer (Expressivity Baseline)
+## Causal Transformer (Expressivity Benchmark)
 **Location:** `python/models/transformer.py`
 
-A standard Multi-Head Self-Attention architecture acting as our expressivity baseline. It uses strict causal masking to prevent look-ahead bias into future LOB states.
+An autoregressive Multi-Head Self-Attention (MHSA) architecture serving as the theoretical upper bound for sequence expressivity. It enforces strict causal masking to prevent temporal look-ahead leakage across the order book events.
 
-While Transformers generally capture strong correlations (high Information Coefficient), their attention matrices are unbounded and highly non-linear. This makes them notoriously difficult to formally verify and prone to instability during market regime shifts, serving as a foil to the contractive stability we are testing in the SSM.
+Empirically, MHSA networks achieve high Information Coefficients but utilize unbounded, highly non-linear attention matrices. This makes them computationally intractable to formally verify with standard SMT solvers and highly susceptible to drawdowns during aggressive market regime shifts. It serves as a direct foil to the contractive stability properties we hypothesize in the SSM.
 
 ---
 
-## LSTM (Sanity Check)
+## LSTM (Recurrent Baseline)
 **Location:** `python/models/lstm.py`
 
-A standard Long Short-Term Memory network. Included purely as a sanity check to benchmark classical recurrent memory against the modern attention and state-space architectures.
+A standard Long Short-Term Memory network. It is included to benchmark classical gated recurrent memory against modern routing mechanisms (attention and state-spaces), establishing a baseline for gradient stability and constant-time inference latency.

@@ -1,30 +1,30 @@
 # Testing & Validation Suite
 
-This directory (`python/tests/`) contains the unit tests run via `pytest`. The primary goal here is catching silent bugs—like subtle dimension broadcasting errors or data pipeline leakage—before running full training loops.
+This directory (`python/tests/`) contains the unit testing suite executed via `pytest`. The objective is to proactively isolate silent failures, such as dimensional broadcasting faults and temporal leakage in the data pipeline, prior to executing full optimization loops.
 
 ---
 
 ## Feature Invariants (`test_features.py`)
 
-These tests validate the mathematical integrity of the raw limit order book transformations:
-* **No Data Corruption:** Asserts that normalization and log-scaling do not introduce `NaN` or `Inf` values across edge cases (such as zero-volume book updates).
-* **Order Book Invariants:** Verifies physical market constraints, confirming that the best ask is strictly greater than the best bid ($P_{\text{ask}, 0} > P_{\text{bid}, 0}$) and that price distances from the mid-price maintain the correct sign ($D_{\text{ask}} \ge 0, D_{\text{bid}} \le 0$).
-* **Target Alignment:** Confirms that forward return calculations match exact tick indexing and do not leak future information into current observations.
+These tests enforce the strict mathematical integrity of the MBP-10 transformations:
+* **Numerical Stability:** Asserts that the coordinate normalizations and log-scaled volume regularizations do not introduce `NaN` or `Inf` values across sparse edge cases, such as zero-volume depth updates.
+* **Microstructure Constraints:** Verifies the physical invariants of the limit order book. This confirms the top-of-book spread remains strictly positive ($P_{\text{ask}, 0} > P_{\text{bid}, 0}$) and the spatial transformations maintain strictly bounded half-spaces ($D_{\text{ask}} \ge 0, D_{\text{bid}} \le 0$).
+* **Temporal Purging:** Confirms the forward return calculations perfectly align with the tick indexing, mathematically guaranteeing zero look-ahead bias in the optimization targets.
 
 ---
 
-## Model Unit Tests (`test_mamba.py`, `test_transformer.py`, `test_lstm.py`)
+## Architectural Unit Tests (`test_mamba.py`, `test_transformer.py`, `test_lstm.py`)
 
-Each model implementation has a dedicated test file to guarantee architectural stability:
-* **Tensor Shape Contracts:** Verifies that passing an input batch of shape `(Batch, Sequence, Features)` consistently yields a 1D prediction tensor of shape `(Batch,)` without triggering unintentional PyTorch broadcasting.
-* **Gradient Flow:** Runs a dummy forward and backward pass to ensure that loss gradients propagate through all parameter layers (particularly through the custom unrolled state transitions in Mamba) without vanishing or detaching.
-* **Precision & Type Handling:** Verifies that modules execute cleanly when cast to `torch.float32`.
+Each sequence model requires rigorous unit testing to guarantee topological stability:
+* **Dimensional Contracts:** Asserts that passing a batched sequence tensor of shape `(Batch, Sequence, Features)` deterministically reduces to a `(Batch,)` prediction vector without triggering arbitrary PyTorch broadcasting.
+* **Gradient Propagation:** Executes isolated forward and backward passes to verify that loss gradients flow completely through the parameter graphs. This is explicitly required to validate the custom unrolled state transitions in the Mamba SSM.
+* **Precision Casting:** Verifies that all modules instantiate and execute without precision errors under standard `torch.float32` mappings.
 
 ---
 
-## Running the Suite
+## Execution Context
 
-To run all unit tests from the project root:
+To execute the validation suite from the project root:
 
 ```bash
 PYTHONPATH=. pytest python/tests/

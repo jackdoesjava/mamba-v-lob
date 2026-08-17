@@ -1,23 +1,23 @@
-# Data Processing & Utilities
+# Utility & Data Ingestion Modules
 
-This folder (`python/utils/`) contains the deterministic pipeline for getting raw Nasdaq ITCH data into a format that the neural networks can actually learn from.
-
----
-
-## Feature Engineering (`features.py`)
-
-Raw limit order book (MBP-10) data is highly non-stationary. If you feed absolute price levels directly into a neural network, it will just memorize the random walk of the price drift instead of learning the actual microstructure dynamics.
-
-To fix this, this script processes the raw feeds into stationary inputs:
-* **Price Distances:** Instead of absolute bids and asks, all price levels are calculated as a relative distance from the current mid-price.
-* **Volume Scaling:** Deep order book sizes have massive variance and can spike randomly. We apply log-scaling to the volume depth to compress extreme outliers so they don't blow up the network gradients during training.
-* **Target Formulation:** Calculates the forward 100-tick log return of the mid-price. I put strict indexing checks in place here to guarantee there is zero look-ahead bias (which is the easiest way to accidentally fake a good backtest).
+This directory (`python/utils/`) contains the data ingestion and PyTorch loading infrastructure, mapping the raw Databento MBP-10 feeds into stationary, model-ready tensors.
 
 ---
 
-## Dataset Management (`dataset.py`)
+## Stationary Feature Engineering (`features.py`)
 
-This contains the PyTorch `Dataset` and `DataLoader` implementations, optimized to handle high-frequency data without crashing the system.
+Raw limit order book prices are $I(1)$ non-stationary processes. Feeding absolute prices directly into sequential models causes them to fit spurious correlations to macroscopic price drift rather than learning the high-frequency microstructure dynamics. 
 
-* **Sequence Windowing:** Implements a sliding window to generate overlapping temporal sequences (e.g., $L=100$) so the recurrent layers (LSTM/Mamba) and attention mechanisms (Transformer) have historical context for every prediction.
-* **Memory Efficiency:** ITCH data gets massive very quickly. The loader explicitly casts the batched arrays down to `torch.float32` before yielding them. This keeps the memory mapping stable and stops the system RAM from overflowing when running the training loop locally.
+This module enforces strict stationarity across the feature space:
+* **Spatial Centering (Price):** All 10 levels of bid and ask prices are transformed into relative coordinate distances from the instantaneous mid-price.
+* **Volume Regularization:** Deep-book liquidity exhibits heavy-tailed variance and extreme queue imbalances. We apply $\ln(x+1)$ scaling to all volume depths to compress outliers and stabilize gradient flow during training.
+* **Target Generation:** Computes the forward 100-tick log return of the mid-price. Strict index masking and temporal purging are enforced during this step to mathematically guarantee zero look-ahead bias (temporal leakage) in the training targets.
+
+---
+
+## High-Throughput Dataloaders (`dataset.py`)
+
+This module implements the PyTorch `Dataset` and `DataLoader` classes, optimized for the memory constraints of high-frequency ITCH data.
+
+* **Temporal Striding:** Implements a sliding window algorithm to generate overlapping context sequences (e.g., $L=100$). This constructs the strict chronological event horizons required by the causal models (Mamba, Causal Transformer, LSTM) for Backpropagation Through Time (BPTT).
+* **Memory Management:** Because granular LOB data easily exceeds local RAM limits, the loader relies on efficient memory-mapped arrays and strictly downcasts batched views to `torch.float32` immediately before yielding. This stabilizes the memory footprint and prevents Out-of-Memory (OOM) faults during the local training loop.

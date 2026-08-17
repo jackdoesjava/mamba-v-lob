@@ -1,33 +1,39 @@
 # Execution Pipeline
 
-The `python/scripts/` directory contains the core executable pipeline. I split this up into modular, sequential steps so we don't have to re-run the entire data ingestion process every time we want to tweak a model hyperparameter or test a new evaluation metric.
+This directory (`python/scripts/`) defines the executable research pipeline. The architecture is modularized to decouple data preprocessing from optimization and inference, enabling rapid hyperparameter iteration without redundant I/O overhead.
 
 ---
 
 ## Data Generation
 **File:** `01_build_features.py`
 
-This script ingests the raw Databento order book feeds and applies the transformations defined in our utility files. It handles the heavy lifting of calculating the relative price distances and log-scaling the depth volumes, ultimately outputting normalized `.pt` tensor files to disk. Running this once locally saves a massive amount of computational overhead during the training loop.
+Executes the deterministic preprocessing pipeline on Databento MBP-10 feeds. It computes the spatial relative coordinate mappings and log-scaled volume regularizations, serializing the fully normalized feature space into PyTorch (`.pt`) tensors. This offline materialization is strictly required to prevent CPU-bound I/O bottlenecks during subsequent mini-batch generation.
 
 ---
 
-## Training Loop
+## Model Optimization
 **File:** `02_train_models.py`
 
-The main PyTorch training script. It manages the optimization (using AdamW) and implements early stopping based on validation loss. Since we're dealing with high-frequency LOB data and varying convergence times, it's set up to save the best-performing weights to `models/checkpoints/` dynamically as soon as a new lowest validation loss is hit, rather than waiting for all epochs to finish. 
+Implements the primary PyTorch training loop. It utilizes AdamW optimization with dynamic early stopping predicated on out-of-sample validation loss. To capture the varying convergence dynamics across the causal architectures, the script asynchronously caches model state dictionaries to `models/checkpoints/` immediately upon achieving new validation minimums.
 
-*Note: When training the custom Mamba model locally on a CPU, you need to prefix the execution with `OMP_NUM_THREADS=1`. This prevents OpenMP from deadlocking your processor threads during the sequential scan.*
+*Note:* Due to the explicitly unrolled SSM transitions, CPU-bound execution requires prefixing the run with `OMP_NUM_THREADS=1` to prevent OpenMP thread deadlocks during the sequential scan.
 
 ---
 
-## Model Evaluation
+## Out-of-Sample Evaluation
 **File:** `03_evaluate_models.py`
 
-This script handles out-of-sample inference. It freezes all model weights using `torch.no_grad()`, runs the validation set through the Ridge baseline, LSTM, Transformer, and Mamba models, and calculates the key execution metrics (Hit Rate, Pearson/Rank IC, Pseudo-Sharpe, and Max Drawdown). Finally, it plots the cumulative return curves and exports the tear sheet to `model_comparison.png`.
+Conducts strict out-of-sample inference and statistical benchmarking. Operating entirely under `torch.no_grad()` contexts, it evaluates the Mamba SSM against the Transformer, LSTM, and a Ridge regression baseline. It computes core quantitative metrics—Hit Rate, Information Coefficient (Pearson/Rank IC), Pseudo-Sharpe, and Maximum Drawdown—and exports the cumulative return distributions to `model_comparison.png`.
 
 ---
 
 ## Verification Matrix Export 
 **File:** `04_export_bounds.py`
 
-Because Daniel is handling the formal verification proofs, he needs the exact mathematical boundaries of the trained model, not just PyTorch weights. This script extracts the extreme empirical limits of the feature space ($[x_{\min}, x_{\max}]$) alongside Mamba's continuous-time transition matrices ($A, B, C, \Delta$), dumping them into a clean, parsed format that can be directly ingested by the theorem prover.
+Bridges the empirical models with the downstream formal verification engine. This script extracts the strict empirical bounding hyper-rectangles of the feature space:
+
+$$
+[x_{\min}, x_{\max}]
+$$
+
+alongside the converged continuous-time SSM parameters ($A, B, C, \Delta$). These matrices are serialized into standard data structures, allowing Daniel to ingest them directly into the theorem prover to establish the topological stability boundaries of the network.

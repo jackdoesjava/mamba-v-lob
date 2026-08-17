@@ -15,7 +15,7 @@ Raw limit order book data is highly non-stationary $I(1)$, which breaks continuo
 ### Time Discretization ($\Delta t$)
 Unlike standard transformers, Mamba's continuous-time formulation requires explicit time deltas to parameterize the state transition matrix ($\Delta$). Since tick data is asynchronous:
 $$\Delta t_k = t_k - t_{k-1}$$
-*Note: Because NY4 hardware can log multiple events at the exact same nanosecond, we enforce $\Delta t_k \ge 0$ and handle $\Delta t = 0$ safely during the forward pass to prevent NaN gradients in the discretization step.*
+*Note: Because NY4 hardware logs multiple matching engine events at the exact same nanosecond, feeding $\Delta t = 0$ directly into the SSM discretization creates degenerate transition matrices. Instead, we aggregate simultaneous messages at the ingestion layer, taking the final order book snapshot for that nanosecond to ensure time is strictly monotonically increasing ($\Delta t_k > 0$).*
 
 ### Spatial Stationarity (Price)
 We center the book around the instantaneous mid-price to remove price drift.

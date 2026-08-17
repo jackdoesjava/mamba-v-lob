@@ -1,44 +1,41 @@
-# Data Pipeline Specification: MBP-10 to Stationary State Space Inputs
+# LOB Data Pipeline: MBP-10 Preprocessing & Verification Invariants
 
-## 1. Source Data Specifications
-* **Provider:** Databento US Equities
+Here is the breakdown of how we map raw Databento order book feeds into stationary features for the Mamba SSM, along with the strict invariants required for the formal verification stage.
+
+## 1. Source Data
+* **Provider:** Databento (US Equities)
 * **Feed:** Nasdaq TotalView-ITCH (XNAS.ITCH)
-* **Schema:** Market By Price (MBP-10), top 10 bids and asks reconstructed.
-* **Timestamping:** Nanosecond-resolution UTC, hardware-timestamped at Equinix NY4.
-* **Price Encoding:** Fixed-point integer representation scaled by factor $10^9$.
+* **Schema:** Market By Price (MBP-10) — top 10 levels for both bids and asks.
+* **Timestamps:** Nanosecond-resolution UTC (Equinix NY4 hardware timestamps).
+* **Prices:** Fixed-point integers scaled by $10^9$.
 
-## 2. Deterministic Transformations & Normalization
+## 2. Feature Engineering & Stationarity
+Raw limit order book data is highly non-stationary $I(1)$, which breaks continuous-time state space assumptions. We map the raw feeds into a stationary, relative coordinate space before passing them to the network.
 
-To satisfy the assumptions of continuous-time State Space Models (SSMs) and allow formal verification via SMT solvers, raw inputs are transformed into a stationary coordinate space.
-
-### Temporal Discretization ($\Delta t$)
-Tick data arrives asynchronously. The model requires explicit time deltas to parameterize the state transition matrix discretization step ($\Delta$).
+### Time Discretization ($\Delta t$)
+Unlike standard transformers, Mamba's continuous-time formulation requires explicit time deltas to parameterize the state transition matrix ($\Delta$). Since tick data is asynchronous:
 $$\Delta t_k = t_k - t_{k-1}$$
-* Bounded domain: $\Delta t_k \ge 0$.
-* Missing values: Initial sequence step enforces $\Delta t_0 = 0.0$.
+*Note: Because NY4 hardware can log multiple events at the exact same nanosecond, we enforce $\Delta t_k \ge 0$ and handle $\Delta t = 0$ safely during the forward pass to prevent NaN gradients in the discretization step.*
 
-### Spatial Stationarity (Price Dimension)
-Raw asset prices are non-stationary $I(1)$ processes. Absolute prices are mapped to relative coordinate distances from the instantaneous mid-price ($P_{\text{mid}}$).
-
-1. **Mid-Price Definition:**
+### Spatial Stationarity (Price)
+We center the book around the instantaneous mid-price to remove price drift.
+1. **Mid-Price:**
    $$P_{\text{mid}, k} = \frac{P_{\text{ask}, 0, k} + P_{\text{bid}, 0, k}}{2}$$
-2. **Distance Vector Transformation:**
+2. **Relative Distances:**
+   Instead of absolute prices, the network ingests the distance from the mid-price across all 10 depth levels:
    $$\forall i \in [0, 9]: \quad D_{\text{ask}, i, k} = P_{\text{ask}, i, k} - P_{\text{mid}, k}$$
    $$\forall i \in [0, 9]: \quad D_{\text{bid}, i, k} = P_{\text{bid}, i, k} - P_{\text{mid}, k}$$
 
-### Volumetric Regularization (Size Dimension)
-Order book sizes at deep levels exhibit heavy-tailed distributions. A natural logarithmic transformation stabilizes variance for the neural network gradients while preserving order-matching invariants.
-$$V_{\text{scaled}, i, k} = \ln(V_{\text{raw}, i, k} + 1.0)$$
+### Volume Regularization
+LOB sizes at deeper levels are massively skewed and heavy-tailed. To prevent the Mamba gradients from collapsing or exploding, we squash the raw sizes with a log transform:
+$$V_{\text{scaled}, i, k} = \ln(V_{\text{raw}, i, k} + 1)$$
 
-## 3. Downstream Invariants for Verification
+## 3. Invariants (The Verification Contract)
+For Daniel to actually prove the model's stability boundaries in the verification engine, he needs hard geometric guarantees about the input space $\mathcal{X}$. Let $a_i(k)$ and $b_i(k)$ be the ask and bid prices at depth $i$, time $k$.
 
-Let $a_i(k)$ and $b_i(k)$ represent the asset price at order book depth level $i$ (where $i=0$ is top-of-book) at tick time $k$.
-
-* **Spread Invariant:** The bid-ask spread must remain strictly positive under nominal matching engine conditions:
+* **Strictly Positive Spread:** The matching engine guarantees the top-of-book spread is never crossed under normal market conditions:
   $$\forall k: \quad a_0(k) - b_0(k) > 0$$
-
-* **Distance Bounds:** Spatial distance vectors must maintain their respective geometric half-spaces:
+* **Distance Half-Spaces:** The relative price transformations are strictly bounded to their respective sides of the mid-price:
   $$\forall i, k: \quad D^a_{i,k} \ge 0 \quad \text{and} \quad D^b_{i,k} \le 0$$
-
-* **Target Mapping:** The optimization target is the forward log return over an event horizon of $H=100$ ticks:
+* **Optimization Target:** The loss function optimizes for the forward log return over an event-time horizon of $H=100$ ticks:
   $$y_k = \ln\left(\frac{P_{\text{mid}, k+H}}{P_{\text{mid}, k}}\right)$$

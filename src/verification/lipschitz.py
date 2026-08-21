@@ -1,25 +1,7 @@
-"""Certified local sensitivity: how far the prediction can move when the book moves a little.
+"""Local sensitivity by norm propagation, kept as a baseline rather than a usable bound.
 
-certify.py bounds the model over every input it could ever see. That is the right object for
-an unconditional safety claim and useless for a question about one book state. Propagating a
-narrow box through the network instead does not work: the LayerNorm variance lower bound
-collapses once the box widens, 1/sigma runs away, and the widths compound. Measured on this
-model, plain interval propagation reaches 1e24 at eps = 1e-3 and overflows above it.
-
-What works is to keep the concrete forward pass as the centre and propagate only a bound on
-the sensitivity around it. For a max-norm budget eps this tracks
-
-    Lambda_i  >=  || d(component i) / dx ||_1
-
-so |component_i(x + delta) - component_i(x)| <= Lambda_i * eps for every ||delta||_inf <= eps.
-The certified interval is the nominal value plus or minus Lambda * eps.
-
-The state recursion inherits the contraction factor from docs/02-invariant.md:
-
-    Lambda_h(t) <= sup|Abar| Lambda_h(t-1) + |h(t-1)| Lambda_Abar + Lambda_drive
-
-so the dt_min that gives a finite reachable set also gives a finite sensitivity. See
-docs/03-certificate.md.
+It is sound and diverges above eps = 1e-6 on the full model. scripts/08_domains.py measures
+that and docs/03-certificate.md reports it.
 """
 
 from __future__ import annotations

@@ -1,13 +1,9 @@
-"""NumPy forward pass driven only by an exported certificate JSON.
+"""NumPy forward pass driven only by an exported certificate JSON, with no torch import.
 
-Nothing here imports torch or reads the repository. Given
-models/bounds/mamba_certificate.json it reproduces the network, so a verifier can check its
-own encoding of the dynamics against a known-good implementation. scripts/04_export_bounds.py
-runs this against PyTorch and refuses to write the artefact if they disagree.
+scripts/04_export_bounds.py runs it against PyTorch and refuses to write on disagreement.
 
-    from src.verification.reference import ReferenceModel
     model = ReferenceModel.from_json("models/bounds/mamba_certificate.json")
-    y = model.forward(x)                  # x is (batch, L, input_dim), already normalised
+    y = model.forward(x)                 # x is (batch, L, input_dim), already normalised
     y, trace = model.forward(x, trace=True)
 """
 

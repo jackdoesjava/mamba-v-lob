@@ -1,17 +1,8 @@
-"""Compare abstract domains on the same question: how far can the prediction move?
+"""How far can the prediction move over an eps ball, by four methods.
 
-Three ways of answering, plus a search that lower-bounds the truth:
-
-  attack        gradient ascent and box-vertex sampling. Whatever it reaches is reachable, so
-                this is a lower bound on the true width and the yardstick for the rest.
-  lipschitz     norm-based sensitivity propagation, src/verification/lipschitz.py.
-  interval      box propagation through the sequence, src/verification/sensitivity.py.
-  global        the unconditional certificate, src/verification/certify.py. Independent of
-                eps and of the input, so it appears as a flat reference line.
-
-The point of the script is to establish which domain is usable at which perturbation size,
-and it is reported in docs/03-certificate.md. Two of the three are not usable at any size that
-matters, which is the result.
+Gradient ascent lower-bounds the truth; norm propagation and box propagation are the two
+local domains; the unconditional certificate does not depend on eps. Two of the three bounds
+are unusable at any eps that matters, which docs/03-certificate.md reports.
 """
 
 from __future__ import annotations

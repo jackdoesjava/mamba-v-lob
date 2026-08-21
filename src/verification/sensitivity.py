@@ -1,17 +1,6 @@
-"""Certified sensitivity of the prediction to a bounded perturbation of the order book.
+"""Local sensitivity by box propagation, the other baseline that does not survive the model.
 
-The certificate in certify.py is unconditional: it bounds the SSM over every input the block
-could ever see, using the LayerNorm box. That is the right object for a global safety claim
-and far too loose to say anything about a particular book state.
-
-This module answers the local question instead. Given an observed window x and a perturbation
-budget eps, it propagates the box [x - eps, x + eps] through the whole network and returns a
-certified interval for the prediction. Nothing about the perturbation is assumed beyond its
-size: it covers adversarial quoting, a stale or corrupted feed, and ordinary microstructure
-noise alike.
-
-The quantity that comes out, (y_hi - y_lo) / (2 eps), is a certified local Lipschitz constant
-in the max norm. See docs/03-certificate.md.
+Sound, and reaches 1e24 at eps = 1e-3 before overflowing. See docs/03-certificate.md.
 """
 
 from __future__ import annotations

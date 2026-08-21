@@ -249,9 +249,9 @@ def state_bound_widened(
 ) -> tuple[Interval, int]:
     """Iterate h <- Abar h + drive to a fixed point instead of stopping at L steps.
 
-    This is the fair baseline for the invariant in verification.invariant: it is what generic
-    interval propagation converges to if you let it, so a comparison against the unrolled
-    bound at some chosen L would be comparing against a deliberately weak implementation.
+    The fair baseline for verification.invariant: it is what generic interval propagation
+    converges to if you let it run, so comparing against an unrolled bound stopped at some
+    chosen L would understate the baseline.
     """
     lo = torch.zeros_like(drive.lo)
     hi = torch.zeros_like(drive.hi)

@@ -1,23 +1,8 @@
 """A forward-invariant box for the SSM state, valid at any sequence length.
 
-Exact zero-order hold gives, for diagonal A < 0,
-
-    Bbar = A^-1 (exp(dt A) - I) B = (1 - Abar) B / |A|,
-
-so the state update is
-
-    h_t = Abar_t h_{t-1} + (1 - Abar_t) c_t,    c_t = B_t u_t / |A|,
-
-a convex combination, because Abar lies in (0, 1). If |c_t| <= M for every admissible input
-then |h| <= M is preserved by one step, hence by induction for every t. No unrolling, no
-geometric series, and no constraint on dt.
-
-The geometric bound M_drive / (1 - sup Abar) answers the same question by bounding Abar and
-Bbar separately, which throws the (1 - Abar) factor away: it takes its maximum in the
-numerator and its minimum in the denominator. That is why it diverges as dt -> 0 when nothing
-is actually diverging.
-
-See docs/02-invariant.md.
+Exact zero-order hold gives Bbar = (1 - Abar) B / |A| for diagonal A < 0, so the update
+h_t = Abar_t h_{t-1} + (1 - Abar_t) c_t with c_t = B_t u_t / |A| is a convex combination.
+Bounding c bounds h, by induction and at any length. Derivation in docs/02-invariant.md.
 """
 
 from __future__ import annotations
@@ -74,8 +59,8 @@ def induction_residual(invariant: Interval, equilibrium: Interval) -> torch.Tens
     for any non-degenerate box. Keeping a as a single variable, the supremum over a in [0, 1]
     of a M + (1 - a) M_c is max(M, M_c), so the box is preserved exactly when M_c <= M.
 
-    That is the same dependency loss that makes the geometric bound diverge, showing up one
-    level higher. It is worth checking rather than asserting.
+    That is the same dependency loss that makes the geometric bound diverge, one level up.
+    Checked rather than assumed.
     """
     M = invariant.abs_max()
     M_c = equilibrium.abs_max()

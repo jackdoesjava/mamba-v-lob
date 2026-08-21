@@ -1,15 +1,8 @@
 """Is the invariant's advantage a property of the architecture or of one checkpoint?
 
-The headline comparison in scripts/06_certify.py runs on a single trained model, which does
-not distinguish the two. This sweeps seeds and configurations and reports the ratio between
-the geometric bound and the invariant for each.
-
-The geometric bound stands in for the widened fixed point here. They agree, which
-tests/test_invariant.py checks, and iterating to convergence takes about 1e4 steps per
-configuration, which is not worth paying for a sweep.
-
-Certification needs no data, so every row is cheap and the untrained rows are as meaningful
-as the trained ones: the bound is a statement about weights, not about a dataset.
+Sweeps seeds and configurations and reports the geometric bound over the invariant for each.
+The geometric bound stands in for the widened fixed point, which it matches. Certification
+needs no data, so untrained rows count as much as trained ones.
 """
 
 from __future__ import annotations

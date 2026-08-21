@@ -1,15 +1,9 @@
-"""The comparison the paper is built on: closed-form invariant against the alternatives.
+"""The comparison the paper is built on. Four bounds on sup |h| over every admissible input.
 
-All four columns bound the same thing, sup |h| over every admissible input. What separates
-them is whether the bound depends on sequence length and what it costs to obtain.
-
-  invariant   closed form, from src/verification/invariant.py. One induction step, no
-              iteration, no search, and no dependence on L.
-  widened     generic interval propagation iterated to its fixed point. The fair baseline:
-              comparing against an unrolled bound truncated at some L would be comparing
-              against a deliberately weak implementation.
-  geometric   the analytic fixed point, M / (1 - sup Abar). Should agree with widened.
-  unrolled    interval propagation stopped at L, which is what bounded verification does.
+  invariant   closed form, one induction step, no iteration and no dependence on L
+  widened     generic interval propagation iterated to its fixed point, the fair baseline
+  geometric   the analytic fixed point M / (1 - sup Abar), which widened should match
+  unrolled    the same propagation stopped at L, which is what bounded verification does
 
 Writes docs/certification/bounds.{json,md}.
 """

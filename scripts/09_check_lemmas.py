@@ -1,16 +1,8 @@
-"""Machine-check the algebraic lemmas the certificate rests on, with Z3.
+"""Discharge the polynomial lemmas behind the certificate with Z3.
 
-The bounds in docs/ are proved by hand. The proofs are short, which is exactly when a sign
-slip survives review, so the ones that live in polynomial real arithmetic are also discharged
-by a solver here. Each check asserts the negation of the lemma and asks for a model; unsat
-means no counterexample exists.
-
-Two of the lemmas quantify over a dimension d, so they are checked for a range of small d
-rather than in general. That is weaker than the hand proof and catches a different class of
-mistake: the hand proof is general but human, the solver is exhaustive but finite.
-
-Nothing transcendental is checked. exp and the zero-order hold are outside decidable real
-arithmetic, and their proofs stay by hand.
+Each check asserts the negation and asks for a model, so unsat means no counterexample. The
+LayerNorm lemmas quantify over a dimension and are checked at small widths only. exp and the
+zero-order hold are outside decidable real arithmetic and keep their hand proofs.
 """
 
 from __future__ import annotations

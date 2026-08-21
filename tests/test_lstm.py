@@ -11,7 +11,7 @@ def mock_config():
 def mock_input_tensor(mock_config):
     batch_size = 32
     seq_len = mock_config['data']['seq_length']
-    input_dim = 46 # must match the dim check LSTMBaseline does at runtime
+    input_dim = 46  # arbitrary; LSTMBaseline takes any width and does no runtime check
     return torch.randn(batch_size, seq_len, input_dim)
 
 def test_lstm_forward_shape(mock_config, mock_input_tensor):

@@ -1,5 +1,7 @@
-"""Soundness tests for the interval abstraction: sample inside each input box and check
-the concrete output lands inside the computed output box.
+"""Soundness tests for the interval abstraction.
+
+Most draw concrete values from an input box and check the output lands inside the computed
+box. A few instead pin a constant, an exactness claim, or a limit.
 """
 
 from __future__ import annotations

@@ -51,6 +51,29 @@ class Interval:
         )
         return Interval(products.amin(0), products.amax(0))
 
+    def __sub__(self, other: "Interval | torch.Tensor") -> "Interval":
+        if isinstance(other, Interval):
+            return Interval(self.lo - other.hi, self.hi - other.lo)
+        return Interval(self.lo - other, self.hi - other)
+
+    def square(self) -> "Interval":
+        lo2, hi2 = self.lo * self.lo, self.hi * self.hi
+        straddles = (self.lo <= 0) & (self.hi >= 0)
+        lower = torch.where(straddles, torch.zeros_like(lo2), torch.minimum(lo2, hi2))
+        return Interval(lower, torch.maximum(lo2, hi2))
+
+    def sqrt(self) -> "Interval":
+        return Interval(self.lo.clamp(min=0.0).sqrt(), self.hi.clamp(min=0.0).sqrt())
+
+    def mean(self, dim: int, keepdim: bool = False) -> "Interval":
+        return Interval(self.lo.mean(dim, keepdim=keepdim), self.hi.mean(dim, keepdim=keepdim))
+
+    def centre(self) -> torch.Tensor:
+        return 0.5 * (self.lo + self.hi)
+
+    def radius(self) -> torch.Tensor:
+        return 0.5 * (self.hi - self.lo)
+
     def abs_max(self) -> torch.Tensor:
         return torch.maximum(self.lo.abs(), self.hi.abs())
 
@@ -219,3 +242,33 @@ def state_bound_unrolled(A_bar: Interval, drive: Interval, seq_len: int) -> Inte
         new_lo = torch.where(lo >= 0, A_bar.lo * lo, A_bar.hi * lo) + drive.lo
         lo, hi = new_lo, new_hi
     return Interval(lo, hi)
+
+
+def divide_by_positive(num: Interval, den: Interval) -> Interval:
+    """num / den where den is strictly positive. Reciprocal of a positive box is monotone."""
+    inv = Interval(1.0 / den.hi, 1.0 / den.lo.clamp(min=1e-30))
+    return num * inv
+
+
+def layernorm_input_box(box: Interval, ln: nn.LayerNorm, eps: float = 1e-5) -> Interval:
+    """LayerNorm over a box around a concrete point, in centre-radius form.
+
+    Pure interval arithmetic puts 0 in the variance, because every centred coordinate
+    straddles it, and 1/sigma then reaches 1/sqrt(eps). Writing x = c + e with |e_i| <= r_i
+    keeps the concrete spread of c and only gives up the perturbation: the mean shifts by at
+    most mean(r), so |x_i - mean(x) - (c_i - mean(c))| <= r_i + mean(r).
+
+    `layernorm` in this module is the complementary bound: input-independent, and the one
+    the global certificate uses.
+    """
+    c, r = box.centre(), box.radius()
+    c_centred = c - c.mean(-1, keepdim=True)
+    reach = r + r.mean(-1, keepdim=True)
+
+    lo_abs = (c_centred.abs() - reach).clamp(min=0.0)
+    hi_abs = c_centred.abs() + reach
+    var = Interval((lo_abs * lo_abs).mean(-1, keepdim=True), (hi_abs * hi_abs).mean(-1, keepdim=True))
+    sigma = Interval(var.lo + eps, var.hi + eps).sqrt()
+
+    z = divide_by_positive(Interval(c_centred - reach, c_centred + reach), sigma)
+    return z * ln.weight + ln.bias

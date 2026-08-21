@@ -146,13 +146,14 @@ class LOBDataModule:
         hi = np.quantile(train_raw, 1.0 - winsor_q, axis=0).astype(np.float32)
 
         # a near-constant column collapses to lo == hi, which np.clip and the input box both
-        # need to be a real interval: widen to min/max, then force nonzero width
+        # need to be a real interval: widen to min/max, then nudge by one ulp. A fixed 1e-6
+        # would vanish in float32 once |lo| exceeds about 32.
         degenerate = hi <= lo
         if degenerate.any():
             lo[degenerate] = train_raw[:, degenerate].min(axis=0)
             hi[degenerate] = train_raw[:, degenerate].max(axis=0)
             still = hi <= lo
-            hi[still] = lo[still] + 1e-6
+            hi[still] = np.nextafter(lo[still], np.float32(np.inf))
 
         clipped_train = np.clip(train_raw, lo, hi)
         mean = clipped_train.mean(axis=0).astype(np.float32)

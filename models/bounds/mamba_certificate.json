@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "provenance": {
     "export": {
-      "git_sha": "dda5b457410c38a9173518c745e20f9de2328b07-dirty",
+      "git_sha": "22f0d749b25af1063de7994a1593dc0a45048a86-dirty",
       "torch_version": "2.11.0+cpu",
       "numpy_version": "2.4.4",
       "python_version": "3.14.4",
@@ -66,7 +66,7 @@
     "post_ssm": [
       "out = out_proj(y * SiLU(g)) + x            # residual is the block input, pre-norm"
     ],
-    "stability": "A < 0 and delta > 0 give A_bar in (0, 1) elementwise. Under the 'bounded' parametrisation delta >= dt_min > 0 for every input, so sup A_bar = exp(-dt_min * min|A|) < 1 and |h| <= sup|B_bar * u| / (1 - sup A_bar). Under 'softplus', inf delta = 0, so sup A_bar = 1 and no finite invariant set exists; the finite-horizon bound sum_{k<L} (sup A_bar)^k = L is then the only thing that can be claimed."
+    "stability": "A < 0 and delta > 0 give A_bar in (0, 1) elementwise. Exact zero-order hold gives B_bar = (1 - A_bar) * B / |A| identically, so the update h[t] = A_bar * h[t-1] + (1 - A_bar) * c[t], with c = B * u / |A|, is a convex combination. If |c| <= M for every admissible input then |h| <= M for every t, by induction from h[-1] = 0. That holds at any sequence length and needs no lower bound on delta. The geometric form sup|B_bar * u| / (1 - sup A_bar) bounds the same quantity but discards the (1 - A_bar) factor, taking its maximum in the numerator and its minimum in the denominator, and is about 95 times looser on these weights."
   },
   "normalisation": {
     "feature_names": [
@@ -477,6 +477,12 @@
           "delta_hi": 0.10000000149011612,
           "B_abs_max": 17.71307373046875,
           "C_abs_max": 17.526533126831055,
+          "h_abs_max_invariant": 129.67388916015625,
+          "invariant_holds": true,
+          "invariant_induction_residual": 0.0,
+          "zoh_exact": true,
+          "h_abs_max_widened": 12349.40625,
+          "widening_iterations": 10509,
           "h_abs_max_geometric": 12349.5810546875,
           "h_abs_max_horizon": 1169.0269775390625,
           "y_abs_max_horizon": 160109.0
@@ -1114,6 +1120,40 @@
               16
             ]
           },
+          "h_invariant": {
+            "lo": -129.67388916015625,
+            "hi": 129.67388916015625,
+            "abs_max": 129.67388916015625,
+            "shape": [
+              128,
+              16
+            ]
+          },
+          "h_widened": {
+            "lo": -11025.009765625,
+            "hi": 12349.40625,
+            "abs_max": 12349.40625,
+            "shape": [
+              128,
+              16
+            ]
+          },
+          "y_invariant": {
+            "lo": -6814.32080078125,
+            "hi": 6822.64501953125,
+            "abs_max": 6822.64501953125,
+            "shape": [
+              128
+            ]
+          },
+          "out_invariant": {
+            "lo": -115316.21875,
+            "hi": 115315.203125,
+            "abs_max": 115316.21875,
+            "shape": [
+              64
+            ]
+          },
           "h_geometric": {
             "lo": -12349.5810546875,
             "hi": 12349.5810546875,
@@ -1185,6 +1225,12 @@
           "delta_hi": 0.10000000149011612,
           "B_abs_max": 17.226232528686523,
           "C_abs_max": 17.591190338134766,
+          "h_abs_max_invariant": 143.54425048828125,
+          "invariant_holds": true,
+          "invariant_induction_residual": 0.0,
+          "zoh_exact": true,
+          "h_abs_max_widened": 13681.3251953125,
+          "widening_iterations": 10634,
           "h_abs_max_geometric": 13681.9033203125,
           "h_abs_max_horizon": 1273.9185791015625,
           "y_abs_max_horizon": 169548.671875
@@ -1822,6 +1868,40 @@
               16
             ]
           },
+          "h_invariant": {
+            "lo": -143.54425048828125,
+            "hi": 143.54425048828125,
+            "abs_max": 143.54425048828125,
+            "shape": [
+              128,
+              16
+            ]
+          },
+          "h_widened": {
+            "lo": -11187.0869140625,
+            "hi": 13681.3251953125,
+            "abs_max": 13681.3251953125,
+            "shape": [
+              128,
+              16
+            ]
+          },
+          "y_invariant": {
+            "lo": -7542.24755859375,
+            "hi": 7551.01953125,
+            "abs_max": 7551.01953125,
+            "shape": [
+              128
+            ]
+          },
+          "out_invariant": {
+            "lo": -117228.1640625,
+            "hi": 117212.875,
+            "abs_max": 117228.1640625,
+            "shape": [
+              64
+            ]
+          },
           "h_geometric": {
             "lo": -13681.9033203125,
             "hi": 13681.9033203125,
@@ -1879,7 +1959,7 @@
   "empirical_envelope": {
     "output": {
       "output": {
-        "lo": -0.1823883354663849,
+        "lo": -0.16829778254032135,
         "hi": 0.144169420003891
       }
     },
@@ -1887,27 +1967,27 @@
       {
         "A_bar": {
           "lo": 0.2338622361421585,
-          "hi": 0.9988812804222107
+          "hi": 0.9988725185394287
         },
         "B": {
           "lo": -0.6564669609069824,
-          "hi": 0.6681150197982788
+          "hi": 0.6127232909202576
         },
         "B_bar": {
           "lo": -0.03722674399614334,
-          "hi": 0.052967365831136703
+          "hi": 0.0489664189517498
         },
         "C": {
-          "lo": -0.5115096569061279,
-          "hi": 0.5379432439804077
+          "lo": -0.5034973621368408,
+          "hi": 0.5011348724365234
         },
         "delta": {
-          "lo": 0.0011158337583765388,
+          "lo": 0.001124589703977108,
           "hi": 0.09177187085151672
         },
         "h": {
           "lo": -0.22568051517009735,
-          "hi": 0.25996026396751404
+          "hi": 0.1796995997428894
         },
         "u": {
           "lo": -0.27846455574035645,
@@ -1929,11 +2009,11 @@
         },
         "B_bar": {
           "lo": -0.038032546639442444,
-          "hi": 0.03439212590456009
+          "hi": 0.03412257879972458
         },
         "C": {
-          "lo": -0.638447105884552,
-          "hi": 0.5022836923599243
+          "lo": -0.5020179748535156,
+          "hi": 0.4997195601463318
         },
         "delta": {
           "lo": 0.0011148386402055621,
@@ -1941,15 +2021,15 @@
         },
         "h": {
           "lo": -0.16802428662776947,
-          "hi": 0.12290598452091217
+          "hi": 0.10289457440376282
         },
         "u": {
           "lo": -0.27846455574035645,
-          "hi": 1.846614956855774
+          "hi": 1.7309647798538208
         },
         "y": {
-          "lo": -0.28547045588493347,
-          "hi": 1.8648159503936768
+          "lo": -0.28266263008117676,
+          "hi": 1.7507432699203491
         }
       }
     ]
@@ -1973,36 +2053,36 @@
       "layer": 0,
       "quantity": "B",
       "certified_abs_max": 17.71307373046875,
-      "empirical_abs_max": 0.6681150197982788,
-      "looseness": 26.512012461292645
+      "empirical_abs_max": 0.6564669609069824,
+      "looseness": 26.982429863638774
     },
     {
       "layer": 0,
       "quantity": "C",
       "certified_abs_max": 17.526533126831055,
-      "empirical_abs_max": 0.5379432439804077,
-      "looseness": 32.58063619713269
+      "empirical_abs_max": 0.5034973621368408,
+      "looseness": 34.80958281975603
     },
     {
       "layer": 0,
       "quantity": "A_bar",
       "certified_abs_max": 0.9990273118019104,
-      "empirical_abs_max": 0.9988812804222107,
-      "looseness": 1.000146194930831
+      "empirical_abs_max": 0.9988725185394287,
+      "looseness": 1.0001549679860129
     },
     {
       "layer": 0,
       "quantity": "B_bar",
       "certified_abs_max": 1.540228009223938,
-      "empirical_abs_max": 0.052967365831136703,
-      "looseness": 29.0788107933153
+      "empirical_abs_max": 0.0489664189517498,
+      "looseness": 31.454781505293198
     },
     {
       "layer": 0,
       "quantity": "h",
       "certified_abs_max": 1169.0269775390625,
-      "empirical_abs_max": 0.25996026396751404,
-      "looseness": 4496.944878026244
+      "empirical_abs_max": 0.22568051517009735,
+      "looseness": 5180.008458674231
     },
     {
       "layer": 0,
@@ -2015,8 +2095,8 @@
       "layer": 1,
       "quantity": "u",
       "certified_abs_max": 9.004310607910156,
-      "empirical_abs_max": 1.846614956855774,
-      "looseness": 4.876117013176245
+      "empirical_abs_max": 1.7309647798538208,
+      "looseness": 5.201902842107836
     },
     {
       "layer": 1,
@@ -2036,8 +2116,8 @@
       "layer": 1,
       "quantity": "C",
       "certified_abs_max": 17.591190338134766,
-      "empirical_abs_max": 0.638447105884552,
-      "looseness": 27.553089638902232
+      "empirical_abs_max": 0.5020179748535156,
+      "looseness": 35.04095713558408
     },
     {
       "layer": 1,
@@ -2064,8 +2144,8 @@
       "layer": 1,
       "quantity": "y",
       "certified_abs_max": 169548.671875,
-      "empirical_abs_max": 1.8648159503936768,
-      "looseness": 90919.78853956446
+      "empirical_abs_max": 1.7507432699203491,
+      "looseness": 96843.82329952563
     }
   ],
   "checks": {

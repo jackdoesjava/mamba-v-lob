@@ -21,6 +21,8 @@ from src.verification.certify import (
     looseness_report,
 )
 from src.verification.intervals import Interval
+from src.verification.export import export_parameters
+from src.verification.reference import ReferenceModel
 
 SCHEMA_VERSION = "1.0"
 
@@ -121,75 +123,43 @@ def serialise_certificate(cert: dict) -> dict:
     return out
 
 
-def export_parameters(model: LOBMamba) -> dict:
-    """Weights, with A materialised. Lists of Python floats round-trip float32 exactly."""
-    params: dict = {"stem": {}, "layers": [], "head": {}}
-    for name, t in model.proj.state_dict().items():
-        params["stem"][f"proj.{name}"] = t.tolist()
-    for name, t in model.final_norm.state_dict().items():
-        params["head"][f"final_norm.{name}"] = t.tolist()
-    for name, t in model.head.state_dict().items():
-        params["head"][f"head.{name}"] = t.tolist()
-
-    for block in model.layers:
-        entry = {
-            "A": (-torch.exp(block.A_log)).detach().tolist(),
-            "A_log": block.A_log.detach().tolist(),
-            "D": block.D.detach().tolist(),
-            "dt_min": block.dt_min,
-            "dt_max": block.dt_max,
-            "dt_parametrisation": block.dt_parametrisation,
-            "dt_rank": block.dt_rank,
-            "d_state": block.d_state,
-            "d_inner": block.d_inner,
-            "d_conv": block.d_conv,
-        }
-        for mod_name in ("norm", "in_proj", "conv1d", "x_proj", "dt_proj", "out_proj"):
-            for pname, t in getattr(block, mod_name).state_dict().items():
-                entry[f"{mod_name}.{pname}"] = t.tolist()
-        params["layers"].append(entry)
-    return params
-
-
 def numpy_roundtrip_check(
-    model: LOBMamba, params: dict, x: torch.Tensor, tol: float = 1e-4
+    model: LOBMamba, artefact: dict, x: torch.Tensor, tol: float = 1e-4
 ) -> dict:
-    """Re-run block 0's recurrence in NumPy from the exported A/D and the traced delta, B, C."""
+    """Re-run the whole network in NumPy from the artefact alone and compare against PyTorch.
+
+    This drives src.verification.reference, which imports nothing from the model and reads
+    only the exported dict, so it exercises the stem, both blocks and the head rather than
+    the scan in isolation. If it disagrees, the artefact does not describe the model.
+    """
     model.eval()
     with torch.no_grad():
-        _, traces = model(x, trace=True)
-    tr = traces[0]
-    p = params["layers"][0]
+        y_torch, traces = model(x, trace=True)
 
-    A = np.asarray(p["A"], dtype=np.float64)
-    D = np.asarray(p["D"], dtype=np.float64)
-    delta = tr.delta.numpy().astype(np.float64)
-    B = tr.B.numpy().astype(np.float64)
-    C = tr.C.numpy().astype(np.float64)
-    u = tr.u.numpy().astype(np.float64)
+    reference = ReferenceModel(artefact)
+    y_numpy, rec = reference.forward(x.numpy(), trace=True)
 
-    batch, L, d_inner = u.shape
-    d_state = A.shape[1]
-    h = np.zeros((batch, d_inner, d_state))
-    y = np.zeros((batch, L, d_inner))
+    worst = {"output": float(np.abs(y_numpy - y_torch.numpy()).max())}
+    for i, (tr, r) in enumerate(zip(traces, rec)):
+        for name, a, b in (
+            ("u", tr.u, r["u"]),
+            ("delta", tr.delta, r["delta"]),
+            ("B", tr.B, r["B"]),
+            ("C", tr.C, r["C"]),
+            ("A_bar", tr.A_bar, r["A_bar"]),
+            ("B_bar", tr.B_bar, r["B_bar"]),
+            ("h", tr.h, r["h"]),
+            ("y", tr.y, r["y"]),
+        ):
+            worst[f"layer{i}.{name}"] = float(np.abs(a.numpy() - b).max())
 
-    for t in range(L):
-        v = delta[:, t][:, :, None] * A[None, :, :]
-        A_bar = np.exp(v)
-        with np.errstate(invalid="ignore", divide="ignore"):
-            # phi(v) = expm1(v)/v, which is 0/0 at v = 0; Taylor below |v| = 1e-4.
-            phi = np.where(np.abs(v) < 1e-4, 1.0 + v / 2 + v * v / 6, np.expm1(v) / v)
-        B_bar = delta[:, t][:, :, None] * phi * B[:, t][:, None, :]
-        h = A_bar * h + B_bar * u[:, t][:, :, None]
-        y[:, t] = np.einsum("bdn,bn->bd", h, C[:, t]) + D * u[:, t]
-
-    err = float(np.abs(y - tr.y.numpy()).max())
-    h_err = float(np.abs(h - tr.h[:, -1].numpy()).max())
+    err = max(worst.values())
     return {
-        "max_abs_error_y": err,
-        "max_abs_error_final_h": h_err,
+        "max_abs_error": err,
+        "max_abs_error_output": worst["output"],
+        "per_quantity": worst,
         "tolerance": tol,
-        "passed": bool(err < tol and h_err < tol),
+        "passed": bool(err < tol),
     }
 
 
@@ -263,15 +233,8 @@ def main() -> None:
     loose = looseness_report(cert, envelope)
     sound = soundness_check(cert, envelope)
 
-    print("re-running the recurrence in NumPy from the exported numbers ...")
     params = export_parameters(model)
-    roundtrip = numpy_roundtrip_check(model, params, batches[0][:4])
 
-    if not roundtrip["passed"]:
-        raise SystemExit(
-            f"round-trip FAILED: {roundtrip}. The export does not describe the model; "
-            "refusing to write it."
-        )
     if not sound["sound"]:
         raise SystemExit(
             f"soundness FAILED: realised values outside the certified box: "
@@ -308,9 +271,19 @@ def main() -> None:
         "certificate": serialise_certificate(cert),
         "empirical_envelope": envelope,
         "looseness": loose,
-        "checks": {"roundtrip": roundtrip, "soundness": sound},
+        "checks": {"soundness": sound},
         "parameters": params,
     }
+
+    print("re-running the whole network in NumPy from the artefact ...")
+    roundtrip = numpy_roundtrip_check(model, artefact, batches[0][:4])
+    artefact["checks"]["roundtrip"] = roundtrip
+    if not roundtrip["passed"]:
+        raise SystemExit(
+            f"round-trip FAILED: worst {roundtrip['max_abs_error']:.3e} in "
+            f"{max(roundtrip['per_quantity'], key=roundtrip['per_quantity'].get)}. "
+            "The export does not describe the model; refusing to write it."
+        )
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -329,7 +302,7 @@ def main() -> None:
 
     size_mb = out_path.stat().st_size / 1e6
     print(f"\nwrote {out_path} ({size_mb:.1f} MB) and {npz_path.name}")
-    print(f"  round-trip max |y_numpy - y_torch| = {roundtrip['max_abs_error_y']:.3e}")
+    print(f"  round-trip worst |numpy - torch| = {roundtrip['max_abs_error']:.3e}")
     print(f"  soundness: {'OK' if sound['sound'] else 'VIOLATED'}")
     print(f"  all layers contractive: {cert['all_layers_contractive']}")
     print(

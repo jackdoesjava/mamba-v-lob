@@ -11,7 +11,7 @@ size: it covers adversarial quoting, a stale or corrupted feed, and ordinary mic
 noise alike.
 
 The quantity that comes out, (y_hi - y_lo) / (2 eps), is a certified local Lipschitz constant
-in the max norm. See docs/15-sensitivity.md.
+in the max norm. See docs/16-domains.md.
 """
 
 from __future__ import annotations

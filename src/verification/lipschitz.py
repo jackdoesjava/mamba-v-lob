@@ -19,7 +19,7 @@ The state recursion inherits the contraction factor from docs/04-stability.md:
     Lambda_h(t) <= sup|Abar| Lambda_h(t-1) + |h(t-1)| Lambda_Abar + Lambda_drive
 
 so the dt_min that gives a finite reachable set also gives a finite sensitivity. See
-docs/15-sensitivity.md.
+docs/16-domains.md.
 """
 
 from __future__ import annotations

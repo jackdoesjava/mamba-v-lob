@@ -46,18 +46,24 @@ and `D` and the traced `delta`, `B`, `C`, then compares the outputs and the fina
 against PyTorch. The second is the soundness check: every realised value must sit inside its
 certified box.
 
+The re-run is driven by `src/verification/reference.py`, which imports nothing from the model
+and reads only the exported dict. It rebuilds the stem, both blocks and the head, so every
+intermediate is compared rather than the scan alone.
+
 | round-trip quantity | measured | tolerance |
 | --- | --- | --- |
-| max abs error in `y` | 2.086e-07 | 1e-4 |
-| max abs error in final `h` | 8.724e-08 | 1e-4 |
+| worst over all intermediates and the output | 8.821e-07 | 1e-4 |
 
 The residual is float32 rounding accumulated over the sequence and re-run in float64. This
 checks a different property from soundness, namely that the artefact describes the model at
 all. A certificate proved about a recurrence the network does not run would be sound and
 useless, and that failure is invisible to everything else on this page, since sampling and
-the attack both go through the same PyTorch module. The export ships its equations in
-`dynamics_spec` so an external tool can read them; the round trip is what makes the
-description trustworthy.
+the attack both go through the same PyTorch module.
+
+The check earns its place. An earlier version of the reference reversed the depthwise
+convolution kernel, because `Conv1d` cross-correlates rather than convolves. Every bound on
+this page still held, every test still passed, and the reference disagreed with the model by
+2.5 in `u`. `tests/test_reference.py` now pins the orientation with an impulse response.
 
 ## Gradient-based falsification
 

@@ -125,13 +125,29 @@ has been found, and the script exits non-zero if one is. The export additionally
 every realised value from the held-out batches sits inside its certified box, and refuses to
 write if any escapes.
 
-## What would help, not yet done
+## The reference implementation
 
-A zero-dependency NumPy reference implementation, reading only the JSON. Nothing like this
-exists yet. The round-trip check is the closest thing, but it imports the model to get traces
-and so is a check rather than a standalone reference. A file that takes the JSON and a
-`(batch, L, 43)` array and returns the output, with no torch and no `src/` import, would be
-the cleanest ground truth for anything you build on top.
+`src/verification/reference.py` reads only the exported JSON. It imports numpy and nothing
+else, so it is the ground truth to check your encoding against:
+
+```python
+from src.verification.reference import ReferenceModel
+
+model = ReferenceModel.from_json("models/bounds/mamba_certificate.json")
+model.check_input_box(x)          # raises if x leaves the certified box
+y = model.forward(x)              # x is (batch, L, 43), already normalised
+y, trace = model.forward(x, trace=True)   # delta, B, C, A_bar, B_bar, h, y per layer
+```
+
+`scripts/04_export_bounds.py` runs it against PyTorch before writing and refuses to write on
+disagreement, so a shipped artefact has always passed. Worst measured difference across every
+intermediate and the output is 8.821e-07.
+
+Two details it encodes that are easy to get wrong. `Conv1d` cross-correlates rather than
+convolves, so the depthwise kernel is not reversed: `out[t] = sum_k w[k] u[t + k - d_conv + 1]`.
+And `phi(v) = expm1(v)/v` needs a Taylor branch below `|v| = 1e-4`, where it is 0/0.
+
+## What would help, not yet done
 
 An unrolled feedforward export at fixed `L`. Most verification tooling handles feedforward
 networks rather than loops, and at `L = 100` with 2 layers, `d_inner` 128 and `d_state` 16

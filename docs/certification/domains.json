@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "012dd8fb26da25f56c9061dcc2501c604f91e704-dirty",
+    "git_sha": "271fb2b3778bbfd9812e9bcac2ff8df278e303ed-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -16,10 +16,10 @@
       "eps": 1e-06,
       "attack": 1.6242265701293945e-06,
       "lipschitz": 2.1798062324523926,
-      "interval": 0.551379919052124,
+      "interval": 0.5513806939125061,
       "global": 9.46164083480835,
       "lipschitz_over_attack": 1342057.9816513762,
-      "interval_over_attack": 339472.29357798165
+      "interval_over_attack": 339472.7706422018
     },
     {
       "eps": 1e-05,
@@ -32,25 +32,25 @@
     },
     {
       "eps": 0.0001,
-      "attack": 0.00016295909881591797,
+      "attack": 0.00016297399997711182,
       "lipschitz": Infinity,
-      "interval": 27576192.0,
+      "interval": 27576188.0,
       "global": 9.46164083480835,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 169221554367.7659
+      "interval_over_attack": 169206057431.6935
     },
     {
       "eps": 0.001,
-      "attack": 0.0016294419765472412,
+      "attack": 0.0016294494271278381,
       "lipschitz": Infinity,
-      "interval": 2.16977429090279e+25,
+      "interval": 2.169774521487091e+25,
       "global": 9.46164083480835,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 1.3316057411878536e+28
+      "interval_over_attack": 1.3315997939940126e+28
     },
     {
       "eps": 0.01,
-      "attack": 0.01630992442369461,
+      "attack": 0.016309916973114014,
       "lipschitz": Infinity,
       "interval": NaN,
       "global": 9.46164083480835,
@@ -59,7 +59,7 @@
     },
     {
       "eps": 0.1,
-      "attack": 0.16217321157455444,
+      "attack": 0.16217315196990967,
       "lipschitz": NaN,
       "interval": NaN,
       "global": 9.46164083480835,

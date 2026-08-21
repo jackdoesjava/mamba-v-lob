@@ -76,8 +76,13 @@ python -m scripts.07_attack_bounds           # try to break the certificate
 python -m scripts.08_domains                 # local domains, the negative result
 python -m scripts.09_check_lemmas            # Z3 on the interval lemmas
 python -m scripts.05_figures
+python -m scripts.11_check_artefacts     # nothing in docs/ is stale
 python -m pytest
 ```
+
+`11_check_artefacts` is the one to run before quoting a number or submitting anything. Nothing
+fails when a figure or a results table goes stale, which is how a plot arguing a claim this
+project had already dropped survived here for several hours.
 
 Scripts run as modules from the repository root, not as files. Everything is seeded from
 `config.yaml`, and checkpoints carry their architecture, normalisation, split report and git SHA,

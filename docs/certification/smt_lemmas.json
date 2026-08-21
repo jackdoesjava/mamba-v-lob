@@ -5,84 +5,84 @@
       "d": null,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.036
+      "seconds": 0.019
     },
     {
       "lemma": "interval_square_is_sound",
       "d": null,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.006
+      "seconds": 0.003
     },
     {
       "lemma": "affine_split_is_sound",
       "d": 1,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.006
+      "seconds": 0.002
     },
     {
       "lemma": "affine_split_is_sound",
       "d": 2,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.011
+      "seconds": 0.005
     },
     {
       "lemma": "affine_split_is_sound",
       "d": 3,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.036
+      "seconds": 0.02
     },
     {
       "lemma": "affine_split_is_sound",
       "d": 4,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.216
+      "seconds": 0.106
     },
     {
       "lemma": "layernorm_coordinate_bound",
       "d": 2,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.006
+      "seconds": 0.002
     },
     {
       "lemma": "layernorm_coordinate_bound",
       "d": 3,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.009
+      "seconds": 0.004
     },
     {
       "lemma": "layernorm_coordinate_bound",
       "d": 4,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.083
+      "seconds": 0.04
     },
     {
       "lemma": "layernorm_coordinate_bound",
       "d": 5,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.131
+      "seconds": 0.063
     },
     {
       "lemma": "layernorm_coordinate_bound",
       "d": 6,
       "result": "unknown",
       "proved": false,
-      "seconds": 30.389
+      "seconds": 30.077
     },
     {
       "lemma": "layernorm_linear_is_tight",
       "d": 2,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.005
+      "seconds": 0.003
     },
     {
       "lemma": "layernorm_linear_is_attained",
@@ -96,42 +96,42 @@
       "d": 3,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.113
+      "seconds": 0.063
     },
     {
       "lemma": "layernorm_linear_is_attained",
       "d": 3,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.007
+      "seconds": 0.005
     },
     {
       "lemma": "layernorm_linear_is_tight",
       "d": 4,
       "result": "unknown",
       "proved": false,
-      "seconds": 30.137
+      "seconds": 30.074
     },
     {
       "lemma": "layernorm_linear_is_attained",
       "d": 4,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.007
+      "seconds": 0.004
     },
     {
       "lemma": "layernorm_linear_is_tight",
       "d": 5,
       "result": "unknown",
       "proved": false,
-      "seconds": 30.173
+      "seconds": 30.08
     },
     {
       "lemma": "layernorm_linear_is_attained",
       "d": 5,
       "result": "unsat",
       "proved": true,
-      "seconds": 0.011
+      "seconds": 0.004
     }
   ],
   "proved": 16,

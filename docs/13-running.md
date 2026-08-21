@@ -14,11 +14,11 @@ Dependencies are in `requirements.txt`.
 ## 01_build_features.py
 
 No flags. It reads `data/raw/xnas-itch-20210128.mbp-10.dbn.zst`, a fixed path in the script,
-and raises `FileNotFoundError` if the file is absent. `OrderBookNormalizer` turns the raw
-MBP-10 frame into `ts_event`, `mid_price`, `target_log_return` and the 44 engineered
-features, written to `config.yaml`'s `data.processed_file` as zstd parquet. Nothing is
-normalised or split here; both depend on the train boundary and live in `src/dataset.py`.
-Feature definitions are in [08-data.md](08-data.md). `data/raw/` and `data/processed/` are
+and raises `FileNotFoundError` if it is absent. `OrderBookNormalizer` turns the raw MBP-10
+frame into `ts_event`, `mid_price`, `target_log_return` and the 44 engineered features,
+written to `config.yaml`'s `data.processed_file` as zstd parquet. Nothing is normalised or
+split here; both depend on the train boundary and live in `src/dataset.py`. Feature
+definitions are in [08-data.md](08-data.md). `data/raw/` and `data/processed/` are
 gitignored, so a fresh clone cannot skip this step.
 
 ## 02_train_models.py
@@ -55,9 +55,9 @@ The only script that loads the test split. It looks for the tags `mamba`, `mamba
 `transformer` and `lstm`, skipping any that are missing or fail to load, fits a Ridge
 baseline on flattened training windows, and runs on CPU. Rank IC with a circular block
 bootstrap interval, hit rate, MSE, a per-decision information ratio and a Diebold-Mariano
-matrix go to `models/results/test_metrics.json`, alongside
-`out_of_sample_predictions.parquet` in the same directory and `model_comparison.png` at the
-repository root. With no usable checkpoint it exits with an error.
+matrix go to `models/results/test_metrics.json`, beside
+`out_of_sample_predictions.parquet`, with `model_comparison.png` at the repository root.
+With no usable checkpoint it exits with an error.
 
 ## 04_export_bounds.py
 
@@ -75,9 +75,9 @@ an `.npz` of the raw tensors beside the JSON. Contents and caveats:
 [11-handoff.md](11-handoff.md).
 
 Two self-checks run first, and either failure exits non-zero with no output file. The round
-trip re-runs the recurrence in NumPy from the exported numbers alone and compares against
-PyTorch at a tolerance of `1e-4`. The soundness check requires every realised value to sit
-inside its certified box.
+trip re-runs the recurrence in NumPy from the exported numbers alone against PyTorch, at a
+tolerance of `1e-4`; the soundness check requires every realised value to sit inside its
+certified box.
 
 ## 05_figures.py
 
@@ -155,9 +155,8 @@ What the suite covers is in [14-tests.md](14-tests.md).
 `random`, NumPy, torch and CUDA, exports `PYTHONHASHSEED`, and turns off cuDNN benchmarking
 so autotuning cannot pick a different algorithm between runs; loader shuffling and the Ridge
 sample take explicitly seeded generators. `provenance()` records the git SHA with a `-dirty`
-flag, the torch, NumPy and Python versions, the platform and the seed, and is embedded in
-every checkpoint and in `test_metrics.json`, `ablation.json`, `attack.json` and the
-certificate.
+flag, the torch, NumPy and Python versions, the platform and the seed. It is embedded in
+every checkpoint and in `test_metrics.json`, `ablation.json`, `attack.json` and the export.
 
 A checkpoint holds `model_state_dict`, `model_name`, `architecture`, the full config,
 `normalisation`, `split_report`, `provenance` and the evaluation history. That is enough for

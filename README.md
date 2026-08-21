@@ -1,104 +1,113 @@
-# Certified bounds for a selective state space model on limit order book data
+# A closed-form invariant for a selective state space model
 
-A proof of concept. It asks what can be **proved** about a Mamba-style selective state space
-model forecasting short-horizon returns from a limit order book, and what has to change in the
-architecture before anything can be.
+The hidden state of a Mamba-style selective state space model stays inside a box we can write
+down in closed form from the model's own parameters. It holds at every step of every sequence,
+at any length, and it is derived by hand rather than found by a verifier. The reason is that the
+exact zero-order hold makes the state update a convex combination, so a bound on the drive is
+already a bound on the state. Limit order book forecasting is the demonstration; the claim is
+about the architecture, not about finance.
 
-The answer is a negative result with a constructive fix.
+For diagonal `A < 0` the exact discretisation gives
 
-> Mamba computes its timescale as `delta = softplus(z)`, and softplus has infimum zero. Since
-> `Abar = exp(delta A)`, that makes `sup Abar = 1`, so the state recursion has no uniform
-> contraction factor and no finite invariant set. Selectivity, the thing that makes Mamba work,
-> is what removes the stability guarantee people assume it has. Constraining `delta >= dt_min > 0`
-> restores one, and costs a single line of the parametrisation.
+```
+Bbar = A^-1 (exp(dt A) - I) B = (1 - Abar) B / |A|       Abar = exp(dt A) in (0, 1)
 
-Proofs are in [docs/04-stability.md](docs/04-stability.md). Start at
-[docs/README.md](docs/README.md).
+h_t = Abar_t h_{t-1} + (1 - Abar_t) c_t,     c_t = B_t u_t / |A|
+```
 
-## What is established
+If `|c_t| <= M` for every admissible input, then `|h_{t-1}| <= M` gives `|h_t| <= M`, and
+`h_0 = 0` starts inside. No unrolling, no geometric series, no constraint on `dt`. The usual
+bound `M_drive / (1 - sup Abar)` bounds `Abar` and `Bbar` separately, discarding the
+`(1 - Abar)` factor, which is why it diverges as `dt -> 0` when nothing is diverging.
 
-Every row holds for **all** inputs, in distribution or not, and none of it depends on the
-dataset. Numbers are for the trained model in `models/checkpoints/best_mamba.pt`.
+As far as we can tell this is the first closed-form, architecture-specific inductive invariant
+for an input-selective state space model, derived analytically rather than inferred by a
+verifier, whose assumptions are discharged by the model's own normalisation bounds. Invariants
+for neural sequence models are not new; Jacoby, Barrett and Katz (ATVA 2020) infer them for RNNs
+with a verifier, and Bonassi, Farina and Scattolini (2021) get a convex combination for GRUs out
+of a learned gate rather than out of a discretisation.
 
-| | result |
+## Headline numbers
+
+Trained model, `L = 100`, layer 0, input-independent unless stated.
+
+| quantity | value |
 | --- | --- |
-| `Abar` in `(0,1)` elementwise | for all parameters and all inputs, by construction |
-| `sup Abar < 1` | only if `delta` is bounded below; `0.9990` here |
-| certified `sup abs(h)` at `L = 100` | `1.17e3` and `1.27e3`, against infinite under softplus |
-| certified output range | `[-5.1242, 4.3374]`, for any input whatsoever |
-| enforced input box | `[-6.60, 18.87]`, zero violations across 4.55M rows |
-| export round trip against PyTorch | `8.821e-07` worst over every intermediate |
-| gradient-based falsification | no violation found |
+| certified `sup abs(h)` from the invariant | `129.67` |
+| converged fixed point of the interval recursion | `1.235e4`, so the invariant is `95x` tighter |
+| dependence on sequence length | none; `129.67` at `L = 10` and at `L = 5000` |
+| induction residual | exactly `0`, and the zero-order hold identity is exact to `1e-14` |
+| certified output range, for any input at all | `[-5.1242, 4.3374]` |
+| adversarial search against the trained model | no violation found |
+| machine-checked lemmas, Z3 | 16 of 19 discharged, zero counterexamples |
 
-Four architectural choices, each priced in [docs/certification/ablation.md](docs/certification/ablation.md):
-
-| constraint | effect on certified `sup abs(h)` |
-| --- | --- |
-| `delta` bounded below | infinite to `1.17e3` |
-| depthwise rather than dense convolution | 69 times tighter, 128 times fewer conv parameters |
-| fuse LayerNorm with the following Linear | 49 times tighter, and the fused bound is exact |
-| finite horizon rather than geometric sum | 10.6 times tighter at `L = 100` |
+The invariant needs no floor on `delta`: the softplus arm certifies at `129.72` while the
+geometric argument diverges. Numbers are in [docs/03-certificate.md](docs/03-certificate.md).
 
 ## Layout
 
 ```
-src/
-  models/          the selective SSM and two baselines
-  verification/    interval domain, certificate, NumPy reference implementation
-  dataset.py       purged chronological splits, enforced input box
-  features.py      order book feature engineering
-  utils/           config, seeding and provenance, overlap-aware statistics
-scripts/           01 build, 02 train, 03 evaluate, 04 export, 05 figures,
-                   06 ablation, 07 adversarial attack
-tests/             65 tests; soundness is checked by sampling, not assumed
-docs/              see docs/README.md
-models/            checkpoints, exported certificate, results
+src/models/        the selective SSM and the transformer and LSTM baselines
+src/verification/  interval domain, the invariant, certificate export, NumPy reference
+src/dataset.py     purged chronological splits, enforced input box
+src/features.py    order book feature construction
+src/utils/         config, seeding and provenance, overlap-aware statistics
+scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
+                   07 attack, 08 domains, 09 lemmas
+tests/             unit tests for the maths, the domain and the models
+docs/              the five pages listed at the bottom
 ```
 
 ## Running
 
 ```bash
 pip install -r requirements.txt
-
 python -m scripts.01_build_features          # needs data/raw/*.dbn.zst
 python -m scripts.02_train_models --model mamba
 python -m scripts.02_train_models --model transformer
 python -m scripts.02_train_models --model lstm
-python -m scripts.02_train_models --model mamba \
-    --tag mamba_softplus --dt-parametrisation softplus
-
+python -m scripts.02_train_models --model mamba --tag mamba_softplus \
+    --dt-parametrisation softplus
 python -m scripts.03_evaluate_models         # test split, block bootstrap
 python -m scripts.04_export_bounds           # certificate, with self-checks
-python -m scripts.06_certify                 # ablation table
+python -m scripts.06_certify                 # invariant against the alternatives
 python -m scripts.07_attack_bounds           # try to break the certificate
+python -m scripts.08_domains                 # local domains, the negative result
+python -m scripts.09_check_lemmas            # Z3 on the interval lemmas
 python -m scripts.05_figures
-
 python -m pytest
 ```
 
-Everything is seeded from `config.yaml`. Checkpoints carry their architecture, normalisation,
-split report and git SHA, so an export can rebuild its model without guessing. Full detail in
-[docs/13-running.md](docs/13-running.md).
+Scripts run as modules from the repository root, not as files. Everything is seeded from
+`config.yaml`, and checkpoints carry their architecture, normalisation, split report and git SHA,
+so an export can rebuild its model without being told what it was.
 
-## Three things to know before reading the code
+## Data
 
-`B`, `C` and `delta` are activations, not parameters. Only `A` and `D` live in the state dict.
-A selective SSM is linear time-varying, so the common claim that Mamba is an LTI system and
-therefore boundable is false. See [docs/01-problem.md](docs/01-problem.md).
+Databento MBP-10 from Nasdaq TotalView-ITCH, GME on 2021-01-28. One instrument, one day,
+4,550,476 rows after feature construction and 43 model inputs. The purged three-way chronological
+split, 100 ticks at each boundary, gives 3,185,134 train windows, 682,372 validation and 682,473
+test. Features are winsorised to train-split quantiles at inference, so the input box
+`[-6.60, 18.87]` is enforced rather than observed, with zero violations across all 4.55M rows.
 
-The discretisation is exact. Reference Mamba discretises `A` exactly but `B` by forward Euler,
-which is consistent only when `abs(delta A) << 1`. At the unconstrained timescale this model
-first learned, that shortcut carried 411 percent median error. See
-[docs/03-discretisation.md](docs/03-discretisation.md).
-
-The statistics account for overlap. The label is a 100-tick-ahead return sampled every tick, so
-naive standard errors understate uncertainty by roughly ten times here. See
-[docs/09-statistics.md](docs/09-statistics.md).
+None of the certification depends on any of this. The invariant is a statement about the
+architecture and the trained weights, and it holds for inputs no order book would produce. The
+predictive numbers only show that the certified model is a real model; one instrument on one day
+supports nothing beyond that.
 
 ## Limitations
 
-Set out in full in [docs/12-limitations.md](docs/12-limitations.md). The short version: the
-state bound is loose by roughly `1e4` against the realised envelope; this bounds reachable
-state and output and is not a robustness certificate; a bounded output is not a bounded loss;
-the data is one instrument on one day; no external verifier has consumed the artefact yet; and
-the novelty claim has not been checked against the literature.
+Against a realised trace the invariant is 3 to 5 times loose, so the machinery itself is tight and
+the remaining slack sits in the bounds on `B` and `u`. This bounds reachable state and output; it
+is not a robustness certificate, and a bounded output is not a bounded loss. Both local domains we
+tried diverge on inputs where the model is measurably well behaved, a failure of the domains and
+not of the model. Three lemmas are still hand proofs after Z3 timed out, and no external verifier
+has consumed the artefact. Set out in [docs/05-handoff.md](docs/05-handoff.md).
+
+## Documentation
+
+- [docs/01-problem.md](docs/01-problem.md), the block, what is time-varying, and why bounded verification struggles
+- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant and its proof
+- [docs/03-certificate.md](docs/03-certificate.md), tightness, adversarial search, machine-checked lemmas
+- [docs/04-results.md](docs/04-results.md), data, baselines and the predictive comparison
+- [docs/05-handoff.md](docs/05-handoff.md), limitations and what the verification side needs next

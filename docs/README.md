@@ -28,6 +28,7 @@ on is in [04-stability.md](04-stability.md).
 | page | contents |
 | --- | --- |
 | [07-soundness.md](07-soundness.md) | sampling, the NumPy round trip, gradient-based falsification, and measured tightness |
+| [16-domains.md](16-domains.md) | which abstract domain works, and why the unconditional bound wins |
 | [10-results.md](10-results.md) | every number in one place |
 | [14-tests.md](14-tests.md) | what the test suite covers |
 | [certification/ablation.md](certification/ablation.md) | generated ablation table |
@@ -36,6 +37,7 @@ on is in [04-stability.md](04-stability.md).
 
 | page | contents |
 | --- | --- |
+| [15-risk-limits.md](15-risk-limits.md) | the certified bound read as a pre-trade risk limit |
 | [13-running.md](13-running.md) | the scripts, their flags, and the order to run them |
 | [11-handoff.md](11-handoff.md) | written for the collaborator doing the formal verification |
 | [12-limitations.md](12-limitations.md) | what this does not establish |

@@ -13,6 +13,7 @@ import torch
 from src.models.mamba import LOBMamba, SelectiveSSMBlock
 from src.verification import intervals as iv
 from src.verification.intervals import Interval
+from src.verification.invariant import certify_block_state
 
 
 def _split(box: Interval, sizes: list[int], dim: int = -1) -> list[Interval]:
@@ -21,6 +22,7 @@ def _split(box: Interval, sizes: list[int], dim: int = -1) -> list[Interval]:
     return [Interval(a, b) for a, b in zip(los, his)]
 
 
+@torch.no_grad()
 def certify_block(
     block: SelectiveSSMBlock,
     seq_len: int,
@@ -59,8 +61,13 @@ def certify_block(
     B_bar = g * Interval(B_box.lo.unsqueeze(0), B_box.hi.unsqueeze(0))
     drive = B_bar * Interval(u_box.lo.unsqueeze(-1), u_box.hi.unsqueeze(-1))
 
+    # The bound the certificate ships. The two below are baselines it is measured against.
+    state = certify_block_state(block, u_box, B_box)
+    h_invariant = state["invariant"]
+
     h_geom = iv.state_bound_geometric(A_bar, drive)
     h_horizon = iv.state_bound_unrolled(A_bar, drive, seq_len)
+    h_widened, widen_iters = iv.state_bound_widened(A_bar, drive)
 
     def block_output(h_box: Interval) -> tuple[Interval, Interval]:
         # The second box is pre-residual: forward() returns out_proj(...) + x, and the
@@ -71,6 +78,7 @@ def certify_block(
         y_gated = y * iv.silu(gate_pre)
         return y, iv.affine(y_gated, block.out_proj.weight, block.out_proj.bias)
 
+    y_invariant, out_invariant = block_output(h_invariant)
     y_geom, out_geom = block_output(h_geom)
     y_horizon, out_horizon = block_output(h_horizon)
 
@@ -85,10 +93,14 @@ def certify_block(
             "C": C_box,
             "A_bar": A_bar,
             "B_bar": B_bar,
+            "h_invariant": h_invariant,
             "h_geometric": h_geom,
             "h_horizon": h_horizon,
+            "h_widened": h_widened,
+            "y_invariant": y_invariant,
             "y_geometric": y_geom,
             "y_horizon": y_horizon,
+            "out_invariant": out_invariant,
             "out_geometric": out_geom,
             "out_horizon": out_horizon,
         },
@@ -100,6 +112,12 @@ def certify_block(
             "delta_hi": delta.hi.max().item(),
             "B_abs_max": B_box.abs_max().max().item(),
             "C_abs_max": C_box.abs_max().max().item(),
+            "h_abs_max_invariant": state["radius"],
+            "invariant_holds": state["holds"],
+            "invariant_induction_residual": state["induction_residual"],
+            "zoh_exact": state["zoh_exact"],
+            "h_abs_max_widened": h_widened.abs_max().max().item(),
+            "widening_iterations": widen_iters,
             "h_abs_max_geometric": h_geom.abs_max().max().item(),
             "h_abs_max_horizon": h_horizon.abs_max().max().item(),
             "y_abs_max_horizon": y_horizon.abs_max().max().item(),
@@ -107,6 +125,7 @@ def certify_block(
     }
 
 
+@torch.no_grad()
 def certify_output_range(model: LOBMamba, tight_layernorm: bool = True) -> Interval:
     """Certified range of the scalar prediction, for any input whatsoever.
 

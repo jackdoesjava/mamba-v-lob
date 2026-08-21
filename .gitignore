@@ -1,12 +1,14 @@
-# Prerequisites
+# Environments and caches
 .venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
-# Data Tier (Strictly Local)
+# Raw and processed market data stays local; see docs/08-data.md for how to rebuild it
 data/raw/
 data/processed/
 
-# IDE and OS metadata
+# Editor and OS metadata
 .vscode/
-.DS_Storedata/
+.idea/
+.DS_Store

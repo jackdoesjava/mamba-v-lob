@@ -1,0 +1,13 @@
+[project]
+name = "mamba-v-lob"
+version = "0.1.0"
+description = "Certified bounds for selective state space models on limit order book data"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]

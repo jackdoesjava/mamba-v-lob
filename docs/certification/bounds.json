@@ -1,0 +1,130 @@
+{
+  "provenance": {
+    "git_sha": "b4bb93ad22e3486ad5336279a0481e946f6bf175-dirty",
+    "torch_version": "2.11.0+cpu",
+    "numpy_version": "2.4.4",
+    "python_version": "3.14.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 1337
+  },
+  "seq_len": 100,
+  "bounds": [
+    {
+      "layer": 0,
+      "invariant": 129.67388916015625,
+      "widened": 12349.40625,
+      "widening_iterations": 10509,
+      "geometric": 12349.5810546875,
+      "unrolled_at_L": 1169.0269775390625,
+      "seq_len": 100,
+      "invariant_holds": true,
+      "zoh_exact": true,
+      "tighter_than_widened": 95.23433229296937
+    },
+    {
+      "layer": 1,
+      "invariant": 143.54425048828125,
+      "widened": 13681.3251953125,
+      "widening_iterations": 10634,
+      "geometric": 13681.9033203125,
+      "unrolled_at_L": 1273.9185791015625,
+      "seq_len": 100,
+      "invariant_holds": true,
+      "zoh_exact": true,
+      "tighter_than_widened": 95.31085465822558
+    }
+  ],
+  "scaling": [
+    {
+      "seq_len": 10,
+      "invariant": 129.67388916015625,
+      "unrolled": 127.56034851074219
+    },
+    {
+      "seq_len": 50,
+      "invariant": 129.67388916015625,
+      "unrolled": 601.7821655273438
+    },
+    {
+      "seq_len": 100,
+      "invariant": 129.67388916015625,
+      "unrolled": 1169.0269775390625
+    },
+    {
+      "seq_len": 500,
+      "invariant": 129.67388916015625,
+      "unrolled": 4838.40283203125
+    },
+    {
+      "seq_len": 1000,
+      "invariant": 129.67388916015625,
+      "unrolled": 7781.1171875
+    },
+    {
+      "seq_len": 5000,
+      "invariant": 129.67388916015625,
+      "unrolled": 12264.3388671875
+    }
+  ],
+  "structural": [
+    {
+      "variant": "fused LayerNorm and Linear",
+      "radius": 129.67388916015625,
+      "u_abs_max": 8.426708221435547
+    },
+    {
+      "variant": "LayerNorm box only",
+      "radius": 6332.0322265625,
+      "u_abs_max": 61.313385009765625
+    },
+    {
+      "variant": "depthwise convolution",
+      "radius": 129.67388916015625,
+      "u_abs_max": 8.426708221435547
+    },
+    {
+      "variant": "dense convolution",
+      "radius": 9239.7197265625,
+      "u_abs_max": 56.32474899291992
+    }
+  ],
+  "softplus": [
+    {
+      "layer": 0,
+      "invariant": 129.716796875,
+      "widened": 12975343.0,
+      "widening_iterations": 100000,
+      "geometric": Infinity,
+      "unrolled_at_L": 12971.611328125,
+      "seq_len": 100,
+      "invariant_holds": true,
+      "zoh_exact": true,
+      "tighter_than_widened": 100028.24084920576
+    },
+    {
+      "layer": 1,
+      "invariant": 143.39784240722656,
+      "widened": 14327494.0,
+      "widening_iterations": 100000,
+      "geometric": Infinity,
+      "unrolled_at_L": 14339.357421875,
+      "seq_len": 100,
+      "invariant_holds": true,
+      "zoh_exact": true,
+      "tighter_than_widened": 99914.29270820021
+    }
+  ],
+  "discretisation": {
+    "delta_range": [
+      0.001,
+      0.1
+    ],
+    "max_abs_dtA": 1.6843674182891846,
+    "median_rel_error": 0.17306886613368988,
+    "max_rel_error": 1.068134069442749
+  },
+  "output_range": {
+    "lo": -5.124204158782959,
+    "hi": 4.337436676025391
+  }
+}

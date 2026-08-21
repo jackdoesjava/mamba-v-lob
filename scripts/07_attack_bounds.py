@@ -32,9 +32,11 @@ def attack(
     batch: int = 16,
     seed: int = 0,
 ) -> float:
-    """Maximise one scalar summary of the network's internals over the input.
+    """Maximise one scalar summary over the input.
 
-    Restarts live in the batch dimension, so all of them are optimised at once.
+    Six of the eight objectives read a block internal from the trace; output_max and
+    output_min read the prediction and skip the trace. Restarts live in the batch dimension,
+    so all of them are optimised at once.
     """
     torch.manual_seed(seed)
     if box is not None:
@@ -117,8 +119,9 @@ def main() -> None:
     summaries = [l["summary"] for l in cert["layers"]]
 
     # (objective, layer, certified bound, label, kind). Every objective maximises, so
-    # soundness is always attacked <= certified. "lower" marks floors like inf delta: the
-    # optimiser drives -delta up and both numbers get negated back for display.
+    # soundness is always attacked <= certified. Floors are handled by maximising the
+    # negated quantity. "lower" additionally negates both numbers back for display, which
+    # inf delta wants; output_min keeps its already-negated form and stays "upper".
     targets = [
         ("output_max", 0, cert["output_range"]["hi"], "max output", "upper"),
         ("output_min", 0, -cert["output_range"]["lo"], "-min output", "upper"),

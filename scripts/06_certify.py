@@ -161,10 +161,11 @@ def ablate_discretisation(config: dict, ckpt_dir: Path) -> dict:
             "p99": float(rel.kthvalue(int(0.99 * rel.numel())).values),
             "max": float(rel.max()),
         },
+        "quantity": "ZOH input gain (exp(dt A) - 1)/A against the Euler surrogate dt",
         "note": (
-            "Euler is only consistent with the exact ZOH used for A when |delta*A| << 1. "
-            "The error is a property of the delta range, so bounding delta bounds the "
-            "discretisation inconsistency as well."
+            "A is discretised exactly either way; what differs is the factor multiplying B. "
+            "Euler is consistent with that exact Abar only when |delta*A| << 1. The error is "
+            "a property of the delta range, so bounding delta bounds it as well."
         ),
     }
 

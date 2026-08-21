@@ -150,7 +150,7 @@ def ablate_discretisation(config: dict, ckpt_dir: Path) -> dict:
     v = grid * A.unsqueeze(0)
     zoh = grid * zoh_phi(v)                       # (exp(dt A) - 1)/A
     euler = grid.expand_as(zoh)                   # dt
-    rel = ((euler - zoh).abs() / zoh.abs().clamp_min(1e-30)).flatten()
+    rel = ((euler - zoh).abs() / zoh.abs().clamp_min(1e-30)).flatten().detach()
 
     return {
         "delta_range": [block.dt_min, block.dt_max],

@@ -63,61 +63,65 @@ def load_mamba(config: dict, dt_parametrisation: str = "bounded") -> LOBMamba:
     return LOBMamba(43, cfg).eval()
 
 
-def fig_contraction_vs_dt_min(config: dict) -> None:
-    """Certified state gain against the floor imposed on delta."""
-    model = load_mamba(config)
-    A_abs_min = torch.exp(model.layers[0].A_log).min().item()
+def fig_bound_vs_floor(config: dict) -> None:
+    """The invariant does not use the timescale floor; the geometric bound pays for it."""
+    from src.verification.certify import certify_block
+    from src.verification.invariant import certify_block_state
 
-    dt_mins = np.logspace(-8, -0.5, 400)
-    sup_abar = np.exp(-dt_mins * A_abs_min)
-    geometric = 1.0 / (1.0 - sup_abar)
-    horizon = (1.0 - sup_abar**100) / (1.0 - sup_abar)
+    floors = [1e-5, 1e-4, 1e-3, 1e-2]
+    invariant, geometric = [], []
+    for floor in floors:
+        cfg = json.loads(json.dumps(config))
+        cfg["model"]["mamba"]["dt_min"] = floor
+        torch.manual_seed(int(config.get("seed", 1337)))
+        block = LOBMamba(43, cfg).eval().layers[0]
+        cert = certify_block(block, seq_len=100)
+        invariant.append(certify_block_state(block, cert["boxes"]["u"], cert["boxes"]["B"])["radius"])
+        geometric.append(cert["summary"]["h_abs_max_geometric"])
 
     fig, ax = plt.subplots(figsize=(7.5, 5))
-    ax.loglog(dt_mins, geometric, linewidth=2.2, label=r"geometric  $1/(1-\sup\bar{A})$")
-    ax.loglog(
-        dt_mins, horizon, linewidth=2.2, linestyle="--",
-        label=r"finite horizon  $\sum_{k<100}(\sup\bar{A})^k$",
-    )
-    ax.axvline(1e-3, color="#c92a2a", linewidth=1.4, linestyle=":", label=r"$\delta_{\min}=10^{-3}$ (used)")
-    ax.axhline(100, color="#adb5bd", linewidth=1.0)
-    ax.annotate(
-        "softplus: $\\inf\\delta = 0$\n$\\Rightarrow\\sup\\bar{A}=1\\Rightarrow$ gain $=\\infty$",
-        xy=(1.3e-8, geometric[0] * 0.25),
-        fontsize=10,
-        color="#c92a2a",
-    )
-    ax.set_xlabel(r"$\delta_{\min}$  (lower bound imposed on the timescale)")
-    ax.set_ylabel("certified state gain")
-    ax.set_title(
-        "Bounding $\\delta$ away from zero is what makes the state bound usable\n"
-        f"$\\min|A| = {A_abs_min:.3f}$", fontsize=12,
-    )
+    ax.loglog(floors, geometric, marker="o", linewidth=2.2, color="#c92a2a",
+              label="geometric bound")
+    ax.loglog(floors, invariant, marker="s", linewidth=2.2, color="#2b8a3e",
+              label="invariant")
+    ax.set_xlabel(r"timescale floor $\delta_{\min}$")
+    ax.set_ylabel(r"certified $\sup|h|$")
+    ax.set_title("The geometric bound pays for the floor and the invariant does not\n"
+                 r"gap $=(1-e^{-\lambda d_{hi}})/(1-e^{-\lambda d_{lo}})$", fontsize=12)
     ax.legend(fontsize=9)
-    fig.savefig(OUT_DIR / "contraction_vs_dt_min.pdf")
-    fig.savefig(OUT_DIR / "contraction_vs_dt_min.png", dpi=200)
+    fig.savefig(OUT_DIR / "bound_vs_floor.pdf")
+    fig.savefig(OUT_DIR / "bound_vs_floor.png", dpi=200)
     plt.close(fig)
 
 
 def fig_bound_vs_horizon(config: dict) -> None:
-    """Finite-horizon bound against the geometric fixed point, for both parametrisations."""
-    lengths = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]
+    """One induction step covers every length; the unrolled bound is recomputed and climbs."""
+    from src.verification.certify import certify_block
+    from src.verification.invariant import certify_block_state
+    from src.verification import intervals as iv
+    from src.verification.intervals import Interval
+
+    model = load_mamba(config)
+    block = model.layers[0]
+    base = certify_block(block, seq_len=8)
+    radius = certify_block_state(block, base["boxes"]["u"], base["boxes"]["B"])["radius"]
+    drive = base["boxes"]["B_bar"] * Interval(
+        base["boxes"]["u"].lo.unsqueeze(-1), base["boxes"]["u"].hi.unsqueeze(-1)
+    )
+    widened = float(iv.state_bound_widened(base["boxes"]["A_bar"], drive)[0].abs_max().max())
+
+    lengths = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+    unrolled = [certify_block(block, seq_len=L)["summary"]["h_abs_max_horizon"] for L in lengths]
+
     fig, ax = plt.subplots(figsize=(7.5, 5))
-
-    for dt_param, colour in (("bounded", "#2b8a3e"), ("softplus", "#c92a2a")):
-        model = load_mamba(config, dt_param)
-        block = model.layers[0]
-        vals = [certify_block(block, seq_len=L)["summary"]["h_abs_max_horizon"] for L in lengths]
-        ax.loglog(lengths, vals, marker="o", markersize=4, color=colour, linewidth=2,
-                  label=f"{dt_param}: finite horizon")
-        geo = certify_block(block, seq_len=100)["summary"]["h_abs_max_geometric"]
-        if math.isfinite(geo):
-            ax.axhline(geo, color=colour, linestyle="--", linewidth=1.2,
-                       label=f"{dt_param}: geometric fixed point")
-
+    ax.loglog(lengths, unrolled, marker="o", markersize=4, linewidth=2, color="#c92a2a",
+              label="unrolled, recomputed per length")
+    ax.axhline(widened, color="#c92a2a", linestyle="--", linewidth=1.2,
+               label="its fixed point")
+    ax.axhline(radius, color="#2b8a3e", linewidth=2.2, label="invariant, one induction step")
     ax.set_xlabel("sequence length $L$")
-    ax.set_ylabel(r"certified $\sup\,|h|$")
-    ax.set_title("The finite-horizon bound is far tighter at the lengths actually used", fontsize=12)
+    ax.set_ylabel(r"certified $\sup|h|$")
+    ax.set_title("The invariant does not depend on sequence length", fontsize=12)
     ax.legend(fontsize=9)
     fig.savefig(OUT_DIR / "bound_vs_horizon.pdf")
     fig.savefig(OUT_DIR / "bound_vs_horizon.png", dpi=200)
@@ -297,7 +301,7 @@ def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     print("certification figures ...")
-    fig_contraction_vs_dt_min(config)
+    fig_bound_vs_floor(config)
     fig_bound_vs_horizon(config)
     fig_output_range(config)
     fig_certified_vs_realised(Path(args.certificate))

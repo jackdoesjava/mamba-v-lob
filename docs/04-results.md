@@ -87,6 +87,7 @@ Gradient ascent on the trained model, 60 steps, layer 0 quantities, no violation
 | `sup abs C` | 1.3877 | 17.5265 | 12.63x |
 | max output | 0.3593 | 4.3374 | 12.07x |
 | min output | -0.9234 | -5.1242 | 5.55x |
+| `sup abs h` against the invariant | 0.5130 | 129.67 | 252.8x |
 | output width | 1.2827 | 9.4616 | 7.4x |
 
 ## Machine-checked lemmas

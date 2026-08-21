@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "006c26bd4b2871308105a5414e5c1c7930bcc373-dirty",
+    "git_sha": "fc2915b51afa3e289a7952bf7e6443c9957d3c74-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -18,9 +18,9 @@
       "objective": "output_max",
       "layer": 0,
       "kind": "upper",
-      "attacked": 0.3593147099018097,
+      "attacked": 0.3593147397041321,
       "certified": 4.337436676025391,
-      "looseness": 12.07141415727368,
+      "looseness": 12.071413156045129,
       "violated": false
     },
     {
@@ -28,9 +28,9 @@
       "objective": "output_min",
       "layer": 0,
       "kind": "upper",
-      "attacked": 0.9233837723731995,
+      "attacked": 0.9233838319778442,
       "certified": 5.124204158782959,
-      "looseness": 5.549376447902243,
+      "looseness": 5.549376089688681,
       "violated": false
     },
     {
@@ -38,9 +38,9 @@
       "objective": "u_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 4.563029766082764,
+      "attacked": 4.5630292892456055,
       "certified": 8.426708221435547,
-      "looseness": 1.8467353169755116,
+      "looseness": 1.846735509959594,
       "violated": false
     },
     {
@@ -68,9 +68,9 @@
       "objective": "B_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 1.8159338235855103,
+      "attacked": 1.815934181213379,
       "certified": 17.71307373046875,
-      "looseness": 9.754250678306539,
+      "looseness": 9.754248757316276,
       "violated": false
     },
     {
@@ -78,9 +78,9 @@
       "objective": "C_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 1.3877291679382324,
+      "attacked": 1.3877285718917847,
       "certified": 17.526533126831055,
-      "looseness": 12.629649597169205,
+      "looseness": 12.629655021758662,
       "violated": false
     },
     {
@@ -89,8 +89,8 @@
       "layer": 0,
       "kind": "upper",
       "attacked": 0.5129921436309814,
-      "certified": 1169.0269775390625,
-      "looseness": 2278.8399238722,
+      "certified": 129.67388916015625,
+      "looseness": 252.77948360440502,
       "violated": false
     },
     {
@@ -98,9 +98,9 @@
       "objective": "y_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 4.739531993865967,
+      "attacked": 4.739531517028809,
       "certified": 160109.0,
-      "looseness": 33781.605484933425,
+      "looseness": 33781.60888365009,
       "violated": false
     },
     {
@@ -108,9 +108,9 @@
       "objective": "u_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 6.246053218841553,
+      "attacked": 6.2460527420043945,
       "certified": 9.004310607910156,
-      "looseness": 1.4416000460495875,
+      "looseness": 1.441600156104449,
       "violated": false
     },
     {
@@ -138,9 +138,9 @@
       "objective": "B_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 1.686374306678772,
+      "attacked": 1.6863744258880615,
       "certified": 17.226232528686523,
-      "looseness": 10.214951959635052,
+      "looseness": 10.21495123754324,
       "violated": false
     },
     {
@@ -148,9 +148,9 @@
       "objective": "C_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 1.7676864862442017,
+      "attacked": 1.7676862478256226,
       "certified": 17.591190338134766,
-      "looseness": 9.9515329641461,
+      "looseness": 9.951534306369785,
       "violated": false
     },
     {
@@ -158,9 +158,9 @@
       "objective": "h_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 0.3360580503940582,
-      "certified": 1273.9185791015625,
-      "looseness": 3790.769415009635,
+      "attacked": 0.3360580801963806,
+      "certified": 143.54425048828125,
+      "looseness": 427.1411965586395,
       "violated": false
     },
     {
@@ -168,9 +168,9 @@
       "objective": "y_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 6.669802665710449,
+      "attacked": 6.669803142547607,
       "certified": 169548.671875,
-      "looseness": 25420.34305552279,
+      "looseness": 25420.34123817318,
       "violated": false
     }
   ]

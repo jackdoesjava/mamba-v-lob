@@ -133,7 +133,7 @@ def main() -> None:
             ("delta_min", li, -s["delta_lo"], f"L{li} inf delta", "lower"),
             ("B_abs", li, s["B_abs_max"], f"L{li} sup|B|", "upper"),
             ("C_abs", li, s["C_abs_max"], f"L{li} sup|C|", "upper"),
-            ("h_abs", li, s["h_abs_max_horizon"], f"L{li} sup|h|", "upper"),
+            ("h_abs", li, s["h_abs_max_invariant"], f"L{li} sup|h|", "upper"),
             ("y_abs", li, s["y_abs_max_horizon"], f"L{li} sup|y|", "upper"),
         ]
 

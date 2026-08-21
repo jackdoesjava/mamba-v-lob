@@ -15,7 +15,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]  # src/utils/repro.py -> repo ro
 
 
 def set_seed(seed: int, deterministic: bool = True) -> None:
-    """Seed every RNG the pipeline touches."""
+    """Seed the global RNGs.
+
+    Does not reach explicitly constructed generators: np.random.default_rng in stats.py and
+    the torch.Generator passed to the training DataLoader are seeded at their call sites.
+    """
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

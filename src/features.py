@@ -48,7 +48,8 @@ class OrderBookNormalizer:
         bid_sz_f = pl.col("bid_sz_00").cast(pl.Float64)
         ask_sz_f = pl.col("ask_sz_00").cast(pl.Float64)
 
-        # 1e-8 in the denominators covers a level 0 with nothing on either side
+        # 1e-8 keeps 0/0 out of the frame when level 0 is empty on both sides. The row is
+        # still meaningless there: obi is 0 and micro_price collapses to 0.
         df = df.with_columns([
             ((bid_sz_f - ask_sz_f) / 
              (bid_sz_f + ask_sz_f + 1e-8)).alias("obi_level_0"),
@@ -56,7 +57,8 @@ class OrderBookNormalizer:
              (bid_sz_f + ask_sz_f + 1e-8)).alias("micro_price")
         ])
 
-        # the forward shift nulls the last PREDICTION_HORIZON rows and drop_nulls cuts them.
+        # the forward shift nulls the last PREDICTION_HORIZON rows. drop_nulls takes no
+        # subset, so it also drops any row with a null in any surviving raw DBN column.
         # Must equal data.prediction_horizon in config.yaml, which sets the split purge.
         PREDICTION_HORIZON = 100
         df = df.with_columns([

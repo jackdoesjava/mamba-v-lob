@@ -97,7 +97,8 @@ class SelectiveSSMBlock(nn.Module):
         self.x_proj = nn.Linear(self.d_inner, self.dt_rank + 2 * d_state, bias=False)
         self.dt_proj = nn.Linear(self.dt_rank, self.d_inner, bias=True)
 
-        # S4D-Real initialisation: A[d, n] = -(n+1), shared across channels.
+        # S4D-Real initialisation. A_log stores log(n+1); the sign is applied in forward,
+        # where A = -exp(A_log) gives A[d, n] = -(n+1), shared across channels.
         A = torch.arange(1, d_state + 1, dtype=torch.float32).repeat(self.d_inner, 1)
         self.A_log = nn.Parameter(torch.log(A))
         self.D = nn.Parameter(torch.ones(self.d_inner))

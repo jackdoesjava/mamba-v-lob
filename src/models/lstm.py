@@ -27,8 +27,9 @@ class LSTMBaseline(nn.Module):
                 nn.init.orthogonal_(param.data)
             elif 'bias' in name:
                 nn.init.constant_(param.data, 0.0)
-                # torch packs the gate biases as i,f,g,o, so [n/4:n/2] is the forget gate;
-                # 1.0 holds it open until training learns otherwise
+                # torch packs the gate biases as i,f,g,o, so [n/4:n/2] is the forget gate.
+                # This runs for bias_ih and bias_hh alike, so the effective forget bias is
+                # 2.0, which holds the gate open until training learns otherwise.
                 n = param.size(0)
                 param.data[n//4:n//2].fill_(1.0)
                 

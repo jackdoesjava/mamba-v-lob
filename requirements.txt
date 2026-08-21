@@ -24,3 +24,6 @@ seaborn>=0.13.0
 
 # Testing
 pytest>=8.3.0
+
+# SMT checks for the polynomial lemmas
+z3-solver>=4.12

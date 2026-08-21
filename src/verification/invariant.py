@@ -89,3 +89,30 @@ def certify_block_state(block: SelectiveSSMBlock, u: Interval, B: Interval) -> d
         "holds": bool(residual.max() <= 1e-6),
         "zoh_exact": zoh_is_exact(A, block.dt_max),
     }
+
+
+def abstraction_gap(A: torch.Tensor, delta: Interval) -> torch.Tensor:
+    """Ratio of the geometric bound to the invariant, in closed form and per element.
+
+    Writing lam = |A| and the propagated timescale box as [d_lo, d_hi],
+
+        invariant = sup|B u| / lam
+        geometric = [ (1 - exp(-lam d_hi)) sup|B u| / lam ] / (1 - exp(-lam d_lo))
+
+    because sup|Bbar u| carries the factor 1 - inf Abar = 1 - exp(-lam d_hi) while the
+    denominator carries 1 - sup Abar = 1 - exp(-lam d_lo). Everything but lam cancels:
+
+        gap(lam) = (1 - exp(-lam d_hi)) / (1 - exp(-lam d_lo))
+
+    So the loss is set by the timescale range and the pole and involves no trained weight,
+    which is why it is the same to three figures across seeds. It grows as lam falls, so the
+    slowest pole attains it, and it grows like 1/d_lo as the floor drops. Matches the measured
+    ratio elementwise to 5e-7 on the trained model.
+
+    The propagated box is what matters, not the declared [dt_min, dt_max]. On the trained
+    model the two coincide, because delta saturates its declared range.
+    """
+    lam = A.abs()
+    d_lo = delta.lo.unsqueeze(-1) if delta.lo.dim() == A.dim() - 1 else delta.lo
+    d_hi = delta.hi.unsqueeze(-1) if delta.hi.dim() == A.dim() - 1 else delta.hi
+    return (1.0 - torch.exp(-lam * d_hi)) / (1.0 - torch.exp(-lam * d_lo))

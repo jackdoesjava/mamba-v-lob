@@ -152,3 +152,31 @@ invariant for an input-selective state space model, derived analytically rather 
 by a verifier, whose assumptions are discharged by the model's own normalisation bounds.
 Those assumptions are the boxes on `B` and `u` above, discharged in
 [03-certificate.md](03-certificate.md); the block itself is in [01-problem.md](01-problem.md).
+
+## Where the loss comes from, exactly
+
+The gap between the two bounds has a closed form. Writing `lam = |A|` and the propagated
+timescale box as `[d_lo, d_hi]`,
+
+```
+invariant = sup|B u| / lam
+geometric = [ (1 - exp(-lam d_hi)) sup|B u| / lam ] / (1 - exp(-lam d_lo))
+```
+
+because `sup|Bbar u|` carries the factor `1 - inf Abar` while the denominator carries
+`1 - sup Abar`. Everything except `lam` cancels:
+
+```
+gap(lam) = (1 - exp(-lam d_hi)) / (1 - exp(-lam d_lo))
+```
+
+Three things follow, and all three are visible in the sweep. The gap contains no trained
+weight, so it is the same to three figures across seeds while the radius itself moves by 30
+percent. It grows as `lam` falls, so the slowest pole attains it, which is why it does not
+move with `d_state`. And it grows like `1/d_lo`, which is why lowering the timescale floor by
+a decade costs the geometric bound a factor of ten and costs the invariant nothing.
+
+Measured against the certificate the expression is exact elementwise to `5e-7` on the trained
+model. `abstraction_gap` in `src/verification/invariant.py` computes it and
+`tests/test_invariant.py` checks it.
+

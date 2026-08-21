@@ -8,6 +8,7 @@ from src.verification import intervals as iv
 from src.verification.certify import certify_block
 from src.verification.intervals import Interval
 from src.verification.invariant import (
+    abstraction_gap,
     certify_block_state,
     equilibrium_box,
     induction_residual,
@@ -171,3 +172,30 @@ def test_geometric_bound_pays_for_the_floor_and_the_invariant_does_not():
 
     assert geometric[1e-3] / geometric[1e-2] > 5.0
     assert invariant[1e-3] == pytest.approx(invariant[1e-2], rel=1e-6)
+
+
+def test_abstraction_gap_is_exact_elementwise(block):
+    """The closed form must reproduce the measured ratio at every channel and state."""
+    cert = certify_block(block, seq_len=32)
+    state = certify_block_state(block, cert["boxes"]["u"], cert["boxes"]["B"])
+
+    measured = cert["boxes"]["h_geometric"].abs_max() / state["invariant"].abs_max().clamp(min=1e-30)
+    predicted = abstraction_gap(-torch.exp(block.A_log), cert["boxes"]["delta"])
+    assert ((measured - predicted).abs() / predicted).max() < 1e-3
+
+
+def test_abstraction_gap_does_not_depend_on_the_weights():
+    """B and u cancel between the two bounds, so the gap is a function of A and delta only."""
+    A = -torch.tensor([[1.0, 4.0, 16.0]])
+    delta = Interval(torch.tensor([1e-3]), torch.tensor([1e-1]))
+    gap = abstraction_gap(A, delta)
+    assert gap[0, 0] > gap[0, 1] > gap[0, 2]
+    assert gap[0, 0].item() == pytest.approx(95.21, rel=1e-3)
+
+
+@pytest.mark.parametrize("dt_min,expected", [(1e-2, 9.56), (1e-3, 95.21), (1e-4, 951.67)])
+def test_abstraction_gap_scales_with_the_inverse_floor(dt_min, expected):
+    gap = abstraction_gap(
+        -torch.tensor([[1.0]]), Interval(torch.tensor([dt_min]), torch.tensor([1e-1]))
+    )
+    assert gap.item() == pytest.approx(expected, rel=1e-3)

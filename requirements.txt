@@ -1,23 +1,26 @@
-# Data Ingestion
-databento==0.40.0
-pandas==2.2.3
+# Data ingestion
+databento>=0.40.0
+pandas>=2.2.0
 
-# Data Processing & Storage
-polars==1.0.0
-pyarrow==17.0.0
-numpy==2.0.0
+# Data processing and storage
+polars>=1.0.0
+pyarrow>=17.0.0
+numpy>=1.26.0
 
-# Neural Network Architecture
-torch==2.4.0
+# Model
+torch>=2.4.0
 
-# Configuration & Utilities
-PyYAML==6.0.2
-tqdm==4.66.1
+# Configuration and utilities
+PyYAML>=6.0.2
+tqdm>=4.66.1
 
-# Testing & Verification
-pytest==8.3.2
+# Statistics and baselines
+scipy>=1.14.0
+scikit-learn>=1.5.0
 
-# Visualization & Statistics
-matplotlib==3.9.2
-seaborn==0.13.2
-scipy==1.14.0
+# Visualisation
+matplotlib>=3.9.0
+seaborn>=0.13.0
+
+# Testing
+pytest>=8.3.0

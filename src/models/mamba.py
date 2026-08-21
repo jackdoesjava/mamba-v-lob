@@ -1,6 +1,6 @@
 """Selective SSM block and the LOB regression model built on it.
 
-Where this departs from Gu & Dao (2023), and why, is in docs/02-model.md.
+Where this departs from Gu & Dao (2023), and why, is in docs/01-problem.md.
 """
 
 from __future__ import annotations
@@ -220,12 +220,17 @@ class SelectiveSSMBlock(nn.Module):
         )
 
     def contraction_certificate(self) -> dict[str, float]:
-        """sup Abar over all inputs and the geometric gain it implies. Data-independent."""
+        """sup Abar over all inputs and the geometric gain it implies.
+
+        Kept as the baseline the invariant in verification.invariant is measured against, not
+        as a bound worth shipping. It diverges as dt -> 0 while the state does not, because
+        bounding Abar and Bbar separately throws away the (1 - Abar) factor they share.
+        """
         A_abs_min = torch.exp(self.A_log).min().item()
         if self.dt_parametrisation == "bounded":
             sup_A_bar = math.exp(-self.dt_min * A_abs_min)
         else:
-            sup_A_bar = 1.0  # inf delta = 0
+            sup_A_bar = 1.0  # softplus reaches 0, so exp(delta A) reaches 1
         gain = math.inf if sup_A_bar >= 1.0 else 1.0 / (1.0 - sup_A_bar)
         return {
             "A_abs_min": A_abs_min,

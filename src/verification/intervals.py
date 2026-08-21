@@ -244,6 +244,26 @@ def state_bound_unrolled(A_bar: Interval, drive: Interval, seq_len: int) -> Inte
     return Interval(lo, hi)
 
 
+def state_bound_widened(
+    A_bar: Interval, drive: Interval, max_iters: int = 100_000, tol: float = 1e-9
+) -> tuple[Interval, int]:
+    """Iterate h <- Abar h + drive to a fixed point instead of stopping at L steps.
+
+    This is the fair baseline for the invariant in verification.invariant: it is what generic
+    interval propagation converges to if you let it, so a comparison against the unrolled
+    bound at some chosen L would be comparing against a deliberately weak implementation.
+    """
+    lo = torch.zeros_like(drive.lo)
+    hi = torch.zeros_like(drive.hi)
+    for step in range(1, max_iters + 1):
+        new_hi = torch.where(hi >= 0, A_bar.hi * hi, A_bar.lo * hi) + drive.hi
+        new_lo = torch.where(lo >= 0, A_bar.lo * lo, A_bar.hi * lo) + drive.lo
+        if (new_hi - hi).abs().max() < tol and (new_lo - lo).abs().max() < tol:
+            return Interval(new_lo, new_hi), step
+        lo, hi = new_lo, new_hi
+    return Interval(lo, hi), max_iters
+
+
 def divide_by_positive(num: Interval, den: Interval) -> Interval:
     """num / den where den is strictly positive. Reciprocal of a positive box is monotone."""
     inv = Interval(1.0 / den.hi, 1.0 / den.lo.clamp(min=1e-30))

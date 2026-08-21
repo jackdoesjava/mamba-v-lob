@@ -1,5 +1,5 @@
 """Export a trained LOBMamba as a verifiable certificate: equations, weights, certified
-intervals, realised envelope. See docs/11-handoff.md.
+intervals, realised envelope. See docs/05-handoff.md.
 """
 
 from __future__ import annotations
@@ -57,12 +57,14 @@ DYNAMICS_SPEC = {
         "out = out_proj(y * SiLU(g)) + x            # residual is the block input, pre-norm",
     ],
     "stability": (
-        "A < 0 and delta > 0 give A_bar in (0, 1) elementwise. Under the 'bounded' "
-        "parametrisation delta >= dt_min > 0 for every input, so "
-        "sup A_bar = exp(-dt_min * min|A|) < 1 and |h| <= sup|B_bar * u| / (1 - sup A_bar). "
-        "Under 'softplus', inf delta = 0, so sup A_bar = 1 and no finite invariant set "
-        "exists; the finite-horizon bound sum_{k<L} (sup A_bar)^k = L is then the only "
-        "thing that can be claimed."
+        "A < 0 and delta > 0 give A_bar in (0, 1) elementwise. Exact zero-order hold gives "
+        "B_bar = (1 - A_bar) * B / |A| identically, so the update "
+        "h[t] = A_bar * h[t-1] + (1 - A_bar) * c[t], with c = B * u / |A|, is a convex "
+        "combination. If |c| <= M for every admissible input then |h| <= M for every t, by "
+        "induction from h[-1] = 0. That holds at any sequence length and needs no lower "
+        "bound on delta. The geometric form sup|B_bar * u| / (1 - sup A_bar) bounds the same "
+        "quantity but discards the (1 - A_bar) factor, taking its maximum in the numerator "
+        "and its minimum in the denominator, and is about 95 times looser on these weights."
     ),
 }
 
@@ -109,6 +111,10 @@ def serialise_certificate(cert: dict) -> dict:
                     for k in (
                         "A_bar",
                         "B_bar",
+                        "h_invariant",
+                        "h_widened",
+                        "y_invariant",
+                        "out_invariant",
                         "h_geometric",
                         "h_horizon",
                         "y_geometric",
@@ -312,9 +318,9 @@ def main() -> None:
     for i, layer in enumerate(cert["layers"]):
         s = layer["summary"]
         print(
-            f"  layer {i}: sup Abar={s['sup_A_bar']:.6f}  "
-            f"|h| <= {s['h_abs_max_horizon']:.3e} (L={seq_len})  "
-            f"geometric {s['h_abs_max_geometric']:.3e}"
+            f"  layer {i}: invariant |h| <= {s['h_abs_max_invariant']:.2f}  "
+            f"(induction holds: {s['invariant_holds']}, exact ZOH: {s['zoh_exact']})  "
+            f"against widened {s['h_abs_max_widened']:.3e}"
         )
 
 

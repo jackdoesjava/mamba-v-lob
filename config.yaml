@@ -1,26 +1,60 @@
+seed: 1337
+
 data:
   processed_file: "data/processed/GME_features_20210128.parquet"
-  batch_size: 256
-  seq_length: 100         # The H=100 tick horizon we defined in the pipeline
-  train_split: 0.8
+  batch_size: 128
+  seq_length: 100
+  prediction_horizon: 100   # must match PREDICTION_HORIZON in python/features.py
+  train_split: 0.70
+  val_split: 0.15           # test is the remainder; splits are purged by prediction_horizon
+  winsor_quantile: 0.001    # enforced at inference, so it defines the certified input box
 
 model:
-  active_model: "mamba"   # Options: 'mlp', 'lstm', 'mamba'
-  
-  # Baseline: LSTM
+  active_model: "mamba"
+
   lstm:
     hidden_size: 64
     num_layers: 2
     dropout: 0.1
-  
-  # Core: Mamba SSM
+
+  transformer:
+    d_model: 64
+    nhead: 4
+    num_layers: 2
+    dim_feedforward: 128
+    dropout: 0.1
+    causal: true            # the baseline is only a "causal transformer" if this is on
+
   mamba:
     d_model: 64
     d_state: 16
     d_conv: 4
     expand: 2
+    num_layers: 2
+    dt_rank: null           # null -> ceil(d_model / 16), as in the reference
+    dt_min: 0.001
+    dt_max: 0.1
+    # "bounded": delta = dt_min * (dt_max/dt_min)**sigmoid(z), certifiable.
+    # "softplus": reference Mamba; inf delta = 0, so sup Abar = 1 and no finite state
+    #             bound exists. Kept so scripts/06_certify.py can price the difference.
+    dt_parametrisation: "bounded"
+    head_dropout: 0.2
 
 training:
   learning_rate: 0.001
-  epochs: 50
-  device: "cuda"          # Fallback to 'cpu' if no GPU
+  weight_decay: 0.0001
+  max_steps: 3000
+  eval_every: 250
+  eval_batches: 100      # a fixed, unshuffled val slice, so rank IC is comparable across steps
+  patience: 8            # selection is on rank IC, which is noisier than loss
+  grad_clip: 1.0
+  device: "auto"
+  # Autocast is off by default: at the upper end of the delta range exp(delta*A) underflows
+  # to exactly zero in fp16, silently deleting state transitions the certificate assumes
+  # exist. The scan must agree with the exported dynamics.
+  amp: false
+
+verification:
+  seq_len: 100
+  tight_layernorm: true     # fuse LayerNorm with the following Linear (exact, ~7x tighter)
+  envelope_batches: 20

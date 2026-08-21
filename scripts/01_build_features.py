@@ -1,6 +1,6 @@
 """Turn a raw Databento MBP-10 file into the processed feature parquet.
 
-See docs/08-data.md for the feature definitions and invariants.
+See README.md for the feature definitions and invariants.
 """
 
 from pathlib import Path

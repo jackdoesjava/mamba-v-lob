@@ -10,7 +10,7 @@ Three ways of answering, plus a search that lower-bounds the truth:
                 eps and of the input, so it appears as a flat reference line.
 
 The point of the script is to establish which domain is usable at which perturbation size,
-and it is reported in docs/16-domains.md. Two of the three are not usable at any size that
+and it is reported in docs/03-certificate.md. Two of the three are not usable at any size that
 matters, which is the result.
 """
 

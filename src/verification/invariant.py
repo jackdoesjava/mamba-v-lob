@@ -17,7 +17,7 @@ Bbar separately, which throws the (1 - Abar) factor away: it takes its maximum i
 numerator and its minimum in the denominator. That is why it diverges as dt -> 0 when nothing
 is actually diverging.
 
-See docs/03-invariant.md.
+See docs/02-invariant.md.
 """
 
 from __future__ import annotations

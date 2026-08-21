@@ -1,6 +1,6 @@
 """Train one architecture on purged, chronologically split LOB windows.
 
-Selection criterion, step budget and the fp32 scan requirement: see docs/13-running.md.
+Selection criterion, step budget and the fp32 scan requirement: see README.md.
 """
 
 from __future__ import annotations

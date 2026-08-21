@@ -14,12 +14,12 @@ the sensitivity around it. For a max-norm budget eps this tracks
 so |component_i(x + delta) - component_i(x)| <= Lambda_i * eps for every ||delta||_inf <= eps.
 The certified interval is the nominal value plus or minus Lambda * eps.
 
-The state recursion inherits the contraction factor from docs/04-stability.md:
+The state recursion inherits the contraction factor from docs/02-invariant.md:
 
     Lambda_h(t) <= sup|Abar| Lambda_h(t-1) + |h(t-1)| Lambda_Abar + Lambda_drive
 
 so the dt_min that gives a finite reachable set also gives a finite sensitivity. See
-docs/16-domains.md.
+docs/03-certificate.md.
 """
 
 from __future__ import annotations

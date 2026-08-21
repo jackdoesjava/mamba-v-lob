@@ -1,6 +1,6 @@
 """Chronological LOB windows, train-fitted normalisation, purged splits.
 
-Winsorisation is enforced at inference too; see docs/08-data.md.
+Winsorisation is enforced at inference too; see README.md.
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 """End-to-end certificate for `LOBMamba`, plus the empirical envelope it is priced against.
 
-Structural vs in-context bounds, and what each one licenses: see docs/04-stability.md.
+Structural vs in-context bounds, and what each one licenses: see docs/02-invariant.md.
 """
 
 from __future__ import annotations

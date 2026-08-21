@@ -1,6 +1,6 @@
 """Transformer baseline. Regresses the 100-tick forward log return, as the SSM does.
 
-See docs/02-model.md for what the `causal` flag changes.
+See docs/01-problem.md for what the `causal` flag changes.
 """
 
 from __future__ import annotations

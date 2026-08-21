@@ -1,7 +1,7 @@
 """Soundness of the two local domains, and the ordering between local and global bounds.
 
 Both local domains diverge on the full model at realistic perturbation sizes, which is the
-finding recorded in docs/16-domains.md. They are still required to be sound wherever they
+finding recorded in docs/03-certificate.md. They are still required to be sound wherever they
 return a finite answer, and these tests hold them to that on a small model where the numbers
 stay finite.
 """

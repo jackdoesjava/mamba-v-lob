@@ -1,6 +1,6 @@
 """Block bootstrap, Newey-West and Diebold-Mariano for overlapping labels.
 
-Consecutive labels share H-1 ticks of their forward window. See docs/09-statistics.md.
+Consecutive labels share H-1 ticks of their forward window. See docs/04-results.md.
 """
 
 from __future__ import annotations

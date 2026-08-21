@@ -35,7 +35,7 @@ def _run(solver: Solver, timeout_ms: int) -> tuple[str, float]:
 def layernorm_coordinate_bound(d: int, timeout_ms: int) -> dict:
     """sum z = 0 and sum z^2 <= d imply z_i^2 <= d - 1.
 
-    This is the bound in docs/05-layernorm-bound.md, squared so no root appears. It is what
+    This is the bound in docs/03-certificate.md, squared so no root appears. It is what
     makes every SSM quantity independent of the block input.
     """
     z = [Real(f"z{i}") for i in range(d)]

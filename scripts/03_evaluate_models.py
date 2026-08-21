@@ -1,6 +1,6 @@
 """Evaluate every trained architecture on the held-out test split.
 
-Metric and reporting choices are in docs/09-statistics.md.
+Metric and reporting choices are in docs/04-results.md.
 """
 
 from __future__ import annotations

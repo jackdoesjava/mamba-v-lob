@@ -130,3 +130,44 @@ def test_model_certificate_reports_the_invariant():
         assert s["invariant_holds"]
         assert s["zoh_exact"]
         assert s["h_abs_max_invariant"] < s["h_abs_max_widened"]
+
+
+@pytest.mark.parametrize("dt_min", [1e-5, 1e-4, 1e-3, 1e-2])
+def test_invariant_does_not_depend_on_the_timescale_floor(dt_min):
+    """The radius is sup|B u| / |A|, which contains no dt. The geometric bound scales as 1/dt_min.
+
+    This is what separates the two: the floor is the whole reason the geometric bound moves,
+    and the invariant never looks at it.
+    """
+    torch.manual_seed(21)
+    block = SelectiveSSMBlock(d_model=16, d_state=4, dt_min=dt_min, dt_max=0.1).eval()
+    cert = certify_block(block, seq_len=32)
+    state = certify_block_state(block, cert["boxes"]["u"], cert["boxes"]["B"])
+    assert state["holds"]
+
+    torch.manual_seed(21)
+    reference = SelectiveSSMBlock(d_model=16, d_state=4, dt_min=1e-3, dt_max=0.1).eval()
+    ref_cert = certify_block(reference, seq_len=32)
+    ref_state = certify_block_state(reference, ref_cert["boxes"]["u"], ref_cert["boxes"]["B"])
+    assert state["radius"] == pytest.approx(ref_state["radius"], rel=1e-6)
+
+
+def test_geometric_bound_pays_for_the_floor_and_the_invariant_does_not():
+    """Roughly an order of magnitude looser per decade the floor drops.
+
+    Not exactly ten: the bound takes an elementwise maximum over (channel, state) and the
+    index attaining it can move with the floor. The claim under test is that the geometric
+    bound moves substantially while the invariant does not move at all.
+    """
+    geometric, invariant = {}, {}
+    for dt_min in (1e-3, 1e-2):
+        torch.manual_seed(22)
+        block = SelectiveSSMBlock(d_model=16, d_state=4, dt_min=dt_min, dt_max=0.1).eval()
+        cert = certify_block(block, seq_len=32)
+        geometric[dt_min] = cert["summary"]["h_abs_max_geometric"]
+        invariant[dt_min] = certify_block_state(
+            block, cert["boxes"]["u"], cert["boxes"]["B"]
+        )["radius"]
+
+    assert geometric[1e-3] / geometric[1e-2] > 5.0
+    assert invariant[1e-3] == pytest.approx(invariant[1e-2], rel=1e-6)

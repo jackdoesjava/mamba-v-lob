@@ -1,0 +1,139 @@
+{
+  "checks": [
+    {
+      "lemma": "interval_product_is_sound",
+      "d": null,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.036
+    },
+    {
+      "lemma": "interval_square_is_sound",
+      "d": null,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.006
+    },
+    {
+      "lemma": "affine_split_is_sound",
+      "d": 1,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.006
+    },
+    {
+      "lemma": "affine_split_is_sound",
+      "d": 2,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.011
+    },
+    {
+      "lemma": "affine_split_is_sound",
+      "d": 3,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.036
+    },
+    {
+      "lemma": "affine_split_is_sound",
+      "d": 4,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.216
+    },
+    {
+      "lemma": "layernorm_coordinate_bound",
+      "d": 2,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.006
+    },
+    {
+      "lemma": "layernorm_coordinate_bound",
+      "d": 3,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.009
+    },
+    {
+      "lemma": "layernorm_coordinate_bound",
+      "d": 4,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.083
+    },
+    {
+      "lemma": "layernorm_coordinate_bound",
+      "d": 5,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.131
+    },
+    {
+      "lemma": "layernorm_coordinate_bound",
+      "d": 6,
+      "result": "unknown",
+      "proved": false,
+      "seconds": 30.389
+    },
+    {
+      "lemma": "layernorm_linear_is_tight",
+      "d": 2,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.005
+    },
+    {
+      "lemma": "layernorm_linear_is_attained",
+      "d": 2,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.004
+    },
+    {
+      "lemma": "layernorm_linear_is_tight",
+      "d": 3,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.113
+    },
+    {
+      "lemma": "layernorm_linear_is_attained",
+      "d": 3,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.007
+    },
+    {
+      "lemma": "layernorm_linear_is_tight",
+      "d": 4,
+      "result": "unknown",
+      "proved": false,
+      "seconds": 30.137
+    },
+    {
+      "lemma": "layernorm_linear_is_attained",
+      "d": 4,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.007
+    },
+    {
+      "lemma": "layernorm_linear_is_tight",
+      "d": 5,
+      "result": "unknown",
+      "proved": false,
+      "seconds": 30.173
+    },
+    {
+      "lemma": "layernorm_linear_is_attained",
+      "d": 5,
+      "result": "unsat",
+      "proved": true,
+      "seconds": 0.011
+    }
+  ],
+  "proved": 16,
+  "total": 19
+}

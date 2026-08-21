@@ -1,0 +1,177 @@
+{
+  "provenance": {
+    "git_sha": "006c26bd4b2871308105a5414e5c1c7930bcc373-dirty",
+    "torch_version": "2.11.0+cpu",
+    "numpy_version": "2.4.4",
+    "python_version": "3.14.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 1337
+  },
+  "source": "models\\checkpoints\\best_mamba.pt",
+  "regime": "unrestricted input",
+  "steps": 60,
+  "seq_len": 100,
+  "violations": 0,
+  "results": [
+    {
+      "quantity": "max output",
+      "objective": "output_max",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 0.3593147099018097,
+      "certified": 4.337436676025391,
+      "looseness": 12.07141415727368,
+      "violated": false
+    },
+    {
+      "quantity": "-min output",
+      "objective": "output_min",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 0.9233837723731995,
+      "certified": 5.124204158782959,
+      "looseness": 5.549376447902243,
+      "violated": false
+    },
+    {
+      "quantity": "L0 sup|u|",
+      "objective": "u_abs",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 4.563029766082764,
+      "certified": 8.426708221435547,
+      "looseness": 1.8467353169755116,
+      "violated": false
+    },
+    {
+      "quantity": "L0 sup delta",
+      "objective": "delta_max",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 0.09401697665452957,
+      "certified": 0.10000000149011612,
+      "looseness": 1.0636377072363377,
+      "violated": false
+    },
+    {
+      "quantity": "L0 inf delta",
+      "objective": "delta_min",
+      "layer": 0,
+      "kind": "lower",
+      "attacked": 0.0010884206276386976,
+      "certified": 0.0010000000474974513,
+      "looseness": 1.0884205759414942,
+      "violated": false
+    },
+    {
+      "quantity": "L0 sup|B|",
+      "objective": "B_abs",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 1.8159338235855103,
+      "certified": 17.71307373046875,
+      "looseness": 9.754250678306539,
+      "violated": false
+    },
+    {
+      "quantity": "L0 sup|C|",
+      "objective": "C_abs",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 1.3877291679382324,
+      "certified": 17.526533126831055,
+      "looseness": 12.629649597169205,
+      "violated": false
+    },
+    {
+      "quantity": "L0 sup|h|",
+      "objective": "h_abs",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 0.5129921436309814,
+      "certified": 1169.0269775390625,
+      "looseness": 2278.8399238722,
+      "violated": false
+    },
+    {
+      "quantity": "L0 sup|y|",
+      "objective": "y_abs",
+      "layer": 0,
+      "kind": "upper",
+      "attacked": 4.739531993865967,
+      "certified": 160109.0,
+      "looseness": 33781.605484933425,
+      "violated": false
+    },
+    {
+      "quantity": "L1 sup|u|",
+      "objective": "u_abs",
+      "layer": 1,
+      "kind": "upper",
+      "attacked": 6.246053218841553,
+      "certified": 9.004310607910156,
+      "looseness": 1.4416000460495875,
+      "violated": false
+    },
+    {
+      "quantity": "L1 sup delta",
+      "objective": "delta_max",
+      "layer": 1,
+      "kind": "upper",
+      "attacked": 0.09512579441070557,
+      "certified": 0.10000000149011612,
+      "looseness": 1.0512395939461612,
+      "violated": false
+    },
+    {
+      "quantity": "L1 inf delta",
+      "objective": "delta_min",
+      "layer": 1,
+      "kind": "lower",
+      "attacked": 0.0010703563457354903,
+      "certified": 0.0010000000474974513,
+      "looseness": 1.0703562948962944,
+      "violated": false
+    },
+    {
+      "quantity": "L1 sup|B|",
+      "objective": "B_abs",
+      "layer": 1,
+      "kind": "upper",
+      "attacked": 1.686374306678772,
+      "certified": 17.226232528686523,
+      "looseness": 10.214951959635052,
+      "violated": false
+    },
+    {
+      "quantity": "L1 sup|C|",
+      "objective": "C_abs",
+      "layer": 1,
+      "kind": "upper",
+      "attacked": 1.7676864862442017,
+      "certified": 17.591190338134766,
+      "looseness": 9.9515329641461,
+      "violated": false
+    },
+    {
+      "quantity": "L1 sup|h|",
+      "objective": "h_abs",
+      "layer": 1,
+      "kind": "upper",
+      "attacked": 0.3360580503940582,
+      "certified": 1273.9185791015625,
+      "looseness": 3790.769415009635,
+      "violated": false
+    },
+    {
+      "quantity": "L1 sup|y|",
+      "objective": "y_abs",
+      "layer": 1,
+      "kind": "upper",
+      "attacked": 6.669802665710449,
+      "certified": 169548.671875,
+      "looseness": 25420.34305552279,
+      "violated": false
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "provenance": {
+    "git_sha": "012dd8fb26da25f56c9061dcc2501c604f91e704-dirty",
+    "torch_version": "2.11.0+cpu",
+    "numpy_version": "2.4.4",
+    "python_version": "3.14.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 1337
+  },
+  "checkpoint": "models/checkpoints/best_mamba.pt",
+  "windows": 3,
+  "seq_len": 100,
+  "global_certified_width": 9.46164083480835,
+  "rows": [
+    {
+      "eps": 1e-06,
+      "attack": 1.6242265701293945e-06,
+      "lipschitz": 2.1798062324523926,
+      "interval": 0.551379919052124,
+      "global": 9.46164083480835,
+      "lipschitz_over_attack": 1342057.9816513762,
+      "interval_over_attack": 339472.29357798165
+    },
+    {
+      "eps": 1e-05,
+      "attack": 1.6301870346069336e-05,
+      "lipschitz": Infinity,
+      "interval": 20.401897430419922,
+      "global": 9.46164083480835,
+      "lipschitz_over_attack": Infinity,
+      "interval_over_attack": 1251506.5447897622
+    },
+    {
+      "eps": 0.0001,
+      "attack": 0.00016295909881591797,
+      "lipschitz": Infinity,
+      "interval": 27576192.0,
+      "global": 9.46164083480835,
+      "lipschitz_over_attack": Infinity,
+      "interval_over_attack": 169221554367.7659
+    },
+    {
+      "eps": 0.001,
+      "attack": 0.0016294419765472412,
+      "lipschitz": Infinity,
+      "interval": 2.16977429090279e+25,
+      "global": 9.46164083480835,
+      "lipschitz_over_attack": Infinity,
+      "interval_over_attack": 1.3316057411878536e+28
+    },
+    {
+      "eps": 0.01,
+      "attack": 0.01630992442369461,
+      "lipschitz": Infinity,
+      "interval": NaN,
+      "global": 9.46164083480835,
+      "lipschitz_over_attack": Infinity,
+      "interval_over_attack": NaN
+    },
+    {
+      "eps": 0.1,
+      "attack": 0.16217321157455444,
+      "lipschitz": NaN,
+      "interval": NaN,
+      "global": 9.46164083480835,
+      "lipschitz_over_attack": NaN,
+      "interval_over_attack": NaN
+    }
+  ]
+}

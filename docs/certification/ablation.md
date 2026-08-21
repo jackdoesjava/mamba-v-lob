@@ -8,7 +8,7 @@ property of the module, established without reference to any dataset.
 | delta | inf delta | sup Abar | 1/(1-sup) | sum_{k<100} | |h| geometric | |h| at L=100 | contractive |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | bounded | 0.0010 | 0.9990 | 1036.6341 | 95.3719 | 1.235e+04 | 1169.0270 | yes |
-| softplus | 0.0000 | 1.0000 | inf | 100.0000 | inf | 1.137e+04 | no |
+| softplus | 0.0000 | 1.0000 | inf | 100.0000 | inf | 1.297e+04 | no |
 
 `softplus` is reference Mamba. Because softplus has infimum 0, delta can approach
 zero, Abar can approach 1, and no finite invariant set exists for the state. This
@@ -60,6 +60,7 @@ a linear functional attains ||v - mean(v)||_2 * sqrt(d), and that supremum is re
     "p99": 0.8804996013641357,
     "max": 1.068134069442749
   },
-  "note": "Euler is only consistent with the exact ZOH used for A when |delta*A| << 1. The error is a property of the delta range, so bounding delta bounds the discretisation inconsistency as well."
+  "quantity": "ZOH input gain (exp(dt A) - 1)/A against the Euler surrogate dt",
+  "note": "A is discretised exactly either way; what differs is the factor multiplying B. Euler is consistent with that exact Abar only when |delta*A| << 1. The error is a property of the delta range, so bounding delta bounds it as well."
 }
 ```

@@ -1,0 +1,356 @@
+{
+  "provenance": {
+    "git_sha": "dda5b457410c38a9173518c745e20f9de2328b07-dirty",
+    "torch_version": "2.11.0+cpu",
+    "numpy_version": "2.4.4",
+    "python_version": "3.14.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 1337
+  },
+  "split": "test",
+  "n_observations": 25600,
+  "n_effective": 256.0,
+  "horizon": 100,
+  "target_std_logret": 7.042467768769711e-05,
+  "models": {
+    "Mamba (bounded delta)": {
+      "checkpoint": "models\\checkpoints\\best_mamba.pt",
+      "steps": 250,
+      "n_params": 71361,
+      "selection_metric": "val_rank_ic",
+      "best_val_rank_ic": 0.13983355493495994,
+      "val_loss_at_best": 0.1527214353531599,
+      "architecture": {
+        "input_dim": 43,
+        "d_model": 64,
+        "d_state": 16,
+        "d_conv": 4,
+        "expand": 2,
+        "d_inner": 128,
+        "dt_rank": 4,
+        "dt_min": 0.001,
+        "dt_max": 0.1,
+        "dt_parametrisation": "bounded",
+        "num_layers": 2
+      }
+    },
+    "Mamba (softplus delta)": {
+      "checkpoint": "models\\checkpoints\\best_mamba_softplus.pt",
+      "steps": 250,
+      "n_params": 71361,
+      "selection_metric": "val_rank_ic",
+      "best_val_rank_ic": 0.1398392454348228,
+      "val_loss_at_best": 0.1527213136665523,
+      "architecture": {
+        "input_dim": 43,
+        "d_model": 64,
+        "d_state": 16,
+        "d_conv": 4,
+        "expand": 2,
+        "d_inner": 128,
+        "dt_rank": 4,
+        "dt_min": 0.001,
+        "dt_max": 0.1,
+        "dt_parametrisation": "softplus",
+        "num_layers": 2
+      }
+    },
+    "Causal Transformer": {
+      "checkpoint": "models\\checkpoints\\best_transformer.pt",
+      "steps": 250,
+      "n_params": 72001,
+      "selection_metric": "val_rank_ic",
+      "best_val_rank_ic": 0.1632298301353078,
+      "val_loss_at_best": 0.15172058429569005,
+      "architecture": {
+        "input_dim": 43,
+        "d_model": 64,
+        "causal": true,
+        "num_layers": 2
+      }
+    },
+    "LSTM": {
+      "checkpoint": "models\\checkpoints\\best_lstm.pt",
+      "steps": 1750,
+      "n_params": 61249,
+      "selection_metric": "val_rank_ic",
+      "best_val_rank_ic": 0.10035530378374657,
+      "val_loss_at_best": 0.15445367725566028,
+      "architecture": {
+        "input_dim": 43
+      }
+    },
+    "Ridge": {
+      "n_params": 4300
+    }
+  },
+  "metrics": {
+    "Mamba (bounded delta)": {
+      "rank_ic": 0.10436756199191799,
+      "se_block_bootstrap": 0.03183821435220871,
+      "se_naive_iid": 0.00625,
+      "ci_lo": 0.0420310730728571,
+      "ci_hi": 0.16895722389040868,
+      "n": 25600,
+      "n_effective": 256.0,
+      "alpha": 0.05,
+      "excludes_zero": true,
+      "pearson_ic": 0.10910952836275101,
+      "hit_rate": 0.5447265625,
+      "mse": 0.33726751804351807,
+      "pred_std": 0.08293556421995163,
+      "mean_pnl_per_decision": 3.303702214907389e-06,
+      "information_ratio": 0.08065636456012726,
+      "information_ratio_se": 0.0625,
+      "max_drawdown_logret": 0.026442646980285645
+    },
+    "Mamba (softplus delta)": {
+      "rank_ic": 0.10433913677159092,
+      "se_block_bootstrap": 0.031838377909741394,
+      "se_naive_iid": 0.00625,
+      "ci_lo": 0.0419886822492429,
+      "ci_hi": 0.1689322875801451,
+      "n": 25600,
+      "n_effective": 256.0,
+      "alpha": 0.05,
+      "excludes_zero": true,
+      "pearson_ic": 0.10907939076423645,
+      "hit_rate": 0.544609375,
+      "mse": 0.3372707664966583,
+      "pred_std": 0.08293550461530685,
+      "mean_pnl_per_decision": 3.3006147077685455e-06,
+      "information_ratio": 0.08058048784732819,
+      "information_ratio_se": 0.0625,
+      "max_drawdown_logret": 0.026468969881534576
+    },
+    "Causal Transformer": {
+      "rank_ic": 0.10395976883329691,
+      "se_block_bootstrap": 0.02389019218388456,
+      "se_naive_iid": 0.00625,
+      "ci_lo": 0.058324338265523974,
+      "ci_hi": 0.14960696026173909,
+      "n": 25600,
+      "n_effective": 256.0,
+      "alpha": 0.05,
+      "excludes_zero": true,
+      "pearson_ic": 0.10817212611436844,
+      "hit_rate": 0.5496875,
+      "mse": 0.3373079001903534,
+      "pred_std": 0.0729655846953392,
+      "mean_pnl_per_decision": 2.532208554839599e-06,
+      "information_ratio": 0.061738379299640656,
+      "information_ratio_se": 0.0625,
+      "max_drawdown_logret": 0.024771614000201225
+    },
+    "LSTM": {
+      "rank_ic": 0.11111733391590008,
+      "se_block_bootstrap": 0.030577650978416804,
+      "se_naive_iid": 0.00625,
+      "ci_lo": 0.051553908778325566,
+      "ci_hi": 0.17214047185388984,
+      "n": 25600,
+      "n_effective": 256.0,
+      "alpha": 0.05,
+      "excludes_zero": true,
+      "pearson_ic": 0.12103579193353653,
+      "hit_rate": 0.533046875,
+      "mse": 0.33551642298698425,
+      "pred_std": 0.08062935620546341,
+      "mean_pnl_per_decision": 4.081963197677396e-06,
+      "information_ratio": 0.09982793033123016,
+      "information_ratio_se": 0.0625,
+      "max_drawdown_logret": 0.015834413468837738
+    },
+    "Ridge": {
+      "rank_ic": 0.031167358805511348,
+      "se_block_bootstrap": 0.00762675512728588,
+      "se_naive_iid": 0.00625,
+      "ci_lo": 0.016612980127595635,
+      "ci_hi": 0.04600617852349897,
+      "n": 25600,
+      "n_effective": 256.0,
+      "alpha": 0.05,
+      "excludes_zero": true,
+      "pearson_ic": 0.029911763966083527,
+      "hit_rate": 0.5046875,
+      "mse": 0.7434538006782532,
+      "pred_std": 0.6501256227493286,
+      "mean_pnl_per_decision": 1.206324782287993e-06,
+      "information_ratio": 0.029368454590439796,
+      "information_ratio_se": 0.0625,
+      "max_drawdown_logret": 0.005317567847669125
+    }
+  },
+  "diebold_mariano": {
+    "LSTM": {
+      "LSTM": {
+        "stat": 0.0,
+        "p_value": 1.0
+      },
+      "Mamba (bounded delta)": {
+        "stat": -0.5587490616653199,
+        "p_value": 0.576337878309537,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Mamba (softplus delta)": {
+        "stat": -0.5597452937925957,
+        "p_value": 0.575658080587377,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Causal Transformer": {
+        "stat": -0.5886691126780101,
+        "p_value": 0.556088455542529,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Ridge": {
+        "stat": -29.35254831951229,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      }
+    },
+    "Mamba (bounded delta)": {
+      "LSTM": {
+        "stat": 0.5587490616653199,
+        "p_value": 0.576337878309537,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (bounded delta)": {
+        "stat": 0.0,
+        "p_value": 1.0
+      },
+      "Mamba (softplus delta)": {
+        "stat": -3.1366166713162045,
+        "p_value": 0.001711029951489973,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Causal Transformer": {
+        "stat": -0.021555414739281107,
+        "p_value": 0.9828027671442416,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Ridge": {
+        "stat": -28.07836776414369,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      }
+    },
+    "Mamba (softplus delta)": {
+      "LSTM": {
+        "stat": 0.5597452937925957,
+        "p_value": 0.575658080587377,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (bounded delta)": {
+        "stat": 3.1366166713162045,
+        "p_value": 0.001711029951489973,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (softplus delta)": {
+        "stat": 0.0,
+        "p_value": 1.0
+      },
+      "Causal Transformer": {
+        "stat": -0.019813137402714343,
+        "p_value": 0.984192592225662,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Ridge": {
+        "stat": -28.07766678890771,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      }
+    },
+    "Causal Transformer": {
+      "LSTM": {
+        "stat": 0.5886691126780101,
+        "p_value": 0.556088455542529,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (bounded delta)": {
+        "stat": 0.021555414739281107,
+        "p_value": 0.9828027671442416,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (softplus delta)": {
+        "stat": 0.019813137402714343,
+        "p_value": 0.984192592225662,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Causal Transformer": {
+        "stat": 0.0,
+        "p_value": 1.0
+      },
+      "Ridge": {
+        "stat": -28.138492550279302,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      }
+    },
+    "Ridge": {
+      "LSTM": {
+        "stat": 29.35254831951229,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (bounded delta)": {
+        "stat": 28.07836776414369,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (softplus delta)": {
+        "stat": 28.07766678890771,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Causal Transformer": {
+        "stat": 28.138492550279302,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Ridge": {
+        "stat": 0.0,
+        "p_value": 1.0
+      }
+    }
+  }
+}

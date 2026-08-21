@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "unknown",
+    "git_sha": "dda5b457410c38a9173518c745e20f9de2328b07-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -26,17 +26,17 @@
     },
     {
       "dt_parametrisation": "softplus",
-      "source": "randomly initialised (certificate is weight-dependent but data-free)",
+      "source": "models\\checkpoints\\best_mamba_softplus.pt",
       "inf_delta": 0.0,
       "sup_A_bar": 1.0,
       "geometric_gain": Infinity,
       "horizon_gain": 100.0,
       "h_bound_geometric": Infinity,
-      "h_bound_horizon": 11369.5810546875,
+      "h_bound_horizon": 12971.611328125,
       "contractive": false,
       "certified_output_range": [
-        -8.058592796325684,
-        6.3003997802734375
+        -5.124157905578613,
+        4.337460994720459
       ]
     }
   ],
@@ -139,6 +139,7 @@
       "p99": 0.8804996013641357,
       "max": 1.068134069442749
     },
-    "note": "Euler is only consistent with the exact ZOH used for A when |delta*A| << 1. The error is a property of the delta range, so bounding delta bounds the discretisation inconsistency as well."
+    "quantity": "ZOH input gain (exp(dt A) - 1)/A against the Euler surrogate dt",
+    "note": "A is discretised exactly either way; what differs is the factor multiplying B. Euler is consistent with that exact Abar only when |delta*A| << 1. The error is a property of the delta range, so bounding delta bounds it as well."
   }
 }

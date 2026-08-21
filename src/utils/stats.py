@@ -55,7 +55,8 @@ def block_bootstrap_ic(
         "ci_hi": float(hi),
         "n": int(n),
         "n_effective": effective_sample_size(n, horizon),
-        "significant_at_5pct": bool(lo > 0 or hi < 0),
+        "alpha": float(alpha),
+        "excludes_zero": bool(lo > 0 or hi < 0),
     }
 
 
@@ -71,7 +72,8 @@ def newey_west_lrv(d: np.ndarray, lags: int) -> float:
         cov = float(np.dot(d[:-k], d[k:]) / n)
         lrv += 2.0 * w * cov
     # Bartlett weights keep this non-negative; a raw autocovariance sum can come out negative.
-    # The floor is only a divide-by-zero guard for the DM statistic.
+    # The floor still bites when d is constant, where the true long-run variance is 0 and the
+    # DM statistic is undefined; diebold_mariano screens that case before calling.
     return max(lrv, 1e-30)
 
 
@@ -87,7 +89,8 @@ def diebold_mariano(
         y_true - np.asarray(pred_b, dtype=np.float64)
     ) ** 2
     n = len(d)
-    if n < 3 or np.allclose(d, 0.0):
+    # A constant loss differential has zero long-run variance and no DM statistic.
+    if n < 3 or np.allclose(d, d.mean()):
         return {"stat": 0.0, "p_value": 1.0, "n": int(n), "horizon": int(horizon)}
 
     lrv = newey_west_lrv(d, lags=horizon - 1)

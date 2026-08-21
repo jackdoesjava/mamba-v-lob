@@ -36,6 +36,7 @@ Trained model, `L = 100`, layer 0, input-independent unless stated.
 | certified `sup abs(h)` from the invariant | `129.67` |
 | converged fixed point of the interval recursion | `1.235e4`, so the invariant is `95x` tighter |
 | dependence on sequence length | none; `129.67` at `L = 10` and at `L = 5000` |
+| dependence on the weights | none to three figures; the ratio is `95.2` across 8 seeds |
 | induction residual | exactly `0`, and the zero-order hold identity is exact to `1e-14` |
 | certified output range, for any input at all | `[-5.1242, 4.3374]` |
 | adversarial search against the trained model | no violation found |

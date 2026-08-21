@@ -157,6 +157,40 @@ Mamba arms, favouring the constrained parametrisation by 3e-6 in MSE, which is d
 across 25,600 paired observations and means nothing economically; the claim it supports is that
 the parametrisation costs no accuracy, not that it gains any.
 
+## Does the advantage survive a sweep
+
+The ratio is the geometric bound over the invariant. Certification needs no data,
+so untrained configurations are as informative as trained ones.
+
+| varied | range | invariant | ratio |
+| --- | --- | --- | --- |
+| seed, 8 values | fixed config | 101.2 to 132.2 | 95.203 to 95.209 |
+| d_state | 4 to 64 | 125.526 throughout | 95.1 to 95.2 |
+| expand | 1 to 4 | 78.7 to 166.1 | 95.0 to 95.2 |
+| d_model | 16 to 128 | 15.7 to 359.0 | 29.5 to 95.2 |
+
+The ratio moves by 0.0 percent of its median across seeds, so it is a property of the
+configuration rather than of a particular draw of the weights. It falls at small widths,
+reaching 29.5 at `d_model = 16`, and is flat from 64 upwards.
+
+The timescale range is the one setting that moves it, and it moves only the baseline.
+
+| dt_min | sup Abar | invariant | geometric | ratio |
+| --- | --- | --- | --- | --- |
+| 1e-05 | 1.0000 | 125.526 | 1.193e+06 | 9503.3 |
+| 0.0001 | 0.9999 | 125.526 | 1.194e+05 | 951.5 |
+| 0.001 | 0.9990 | 125.526 | 1.195e+04 | 95.2 |
+| 0.01 | 0.9900 | 125.526 | 1201 | 9.6 |
+
+The invariant is identical to six figures at every floor, because its radius is
+`sup|B u| / |A|` and contains no `dt`. The geometric bound divides by `1 - sup Abar`
+and pays for the floor directly, about tenfold per decade.
+
+On the trained checkpoints the ratio is 95.24 for the bounded arm. For the softplus arm
+the geometric bound is infinite while the invariant certifies at 129.717.
+
+The induction step holds in all 29 configurations tested.
+
 ## Training
 
 | model | parameters | steps | best validation rank IC | at step |

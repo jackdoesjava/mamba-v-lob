@@ -22,7 +22,8 @@ the invariant from the bounds feeding it.
 | 1 | 0.5139 | 0.1585 | 3.2x |
 
 The machinery is 3 to 5 times loose; the rest of the certified gap is in the bounds on `B` and
-`u`. See [02-invariant.md](02-invariant.md) and [03-certificate.md](03-certificate.md).
+`u`. In total the certified radius is about 630 times the realised state at layer 0, 130 of it
+from the boxes and 4.8 from the induction. See [02-invariant.md](02-invariant.md) and [03-certificate.md](03-certificate.md).
 
 ## Scaling with sequence length
 

@@ -44,22 +44,19 @@ megabytes of nested lists to get the tensors.
 | `input_box` | per-feature `lo` and `hi` over the 43 features, plus how the box is enforced |
 | `certificate` | `seq_len`, `relaxation`, `all_layers_contractive`, `output_range`, and the per-layer boxes |
 | `empirical_envelope` | realised ranges for `u`, `delta`, `B`, `C`, `Abar`, `Bbar`, `h`, `y` and the output, on held-out batches |
-| `looseness` | 16 rows, one per layer and quantity: certified abs max, empirical abs max, ratio |
+| `looseness` | 16 rows, one per layer and quantity: certified abs max, empirical abs max, ratio; `h` and `y` are priced against the invariant |
 | `checks` | the round trip and the soundness check, both of which must pass before the file is written |
 | `parameters` | `stem`, `layers`, `head`; weights as nested lists of floats, which round-trip float32 exactly |
 
 Inside `certificate.layers[i]` you get `contraction`, `horizon_gain`, `summary`, then
 `boxes_full` holding `delta`, `B`, `C` and `u` per element, and `boxes_reduced` collapsing
-`A_bar`, `B_bar`, `h_geometric`, `h_horizon`, `y_geometric`, `y_horizon`, `out_geometric` and
-`out_horizon` to their extrema.
+the rest to their extrema: `A_bar`, `B_bar`, the shipped `h_invariant`, `y_invariant` and
+`out_invariant`, and the baselines `h_widened`, `h_geometric`, `h_horizon`, `y_geometric`,
+`y_horizon`, `out_geometric` and `out_horizon`.
 
-Three cautions. `out_geometric` and `out_horizon` are pre-residual, bounding
-`out_proj(y * SiLU(gate))` before the `+ x`; the only whole-network output bound is
-`certificate.output_range`, `[-5.1242, 4.3374]`, through `final_norm`. The `boxes_reduced`
-list predates the invariant, so the invariant box is not serialised and the radii come from
-[certification/bounds.json](certification/bounds.json). And the `stability` string in
-`dynamics_spec` is stale, repeating the geometric argument and the `delta` floor that argument
-needed, so ignore it.
+One caution. The three `out_*` boxes are pre-residual, bounding `out_proj(y * SiLU(gate))`
+before the `+ x`; the only whole-network output bound is `certificate.output_range`,
+`[-5.1242, 4.3374]`, through `final_norm`.
 
 ## The recurrence
 
@@ -123,8 +120,8 @@ every intermediate and the output.
 The certified radius is 129.6739 at layer 0 against a realised state of 0.2066, so about 600
 times conservative. The gap is not in the invariant: feeding it `B` and `u` from the realised
 trace instead of the certified boxes gives 1.0020 at layer 0 against 0.2066, and 0.5139 at
-layer 1 against 0.1585, so the machinery is 3 to 5 times tight and the rest of the slack sits
-in the bounds on `B` and `u`.
+layer 1 against 0.1585, so the induction accounts for a factor of 3 to 5 and the boxes on
+`B` and `u` for the remaining 130.
 
 This bounds reachable state and reachable output. It is not a robustness certificate. Nothing
 here bounds `|f(x) - f(x')|` for nearby inputs, and any reading of these numbers as

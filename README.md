@@ -104,8 +104,9 @@ supports nothing beyond that.
 
 ## Limitations
 
-Against a realised trace the invariant is 3 to 5 times loose, so the machinery itself is tight and
-the remaining slack sits in the bounds on `B` and `u`. This bounds reachable state and output; it
+Against a realised trace the certified radius is about 630 times the realised state; fed the
+realised `B` and `u` instead of the certified boxes the invariant is 3 to 5 times loose, so the
+induction accounts for a factor of 5 and the boxes on `B` and `u` for the rest. This bounds reachable state and output; it
 is not a robustness certificate, and a bounded output is not a bounded loss. Both local domains we
 tried diverge on inputs where the model is measurably well behaved, a failure of the domains and
 not of the model. Three lemmas are still hand proofs after Z3 timed out, and no external verifier

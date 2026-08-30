@@ -135,7 +135,9 @@ The internal rows are layer 0 of two, and layer 1 tracks them closely. The `delt
 near-exact because the box there is a property of the parametrisation and its clamp rather than of
 an accumulation. The `B` and `C` rows are the interval product discarding correlation, and that is
 where the certified gap lives: driven by `B` and `u` from a realised trace instead of the certified
-boxes, the invariant sits 3 to 5 times above the realised `sup|h|`.
+boxes, the invariant sits 3 to 5 times above the realised `sup|h|`. Against that trace the
+certified radius is about 630 times the realised state, so the boxes on `B` and `u` account for
+a factor of 130 and the induction for the remaining 4.8.
 
 ## Local sensitivity, the negative result
 

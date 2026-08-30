@@ -135,6 +135,7 @@ def certify_block(
             "widening_iterations": widen_iters,
             "h_abs_max_geometric": h_geom.abs_max().max().item(),
             "h_abs_max_horizon": h_horizon.abs_max().max().item(),
+            "y_abs_max_invariant": y_invariant.abs_max().max().item(),
             "y_abs_max_horizon": y_horizon.abs_max().max().item(),
         },
     }

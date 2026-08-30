@@ -44,6 +44,10 @@ PRODUCED: dict[str, list[str]] = {
     "docs/figures/bound_vs_horizon.pdf": [
         "scripts/05_figures.py", "src/verification/invariant.py",
     ],
+    "docs/figures/gap_prediction.pdf": [
+        "scripts/05_figures.py", "src/verification/invariant.py",
+    ],
+    "docs/figures/sweep_seeds.pdf": ["scripts/05_figures.py", "scripts/10_sweep.py"],
     "docs/figures/certified_vs_realised.pdf": ["scripts/05_figures.py"],
     "docs/figures/certified_output_range.pdf": ["scripts/05_figures.py"],
     "docs/figures/dm_test_heatmap.pdf": ["scripts/05_figures.py"],

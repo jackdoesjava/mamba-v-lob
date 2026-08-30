@@ -54,7 +54,7 @@ src/dataset.py     purged chronological splits, enforced input box
 src/features.py    order book feature construction
 src/utils/         config, seeding and provenance, overlap-aware statistics
 scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
-                   07 attack, 08 domains, 09 lemmas
+                   07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check
 tests/             unit tests for the maths, the domain and the models
 docs/              the five pages listed at the bottom
 ```
@@ -75,8 +75,9 @@ python -m scripts.06_certify                 # invariant against the alternative
 python -m scripts.07_attack_bounds           # try to break the certificate
 python -m scripts.08_domains                 # local domains, the negative result
 python -m scripts.09_check_lemmas            # Z3 on the interval lemmas
+python -m scripts.10_sweep                   # seeds and configurations
 python -m scripts.05_figures
-python -m scripts.11_check_artefacts     # nothing in docs/ is stale
+python -m scripts.11_check_artefacts         # nothing in docs/ is stale
 python -m pytest
 ```
 

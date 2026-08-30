@@ -121,15 +121,15 @@ up. No violation has been found. Optimising against a bound also prices it, sinc
 
 | quantity | attacked | certified | ratio |
 | --- | --- | --- | --- |
-| `sup delta` | 0.0940 | 0.1000 | 1.06x |
-| `inf delta` | 1.088e-3 | 1.000e-3 | 1.09x |
-| `sup \|u\|` | 4.5630 | 8.4267 | 1.85x |
-| `sup \|B\|` | 1.8159 | 17.7131 | 9.75x |
-| `sup \|C\|` | 1.3877 | 17.5265 | 12.63x |
-| output max | 0.3593 | 4.3374 | 12.07x |
-| output min | -0.9234 | -5.1242 | 5.55x |
-| `sup \|h\|` against the invariant | 0.5130 | 129.67 | 252.8x |
-| attained output width | 1.2827 | 9.4616 | 7.4x |
+| `sup delta` | 0.0942 | 0.1000 | 1.06x |
+| `inf delta` | 1.087e-3 | 1.000e-3 | 1.09x |
+| `sup \|u\|` | 4.7336 | 8.4267 | 1.78x |
+| `sup \|B\|` | 1.8836 | 17.7131 | 9.40x |
+| `sup \|C\|` | 1.4445 | 17.5265 | 12.13x |
+| output max | 0.3942 | 4.3374 | 11.00x |
+| output min | -0.9477 | -5.1242 | 5.41x |
+| `sup \|h\|` against the invariant | 0.5965 | 129.67 | 217.4x |
+| attained output width | 1.3419 | 9.4616 | 7.1x |
 
 The internal rows are layer 0 of two, and layer 1 tracks them closely. The `delta` rows are
 near-exact because the box there is a property of the parametrisation and its clamp rather than of
@@ -142,21 +142,21 @@ a factor of 130 and the induction for the remaining 4.8.
 ## Local sensitivity, the negative result
 
 Asking a narrower question makes the answer worse. Both local domains diverge while the
-unconditional bound stays where it is. Median over three held-out windows, widths in standardised
+unconditional bound stays where it is. Median over four held-out windows, widths in standardised
 target units:
 
 | eps | attack | norm propagation | interval | unconditional |
 | --- | --- | --- | --- | --- |
-| 1e-6 | 1.6242e-6 | 2.1798 | 0.5514 | 9.4616 |
-| 1e-5 | 1.6302e-5 | inf | 20.402 | 9.4616 |
-| 1e-4 | 1.6296e-4 | inf | 2.7576e7 | 9.4616 |
+| 1e-6 | 1.5870e-6 | 2.1798 | 0.5514 | 9.4616 |
+| 1e-5 | 1.6324e-5 | inf | 20.308 | 9.4616 |
+| 1e-4 | 1.6298e-4 | inf | 2.7576e7 | 9.4616 |
 | 1e-1 | 1.6217e-1 | nan | nan | 9.4616 |
 
 The attack column is a search over inputs that exist, so it lower-bounds the true width, and it is
 linear in `eps` across five decades. The model's local Lipschitz constant is about 1.63 and the
 model is locally well behaved; the domains fail, not the model. The interval column at `eps = 1e-6`
 is the one entry below the unconditional bound, and it is small rather than tight, since the
-attacked width in that row is `1.62e-6`.
+attacked width in that row is `1.59e-6`.
 
 Interval propagation collapses to a box at every step and norm propagation collapses to a magnitude
 at every layer, so both throw away the sign structure of the dependence on the input. A relaxation

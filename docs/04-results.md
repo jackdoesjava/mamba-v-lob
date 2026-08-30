@@ -77,18 +77,18 @@ the 100-tick forward return.
 
 ## Adversarial tightness
 
-Gradient ascent on the trained model, 60 steps, layer 0 quantities, no violation found.
+Gradient ascent on the trained model, 150 steps, layer 0 quantities, no violation found.
 
 | quantity | attacked | certified | ratio |
 | --- | --- | --- | --- |
-| `sup delta` | 0.0940 | 0.1000 | 1.06x |
-| `inf delta` | 0.001088 | 0.001000 | 1.09x |
-| `sup abs u` | 4.5630 | 8.4267 | 1.85x |
-| `sup abs B` | 1.8159 | 17.7131 | 9.75x |
-| `sup abs C` | 1.3877 | 17.5265 | 12.63x |
-| max output | 0.3593 | 4.3374 | 12.07x |
-| min output | -0.9234 | -5.1242 | 5.55x |
-| `sup abs h` against the invariant | 0.5130 | 129.67 | 252.8x |
+| `sup delta` | 0.0942 | 0.1000 | 1.06x |
+| `inf delta` | 0.001087 | 0.001000 | 1.09x |
+| `sup abs u` | 4.7336 | 8.4267 | 1.78x |
+| `sup abs B` | 1.8836 | 17.7131 | 9.40x |
+| `sup abs C` | 1.4445 | 17.5265 | 12.13x |
+| max output | 0.3942 | 4.3374 | 11.00x |
+| min output | -0.9477 | -5.1242 | 5.41x |
+| `sup abs h` against the invariant | 0.5965 | 129.67 | 217.4x |
 | output width | 1.2827 | 9.4616 | 7.4x |
 
 ## Machine-checked lemmas
@@ -119,14 +119,14 @@ The artefact and its schema are in [05-handoff.md](05-handoff.md).
 
 ## Local sensitivity
 
-Both local domains diverge while the unconditional bound does not; median over three held-out
+Both local domains diverge while the unconditional bound does not; median over four held-out
 windows, widths in standardised target units.
 
 | `eps` | attack | norm propagation | interval | unconditional |
 | --- | --- | --- | --- | --- |
-| 1e-6 | 1.6242e-6 | 2.1798 | 0.5514 | 9.4616 |
-| 1e-5 | 1.6302e-5 | inf | 20.402 | 9.4616 |
-| 1e-4 | 1.6296e-4 | inf | 2.7576e7 | 9.4616 |
+| 1e-6 | 1.5870e-6 | 2.1798 | 0.5514 | 9.4616 |
+| 1e-5 | 1.6324e-5 | inf | 20.308 | 9.4616 |
+| 1e-4 | 1.6298e-4 | inf | 2.7576e7 | 9.4616 |
 | 1e-1 | 1.6217e-1 | nan | nan | 9.4616 |
 
 The attack width is linear in `eps` across five decades, so the model's true local Lipschitz

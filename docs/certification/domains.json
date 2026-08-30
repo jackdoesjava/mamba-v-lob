@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "271fb2b3778bbfd9812e9bcac2ff8df278e303ed-dirty",
+    "git_sha": "ccc727a3b2dab40e9e058db47c02a2da860fefbf-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -8,49 +8,49 @@
     "seed": 1337
   },
   "checkpoint": "models/checkpoints/best_mamba.pt",
-  "windows": 3,
+  "windows": 4,
   "seq_len": 100,
   "global_certified_width": 9.46164083480835,
   "rows": [
     {
       "eps": 1e-06,
-      "attack": 1.6242265701293945e-06,
+      "attack": 1.5869736671447754e-06,
       "lipschitz": 2.1798062324523926,
       "interval": 0.5513806939125061,
       "global": 9.46164083480835,
-      "lipschitz_over_attack": 1342057.9816513762,
-      "interval_over_attack": 339472.7706422018
+      "lipschitz_over_attack": 1373561.690140845,
+      "interval_over_attack": 347441.61502347415
     },
     {
       "eps": 1e-05,
-      "attack": 1.6301870346069336e-05,
+      "attack": 1.6324222087860107e-05,
       "lipschitz": Infinity,
-      "interval": 20.401897430419922,
+      "interval": 20.30777931213379,
       "global": 9.46164083480835,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 1251506.5447897622
+      "interval_over_attack": 1244027.3847558193
     },
     {
       "eps": 0.0001,
-      "attack": 0.00016297399997711182,
+      "attack": 0.00016298145055770874,
       "lipschitz": Infinity,
-      "interval": 27576188.0,
+      "interval": 27576192.0,
       "global": 9.46164083480835,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 169206057431.6935
+      "interval_over_attack": 169198346840.30975
     },
     {
       "eps": 0.001,
-      "attack": 0.0016294494271278381,
+      "attack": 0.0016294196248054504,
       "lipschitz": Infinity,
-      "interval": 2.169774521487091e+25,
+      "interval": 2.16977429090279e+25,
       "global": 9.46164083480835,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 1.3315997939940126e+28
+      "interval_over_attack": 1.3316240076351462e+28
     },
     {
       "eps": 0.01,
-      "attack": 0.016309916973114014,
+      "attack": 0.016309894621372223,
       "lipschitz": Infinity,
       "interval": NaN,
       "global": 9.46164083480835,

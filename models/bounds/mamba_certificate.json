@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "provenance": {
     "export": {
-      "git_sha": "29fd87ebfc58947be9373ee462d2ce9a5dd7651c-dirty",
+      "git_sha": "ccc727a3b2dab40e9e058db47c02a2da860fefbf-dirty",
       "torch_version": "2.11.0+cpu",
       "numpy_version": "2.4.4",
       "python_version": "3.14.4",
@@ -485,6 +485,7 @@
           "widening_iterations": 10509,
           "h_abs_max_geometric": 12349.5810546875,
           "h_abs_max_horizon": 1169.0269775390625,
+          "y_abs_max_invariant": 6822.64501953125,
           "y_abs_max_horizon": 160109.0
         },
         "boxes_full": {
@@ -1233,6 +1234,7 @@
           "widening_iterations": 10634,
           "h_abs_max_geometric": 13681.9033203125,
           "h_abs_max_horizon": 1273.9185791015625,
+          "y_abs_max_invariant": 7551.01953125,
           "y_abs_max_horizon": 169548.671875
         },
         "boxes_full": {

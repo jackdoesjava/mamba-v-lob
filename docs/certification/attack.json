@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "271fb2b3778bbfd9812e9bcac2ff8df278e303ed-dirty",
+    "git_sha": "ccc727a3b2dab40e9e058db47c02a2da860fefbf-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -9,7 +9,7 @@
   },
   "source": "models\\checkpoints\\best_mamba.pt",
   "regime": "unrestricted input",
-  "steps": 60,
+  "steps": 150,
   "seq_len": 100,
   "violations": 0,
   "results": [
@@ -18,9 +18,9 @@
       "objective": "output_max",
       "layer": 0,
       "kind": "upper",
-      "attacked": 0.3593147397041321,
+      "attacked": 0.39424777030944824,
       "certified": 4.337436676025391,
-      "looseness": 12.071413156045129,
+      "looseness": 11.001803948367042,
       "violated": false
     },
     {
@@ -28,9 +28,9 @@
       "objective": "output_min",
       "layer": 0,
       "kind": "upper",
-      "attacked": 0.9233838319778442,
+      "attacked": 0.9476532936096191,
       "certified": 5.124204158782959,
-      "looseness": 5.549376089688681,
+      "looseness": 5.407256212095062,
       "violated": false
     },
     {
@@ -38,9 +38,9 @@
       "objective": "u_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 4.5630292892456055,
+      "attacked": 4.7336201667785645,
       "certified": 8.426708221435547,
-      "looseness": 1.846735509959594,
+      "looseness": 1.7801825927174657,
       "violated": false
     },
     {
@@ -48,9 +48,9 @@
       "objective": "delta_max",
       "layer": 0,
       "kind": "upper",
-      "attacked": 0.09401697665452957,
+      "attacked": 0.09421628713607788,
       "certified": 0.10000000149011612,
-      "looseness": 1.0636377072363377,
+      "looseness": 1.0613876276581005,
       "violated": false
     },
     {
@@ -58,9 +58,9 @@
       "objective": "delta_min",
       "layer": 0,
       "kind": "lower",
-      "attacked": 0.0010884206276386976,
+      "attacked": 0.0010870099067687988,
       "certified": 0.0010000000474974513,
-      "looseness": 1.0884205759414942,
+      "looseness": 1.0870098551386012,
       "violated": false
     },
     {
@@ -68,9 +68,9 @@
       "objective": "B_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 1.815934181213379,
+      "attacked": 1.883582592010498,
       "certified": 17.71307373046875,
-      "looseness": 9.754248757316276,
+      "looseness": 9.403927284952328,
       "violated": false
     },
     {
@@ -78,9 +78,9 @@
       "objective": "C_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 1.3877285718917847,
+      "attacked": 1.4444957971572876,
       "certified": 17.526533126831055,
-      "looseness": 12.629655021758662,
+      "looseness": 12.133322340793653,
       "violated": false
     },
     {
@@ -88,9 +88,9 @@
       "objective": "h_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 0.5129921436309814,
+      "attacked": 0.5965243577957153,
       "certified": 129.67388916015625,
-      "looseness": 252.77948360440502,
+      "looseness": 217.38238760162102,
       "violated": false
     },
     {
@@ -98,9 +98,9 @@
       "objective": "y_abs",
       "layer": 0,
       "kind": "upper",
-      "attacked": 4.739531517028809,
-      "certified": 160109.0,
-      "looseness": 33781.60888365009,
+      "attacked": 4.914877891540527,
+      "certified": 6822.64501953125,
+      "looseness": 1388.161653268002,
       "violated": false
     },
     {
@@ -108,9 +108,9 @@
       "objective": "u_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 6.2460527420043945,
+      "attacked": 6.495306968688965,
       "certified": 9.004310607910156,
-      "looseness": 1.441600156104449,
+      "looseness": 1.3862794555078,
       "violated": false
     },
     {
@@ -118,9 +118,9 @@
       "objective": "delta_max",
       "layer": 1,
       "kind": "upper",
-      "attacked": 0.09512579441070557,
+      "attacked": 0.09534609317779541,
       "certified": 0.10000000149011612,
-      "looseness": 1.0512395939461612,
+      "looseness": 1.04881068701622,
       "violated": false
     },
     {
@@ -128,9 +128,9 @@
       "objective": "delta_min",
       "layer": 1,
       "kind": "lower",
-      "attacked": 0.0010703563457354903,
+      "attacked": 0.0010654672514647245,
       "certified": 0.0010000000474974513,
-      "looseness": 1.0703562948962944,
+      "looseness": 1.0654672008577482,
       "violated": false
     },
     {
@@ -138,9 +138,9 @@
       "objective": "B_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 1.6863744258880615,
+      "attacked": 1.740657091140747,
       "certified": 17.226232528686523,
-      "looseness": 10.21495123754324,
+      "looseness": 9.896396376035925,
       "violated": false
     },
     {
@@ -148,9 +148,9 @@
       "objective": "C_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 1.7676862478256226,
+      "attacked": 1.8526949882507324,
       "certified": 17.591190338134766,
-      "looseness": 9.951534306369785,
+      "looseness": 9.494919805846683,
       "violated": false
     },
     {
@@ -158,9 +158,9 @@
       "objective": "h_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 0.3360580801963806,
+      "attacked": 0.3646222651004791,
       "certified": 143.54425048828125,
-      "looseness": 427.1411965586395,
+      "looseness": 393.67933400535674,
       "violated": false
     },
     {
@@ -168,9 +168,9 @@
       "objective": "y_abs",
       "layer": 1,
       "kind": "upper",
-      "attacked": 6.669803142547607,
-      "certified": 169548.671875,
-      "looseness": 25420.34123817318,
+      "attacked": 6.992438793182373,
+      "certified": 7551.01953125,
+      "looseness": 1079.8835362866878,
       "violated": false
     }
   ]

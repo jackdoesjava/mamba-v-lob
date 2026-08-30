@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "provenance": {
     "export": {
-      "git_sha": "271fb2b3778bbfd9812e9bcac2ff8df278e303ed-dirty",
+      "git_sha": "29fd87ebfc58947be9373ee462d2ce9a5dd7651c-dirty",
       "torch_version": "2.11.0+cpu",
       "numpy_version": "2.4.4",
       "python_version": "3.14.4",
@@ -2080,16 +2080,16 @@
     {
       "layer": 0,
       "quantity": "h",
-      "certified_abs_max": 1169.0269775390625,
+      "certified_abs_max": 129.67388916015625,
       "empirical_abs_max": 0.25996026396751404,
-      "looseness": 4496.944878026244
+      "looseness": 498.8219629456945
     },
     {
       "layer": 0,
       "quantity": "y",
-      "certified_abs_max": 160109.0,
+      "certified_abs_max": 6822.64501953125,
       "empirical_abs_max": 2.748760938644409,
-      "looseness": 58247.699081084895
+      "looseness": 2482.080170600771
     },
     {
       "layer": 1,
@@ -2136,16 +2136,16 @@
     {
       "layer": 1,
       "quantity": "h",
-      "certified_abs_max": 1273.9185791015625,
+      "certified_abs_max": 143.54425048828125,
       "empirical_abs_max": 0.16802428662776947,
-      "looseness": 7581.752642245834
+      "looseness": 854.3065610882802
     },
     {
       "layer": 1,
       "quantity": "y",
-      "certified_abs_max": 169548.671875,
+      "certified_abs_max": 7551.01953125,
       "empirical_abs_max": 1.8648159503936768,
-      "looseness": 90919.78853956446
+      "looseness": 4049.203638383682
     }
   ],
   "checks": {

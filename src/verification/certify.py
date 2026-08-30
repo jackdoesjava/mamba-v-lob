@@ -22,6 +22,21 @@ def _split(box: Interval, sizes: list[int], dim: int = -1) -> list[Interval]:
     return [Interval(a, b) for a, b in zip(los, his)]
 
 
+# Realised quantities and the certified box each is priced against. The state and its
+# readout are priced against the invariant, which is the bound the certificate ships; the
+# unrolled boxes stay in the certificate as baselines.
+PRICED: list[tuple[str, str]] = [
+    ("u", "u"),
+    ("delta", "delta"),
+    ("B", "B"),
+    ("C", "C"),
+    ("A_bar", "A_bar"),
+    ("B_bar", "B_bar"),
+    ("h", "h_invariant"),
+    ("y", "y_invariant"),
+]
+
+
 @torch.no_grad()
 def certify_block(
     block: SelectiveSSMBlock,
@@ -221,16 +236,7 @@ def looseness_report(certificate: dict, envelope: dict) -> list[dict]:
         zip(certificate["layers"], envelope["layers"])
     ):
         boxes = cert_layer["boxes"]
-        for key, cert_key in [
-            ("u", "u"),
-            ("delta", "delta"),
-            ("B", "B"),
-            ("C", "C"),
-            ("A_bar", "A_bar"),
-            ("B_bar", "B_bar"),
-            ("h", "h_horizon"),
-            ("y", "y_horizon"),
-        ]:
+        for key, cert_key in PRICED:
             if key not in env_layer:
                 continue
             cert_r = boxes[cert_key].abs_max().max().item()

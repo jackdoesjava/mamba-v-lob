@@ -170,8 +170,10 @@ def test_block_certificate_contains_realised_values():
         assert concrete.max() <= box.hi.max() + 1e-4, f"{name} above its box"
 
     assert tr.A_bar.max() <= boxes["A_bar"].hi.max() + 1e-6
-    assert tr.h.abs().max() <= boxes["h_horizon"].abs_max().max() + 1e-4
-    assert tr.y.abs().max() <= boxes["y_horizon"].abs_max().max() + 1e-4
+    for bound in ("h_invariant", "h_horizon"):
+        assert tr.h.abs().max() <= boxes[bound].abs_max().max() + 1e-4
+    for bound in ("y_invariant", "y_horizon"):
+        assert tr.y.abs().max() <= boxes[bound].abs_max().max() + 1e-4
 
 
 def test_certified_output_range_holds_for_wild_inputs():
@@ -234,7 +236,9 @@ def test_empirical_envelope_is_inside_the_certificate():
             ("C", "C"),
             ("A_bar", "A_bar"),
             ("B_bar", "B_bar"),
+            ("h", "h_invariant"),
             ("h", "h_horizon"),
+            ("y", "y_invariant"),
             ("y", "y_horizon"),
         ]:
             lo, hi = boxes[cert_key].lo.min().item(), boxes[cert_key].hi.max().item()

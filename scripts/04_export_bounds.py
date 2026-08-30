@@ -16,6 +16,7 @@ from src.models.mamba import LOBMamba
 from src.utils.config import load_config
 from src.utils.repro import provenance
 from src.verification.certify import (
+    PRICED,
     certify_model,
     empirical_envelope,
     looseness_report,
@@ -174,16 +175,8 @@ def soundness_check(cert: dict, envelope: dict) -> dict:
     violations = []
     for li, (cl, el) in enumerate(zip(cert["layers"], envelope["layers"])):
         boxes = cl["boxes"]
-        for key, cert_key in [
-            ("u", "u"),
-            ("delta", "delta"),
-            ("B", "B"),
-            ("C", "C"),
-            ("A_bar", "A_bar"),
-            ("B_bar", "B_bar"),
-            ("h", "h_horizon"),
-            ("y", "y_horizon"),
-        ]:
+        # the shipped boxes and the unrolled baselines both have to contain what was seen
+        for key, cert_key in PRICED + [("h", "h_horizon"), ("y", "y_horizon")]:
             if key not in el:
                 continue
             box = boxes[cert_key]
@@ -193,6 +186,7 @@ def soundness_check(cert: dict, envelope: dict) -> dict:
                     {
                         "layer": li,
                         "quantity": key,
+                        "box": cert_key,
                         "certified": [lo, hi],
                         "realised": [el[key]["lo"], el[key]["hi"]],
                     }

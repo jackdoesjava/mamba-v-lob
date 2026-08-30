@@ -17,11 +17,7 @@ PRODUCED: dict[str, list[str]] = {
     "docs/certification/bounds.json": [
         "scripts/06_certify.py", "src/verification/invariant.py", "src/verification/certify.py",
     ],
-    "docs/certification/bounds.md": [
-        "scripts/06_certify.py", "src/verification/invariant.py", "src/verification/certify.py",
-    ],
     "docs/certification/sweep.json": ["scripts/10_sweep.py", "src/verification/invariant.py"],
-    "docs/certification/sweep.md": ["scripts/10_sweep.py", "src/verification/invariant.py"],
     "docs/certification/attack.json": [
         "scripts/07_attack_bounds.py", "src/verification/certify.py",
     ],
@@ -53,6 +49,14 @@ PRODUCED: dict[str, list[str]] = {
     "docs/figures/dm_test_heatmap.pdf": ["scripts/05_figures.py"],
     "docs/figures/regime_conditioned_ic.pdf": ["scripts/05_figures.py"],
     "docs/figures/latency_complexity.pdf": ["scripts/05_figures.py"],
+}
+
+# Written by the same run as their JSON, so they are current exactly when it is. A table
+# that comes out identical when regenerated gets no new commit, which would otherwise make
+# it look older than its sources.
+TWINS: dict[str, str] = {
+    "docs/certification/bounds.md": "docs/certification/bounds.json",
+    "docs/certification/sweep.md": "docs/certification/sweep.json",
 }
 
 # Phrases from claims this project retracted. None of them should reach an artefact.
@@ -114,6 +118,13 @@ def main() -> None:
                 stale.append((artefact, source))
                 break
 
+    stale_now = {artefact for artefact, _ in stale}
+    for twin, json_file in TWINS.items():
+        if not Path(twin).exists():
+            missing.append(twin)
+        elif json_file in stale_now:
+            stale.append((twin, json_file))
+
     for path in Path("docs").rglob("*.md"):
         text = path.read_text(encoding="utf-8").lower()
         for phrase in RETRACTED:
@@ -125,7 +136,7 @@ def main() -> None:
             if phrase in text:
                 retracted.append((str(path), phrase))
 
-    print(f"artefacts checked : {len(PRODUCED)}")
+    print(f"artefacts checked : {len(PRODUCED) + len(TWINS)}")
     print(f"missing           : {len(missing)}")
     print(f"stale             : {len(stale)}")
     print(f"retracted phrases : {len(retracted)}")

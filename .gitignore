@@ -12,3 +12,8 @@ data/processed/
 .vscode/
 .idea/
 .DS_Store
+
+# Isabelle
+*.thy.marks
+*.thy#
+*.thy~

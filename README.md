@@ -56,6 +56,7 @@ src/utils/         config, seeding and provenance, overlap-aware statistics
 scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
                    07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check
 tests/             unit tests for the maths, the domain and the models
+isabelle/          the machine-checked invariant and LayerNorm bounds, Isabelle/HOL
 docs/              the five pages listed at the bottom
 ```
 

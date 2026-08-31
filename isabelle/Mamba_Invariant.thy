@@ -5,8 +5,8 @@ begin
 section \<open>A machine-checked forward invariant for the selective SSM state\<close>
 
 text \<open>
-  This theory machine-checks the invariant argument of @{file \<open>docs/02-invariant.md\<close>} and
-  the LayerNorm bounds of @{file \<open>docs/03-certificate.md\<close>}: the hidden state of a Mamba
+  This theory machine-checks the invariant argument of @{file \<open>../docs/02-invariant.md\<close>} and
+  the LayerNorm bounds of @{file \<open>../docs/03-certificate.md\<close>}: the hidden state of a Mamba
   block with exact zero-order-hold discretisation never leaves the box \<open>[-M, M]\<close> with
   \<open>M = sup |B u| / |A|\<close>, at any sequence length, with no lower bound on the timescale.
 
@@ -83,7 +83,7 @@ qed
 section \<open>3. The zero-order-hold identity and the convex form\<close>
 
 text \<open>
-  Proposition 1 of @{file \<open>docs/02-invariant.md\<close>}: for \<open>A < 0\<close> the exact discretisation
+  Proposition 1 of @{file \<open>../docs/02-invariant.md\<close>}: for \<open>A < 0\<close> the exact discretisation
   puts \<open>1 - Abar\<close> in the input gain, so the update is a weighted average. The Euler
   surrogate \<open>Bbar \<approx> dt * B\<close> does not satisfy this identity, which is why the invariant
   belongs to the exact discretisation only.
@@ -264,7 +264,7 @@ next
 qed
 
 text \<open>
-  The coordinate bound of @{file \<open>docs/03-certificate.md\<close>}: on the LayerNorm constraint
+  The coordinate bound of @{file \<open>../docs/03-certificate.md\<close>}: on the LayerNorm constraint
   set (zero sum, energy at most \<open>d\<close>) no coordinate exceeds \<open>sqrt (d - 1)\<close>. To push one
   coordinate high, the other \<open>d - 1\<close> must cancel it, and the cancellation spends energy.
   The statement degenerates gracefully at \<open>d = 1\<close>: the constraints force \<open>z = 0\<close>.
@@ -333,7 +333,7 @@ qed
 text \<open>
   The constraint set is not an assumption on the data: the normalisation itself lands in
   it, for every input \<open>x \<in> \<real>\<^sup>d\<close> and every \<open>eps > 0\<close>. This is the full Proposition of
-  @{file \<open>docs/03-certificate.md\<close>}, \<open>\<bar>LN(x)\<^sub>i - beta\<^sub>i\<bar> \<le> \<bar>gamma\<^sub>i\<bar> sqrt (d - 1)\<close>, with the
+  @{file \<open>../docs/03-certificate.md\<close>}, \<open>\<bar>LN(x)\<^sub>i - beta\<^sub>i\<bar> \<le> \<bar>gamma\<^sub>i\<bar> sqrt (d - 1)\<close>, with the
   biased variance PyTorch uses. The architecture manufactures the invariant's premise.
 \<close>
 
@@ -492,7 +492,7 @@ lemma bounded_dt_positive:
 section \<open>7. The abstraction gap is a genuine gap\<close>
 
 text \<open>
-  The closed-form overcharge of @{file \<open>docs/02-invariant.md\<close>},
+  The closed-form overcharge of @{file \<open>../docs/02-invariant.md\<close>},
   \<open>gap = (1 - exp(-lam d_hi)) / (1 - exp(-lam d_lo))\<close>, is at least \<open>1\<close> whenever the
   timescale box is nondegenerate: the geometric bound never beats the invariant, at any
   pole and any timescale range. (Its divergence as \<open>d_lo \<rightarrow> 0\<close> is visible in the formula;
@@ -530,9 +530,9 @@ text \<open>
       propagation through the trained weights; this file proves the schema of that
       computation (the invariant, the LayerNorm root, the fused bound, tightness of the
       gap formula), while the arithmetic on the weights stays in
-      @{file \<open>src/verification/invariant.py\<close>} and its Z3-checked interval lemmas.
+      @{file \<open>../src/verification/invariant.py\<close>} and its Z3-checked interval lemmas.
     \<^item> Composition across blocks and the head remains interval arithmetic in code, as
-      @{file \<open>docs/05-handoff.md\<close>} already states.
+      @{file \<open>../docs/05-handoff.md\<close>} already states.
 \<close>
 
 end

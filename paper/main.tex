@@ -37,22 +37,25 @@
 \begin{abstract}
 \noindent Certifying a recurrent model usually means fixing a sequence length,
 unrolling the recurrence into a feed-forward network, and calling a verifier. The
-certificate holds at that one length only, and it loosens as the length grows. We show
-that a selective state space model needs no unrolling. Under the exact zero-order hold,
-the state update is a convex combination of the previous state and an input-dependent
-equilibrium. A bound on the equilibrium is therefore a forward-invariant box for the
-hidden state: closed form in the model's own parameters, valid at any sequence length,
-with no lower bound on the timescale required. Its one premise, that the equilibrium
-stays bounded, is discharged by the model's own layer normalisation, so the certificate
-holds for every input. The argument is formalised in Isabelle/HOL: the discretisation
-identity, the induction, and the normalisation bounds at every width. On a Mamba-style
-model trained on limit order book data, the certified bound is 95 times tighter than the
-converged fixed point of the standard interval recursion, and it does not move between
-ten steps and five thousand while the unrolled bound grows by two orders of magnitude.
-The gap between the two has a closed form containing no trained weight, and it matches
-the measured ratio elementwise. Adversarial search against the trained model finds no
-violation. The certificate bounds reachable states and outputs; it is not a robustness
-guarantee.
+resulting certificate holds at that one length only, and it loosens as the length
+grows. We show that a selective state space model, the recurrence at the core of
+Mamba, needs no unrolling. Under the exact zero-order hold, each state update is a
+convex combination of the previous state and an input-dependent equilibrium, so a
+bound on the equilibrium is a forward-invariant box for the hidden state. The box is
+closed form in the model's own parameters, it holds at every sequence length, and it
+requires nothing of the timescale beyond positivity. Its one premise, that the
+equilibrium stays bounded, is discharged by the model's own layer normalisation, so
+the box holds for every input. The argument is formalised in Isabelle/HOL: the
+discretisation identity, the induction, and the normalisation bounds, proved at every
+width rather than checked at ours. On a two-layer model trained on limit order book
+data, the invariant is 95 times tighter than the fixed point of the standard interval
+recursion. The unrolled bound climbs two orders of magnitude towards that fixed point
+between ten steps and five thousand; the invariant does not move at all. The ratio
+between the invariant and the fixed point has a closed form containing no trained
+weight, and it matches the measured value elementwise. Gradient attacks on the trained
+model find no violation. The constrained parametrisation costs no measurable accuracy,
+so the bound is not bought with performance. The invariant bounds reachable states and
+outputs; it is not a robustness guarantee.
 \end{abstract}
 
 \section{Introduction}
@@ -493,9 +496,9 @@ Layer & Invariant & Widened fixed point & Unrolled, $L = 100$ & Tighter by \\
 
 \subsection{Scaling with sequence length}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.85\textwidth]{bound_vs_horizon.pdf}
+  \includegraphics[width=0.75\textwidth]{bound_vs_horizon.pdf}
   \caption{Certified bound on the state against sequence length, layer~0. The unrolled
     interval bound is recomputed at each length and climbs towards its fixed point; the
     invariant is one induction step and does not move. The two cross at about $L = 10$.}
@@ -504,7 +507,8 @@ Layer & Invariant & Widened fixed point & Unrolled, $L = 100$ & Tighter by \\
 
 The invariant is $129.67$ at $L = 10$ and $129.67$ at $L = 5000$. Across the same range
 the unrolled bound runs $127.56$, $601.78$, $1169.03$, $4838.40$, $7781.12$ and
-$1.226 \times 10^{4}$ at $L = 10, 50, 100, 500, 1000, 5000$ respectively. Below
+$1.226 \times 10^{4}$ at $L = 10, 50, 100, 500, 1000, 5000$ respectively, which is
+Figure~\ref{fig:horizon}. Below
 $L \approx 10$ the unrolled bound is the tighter of the two, which we state because it is
 true and because it locates precisely where the tradeoff turns: the invariant is not
 uniformly better, it is better everywhere past a handful of steps and it stops moving.
@@ -515,11 +519,22 @@ With $\Delta = \mathrm{softplus}(z)$, which admits no lower bound at all, induct
 holds and the invariant certifies at $129.7168$ and $143.3978$. The separated argument on
 the same model gives $1.298 \times 10^{7}$ and $1.433 \times 10^{7}$, because
 $\sup\Abar = 1$ and it is dividing by $1 - \sup\Abar$. The invariant needs no floor on the
-timescale; only the geometric argument ever did.
+timescale; only the geometric argument ever did. Figure~\ref{fig:floor} sweeps the floor
+directly.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{bound_vs_floor.pdf}
+  \caption{Certified $\sup|h|$ as the timescale floor $\Delta_{\min}$ is lowered,
+    layer~0, at a fixed random initialisation; moving the floor changes the
+    architecture, and the trained checkpoint exists at one floor only. The geometric
+    bound pays a factor of ten per decade of floor; the invariant does not move.}
+  \label{fig:floor}
+\end{figure}
 
 \subsection{The gap formula against measurement}
 
-\begin{figure}[ht]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{gap_prediction.pdf}
   \caption{The abstraction gap for every (channel, state) element of the trained model.
@@ -529,12 +544,22 @@ timescale; only the geometric argument ever did.
   \label{fig:gap}
 \end{figure}
 
-Equation~\eqref{eq:gap} reproduces the measured ratio elementwise to $5 \times 10^{-7}$.
-Across eight random initialisations the ratio moves between $95.203$ and $95.209$ while
+Equation~\eqref{eq:gap} reproduces the measured ratio elementwise to $5 \times 10^{-7}$,
+plotted per element in Figure~\ref{fig:gap}. Across eight random initialisations the ratio moves between $95.203$ and $95.209$ while
 the radius itself moves between $101.2$ and $132.2$, which is the weight-independence
 of~\eqref{eq:gap} made visible: the quantity the formula predicts is stable precisely
-where the quantity it does not predict is not. Induction holds in all $29$ configurations
-swept.
+where the quantity it does not predict is not. Figure~\ref{fig:seeds} plots both on one
+scale. Induction holds in all $29$ configurations swept.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\textwidth]{sweep_seeds.pdf}
+  \caption{Eight random initialisations, each series shown as the deviation from its own
+    median. The invariant radius moves with the weights by roughly thirty percent; the
+    ratio of the geometric bound to the invariant, the quantity fixed by
+    equation~\eqref{eq:gap}, moves by less than a hundredth of a percent.}
+  \label{fig:seeds}
+\end{figure}
 
 \subsection{Tightness and falsification}
 
@@ -553,7 +578,21 @@ $1.0020$ against a realised $\sup|h|$ of $0.2066$ at layer~0, and $0.5139$ again
 $0.1585$ at layer~1. The induction therefore accounts for a factor of three to five, and
 the boxes on $B$ and $u$ account for the remainder. The dominant term is the interval
 product discarding the correlation between $B$ and $u$, which is a known weakness of the
-box domain and not a weakness of the invariant.
+box domain and not a weakness of the invariant. The exported certificate records a wider
+realised envelope than the single trace used here, and against it the same radii come out
+at $499\times$ and $854\times$; Figure~\ref{fig:priced} reports that ratio for every
+certified quantity.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{certified_vs_realised.pdf}
+  \caption{Certified radius over realised radius for each certified quantity, both
+    layers, log scale. The timescale sits at $1.09\times$ and the transition $\Abar$ at
+    $1.0001\times$ and $1.0002\times$; the state carries $499\times$ and $854\times$,
+    and the readout $y$ carries $2482\times$ and $4049\times$. The state factor is
+    attributable to the boxes on $B$ and $u$ rather than to the induction.}
+  \label{fig:priced}
+\end{figure}
 
 The whole-network output bound, taken through the final normalisation and therefore
 holding for any input in $\mathbb{R}^{L \times 43}$ with no premise at all, is
@@ -561,6 +600,17 @@ $[-5.1242, 4.3374]$. One standardised unit is $0.7042$ basis points of the forwa
 so the model cannot emit a forecast outside roughly $[-3.600, +3.063]$ basis points. This
 licenses a position limit computed from the weights before the model sees a single tick.
 It says nothing whatever about whether the forecast is any good.
+Figure~\ref{fig:output} drives the model with white noise up to $10^{6}$ standard
+deviations; the output stays inside the certified band.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{certified_output_range.pdf}
+  \caption{Realised output ranges under white-noise inputs scaled from $10^{-3}$ to
+    $10^{6}$ standard deviations, against the certified range $[-5.12, 4.34]$, which
+    carries no premise on the input.}
+  \label{fig:output}
+\end{figure}
 
 \subsection{The certified model is a working model}
 
@@ -570,13 +620,24 @@ model $+0.1044$, its softplus arm $+0.1043$, a causal transformer $+0.1040$, and
 regression $+0.0312$. Standard errors from a circular block bootstrap
 \citep{politis1994stationary} are four to five times the naive independent estimate, and
 Diebold--Mariano tests \citep{diebold1995comparing} with the Harvey--Leybourne--Newbold
-correction \citep{harvey1997testing} separate every neural model from ridge and none of
-them from one another.
+correction \citep{harvey1997testing} separate every neural model from ridge, and separate
+the two Mamba arms from each other with the bounded arm favoured; no other pair
+separates. Figure~\ref{fig:dm} gives the full grid of pairwise $p$-values.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{dm_test_heatmap.pdf}
+  \caption{Pairwise Diebold--Mariano $p$-values under the Harvey--Leybourne--Newbold
+    correction, computed on overlapping forecasts. Every neural model separates from the
+    ridge baseline, and the two Mamba arms separate from each other with the bounded arm
+    favoured; no other pair separates.}
+  \label{fig:dm}
+\end{figure}
 
 The only claim these numbers support is that the constrained parametrisation costs no
-measurable accuracy relative to the unconstrained one, so the certificate is not bought
-with performance. One instrument on one day supports nothing beyond that, and we draw
-nothing beyond it.
+measurable accuracy relative to the unconstrained one (the one significant pairwise
+difference favours it), so the certificate is not bought with performance. One instrument
+on one day supports nothing beyond that, and we draw nothing beyond it.
 
 \subsection{Reproducibility}
 

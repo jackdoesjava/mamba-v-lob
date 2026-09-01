@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "271fb2b3778bbfd9812e9bcac2ff8df278e303ed-dirty",
+    "git_sha": "ad50f2ce40a8e2f5acf2e18c9e6c41842be8e72e-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -162,23 +162,23 @@
       "max_drawdown_logret": 0.015834413468837738
     },
     "Ridge": {
-      "rank_ic": 0.031167358805511348,
-      "se_block_bootstrap": 0.00762675512728588,
+      "rank_ic": 0.0311654212079263,
+      "se_block_bootstrap": 0.007626634129558531,
       "se_naive_iid": 0.00625,
-      "ci_lo": 0.016612980127595635,
-      "ci_hi": 0.04600617852349897,
+      "ci_lo": 0.016611992646951085,
+      "ci_hi": 0.04600328875447715,
       "n": 25600,
       "n_effective": 256.0,
       "alpha": 0.05,
       "excludes_zero": true,
-      "pearson_ic": 0.029911763966083527,
+      "pearson_ic": 0.0299108624458313,
       "hit_rate": 0.5046875,
-      "mse": 0.7434538006782532,
-      "pred_std": 0.6501256227493286,
-      "mean_pnl_per_decision": 1.206324782287993e-06,
-      "information_ratio": 0.029368454590439796,
+      "mse": 0.743446946144104,
+      "pred_std": 0.6501193046569824,
+      "mean_pnl_per_decision": 1.207353079735185e-06,
+      "information_ratio": 0.0293935127556324,
       "information_ratio_se": 0.0625,
-      "max_drawdown_logret": 0.005317567847669125
+      "max_drawdown_logret": 0.005264920182526112
     }
   },
   "diebold_mariano": {
@@ -188,7 +188,7 @@
         "p_value": 1.0
       },
       "Mamba (bounded delta)": {
-        "stat": -0.5587490616653199,
+        "stat": -0.55874906166532,
         "p_value": 0.576337878309537,
         "n": 25600,
         "horizon": 100,
@@ -209,7 +209,7 @@
         "favours": "A"
       },
       "Ridge": {
-        "stat": -29.35254831951229,
+        "stat": -29.35257561368864,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -218,7 +218,7 @@
     },
     "Mamba (bounded delta)": {
       "LSTM": {
-        "stat": 0.5587490616653199,
+        "stat": 0.55874906166532,
         "p_value": 0.576337878309537,
         "n": 25600,
         "horizon": 100,
@@ -243,7 +243,7 @@
         "favours": "A"
       },
       "Ridge": {
-        "stat": -28.07836776414369,
+        "stat": -28.078342935079757,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -270,14 +270,14 @@
         "p_value": 1.0
       },
       "Causal Transformer": {
-        "stat": -0.019813137402714343,
+        "stat": -0.019813137402714346,
         "p_value": 0.984192592225662,
         "n": 25600,
         "horizon": 100,
         "favours": "A"
       },
       "Ridge": {
-        "stat": -28.07766678890771,
+        "stat": -28.0776419133037,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -300,7 +300,7 @@
         "favours": "B"
       },
       "Mamba (softplus delta)": {
-        "stat": 0.019813137402714343,
+        "stat": 0.019813137402714346,
         "p_value": 0.984192592225662,
         "n": 25600,
         "horizon": 100,
@@ -311,7 +311,7 @@
         "p_value": 1.0
       },
       "Ridge": {
-        "stat": -28.138492550279302,
+        "stat": -28.138470882400092,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -320,28 +320,28 @@
     },
     "Ridge": {
       "LSTM": {
-        "stat": 29.35254831951229,
+        "stat": 29.35257561368864,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
       },
       "Mamba (bounded delta)": {
-        "stat": 28.07836776414369,
+        "stat": 28.078342935079757,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
       },
       "Mamba (softplus delta)": {
-        "stat": 28.07766678890771,
+        "stat": 28.0776419133037,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
       },
       "Causal Transformer": {
-        "stat": 28.138492550279302,
+        "stat": 28.138470882400092,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,

@@ -1,0 +1,3 @@
+session MambaVLob = HOL +
+  theories
+    Mamba_Invariant

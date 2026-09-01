@@ -1,8 +1,0 @@
-session Mamba_Invariant = HOL +
-  description "
-    A machine-checked forward invariant for the state of a selective state space
-    model, with the LayerNorm bounds that discharge its premise. Checked with
-    Isabelle2025-2.
-  "
-  theories
-    Mamba_Invariant

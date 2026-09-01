@@ -10,10 +10,6 @@ import json
 import warnings
 from pathlib import Path
 
-import matplotlib
-
-matplotlib.use("Agg")  # must precede the pyplot import; headless runs have no display
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
@@ -228,57 +224,7 @@ def main() -> None:
         )
     )
 
-    fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(13, 11), gridspec_kw={"height_ratios": [1.3, 1]}
-    )
-    fig.suptitle(
-        "Held-out test split: LOB return forecasting", fontsize=16, fontweight="bold"
-    )
-
-    for name in order:
-        pnl = (np.sign(predictions[name]) * (targets * target_std + target_mean)).cumsum()
-        ax1.plot(pnl, linewidth=2.0, label=f"{name} (rank IC {results[name]['rank_ic']:+.4f})")
-    ax1.axhline(0, color="#adb5bd", linewidth=0.8)
-    ax1.set_title("Cumulative sign-following PnL, log-return units", fontsize=12)
-    ax1.set_xlabel("test observation")
-    ax1.set_ylabel("cumulative log return")
-    ax1.legend(loc="upper left", fontsize=9)
-    ax1.grid(alpha=0.3)
-
-    ax2.axis("off")
-    header = ["Model", "Rank IC", "95% CI (block)", "naive SE", "block SE", "Hit", "MSE"]
-    rows = [
-        [
-            name,
-            f"{results[name]['rank_ic']:+.4f}",
-            f"[{results[name]['ci_lo']:+.4f}, {results[name]['ci_hi']:+.4f}]",
-            f"{results[name]['se_naive_iid']:.4f}",
-            f"{results[name]['se_block_bootstrap']:.4f}",
-            f"{results[name]['hit_rate']:.2%}",
-            f"{results[name]['mse']:.4f}",
-        ]
-        for name in order
-    ]
-    table = ax2.table(cellText=[header, *rows], loc="center", cellLoc="center")
-    table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1, 1.8)
-    for (r, _), cell in table.get_celld().items():
-        cell.set_edgecolor("#dee2e6")
-        if r == 0:
-            cell.set_text_props(weight="bold")
-            cell.set_facecolor("#f1f3f5")
-    ax2.set_title(
-        f"n = {len(targets):,} overlapping observations "
-        f"({effective_sample_size(len(targets), horizon):.0f} independent windows). "
-        "Overlapping windows: read the block SE, not the naive one.",
-        fontsize=10,
-        pad=18,
-    )
-
-    plt.tight_layout()
-    plt.savefig("model_comparison.png", dpi=200, bbox_inches="tight")
-    print(f"\nwrote {RESULTS_DIR}/test_metrics.json, predictions parquet, model_comparison.png")
+    print(f"\nwrote {RESULTS_DIR}/test_metrics.json and the predictions parquet")
 
 
 if __name__ == "__main__":

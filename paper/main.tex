@@ -398,57 +398,142 @@ happened instead.
 \section{Machine-checked proof}
 \label{sec:formal}
 
-% ---------------------------------------------------------------------------
-% DANIEL: this section is yours to write. Notes, not text:
-%
-%   - the theory is isabelle/Mamba_Invariant.thy, session MambaVLob, Isabelle2025-2
-%   - 442 commands, no errors, no sorries; imports only Complex_Main (no AFP)
-%   - the five statements map to: convex_combination_bound; Abar_in_unit_interval
-%     (+ _closed); zoh_identity and update_is_convex_combination;
-%     convex_recurrence_invariant with headline mamba_cell_state_bounded;
-%     layernorm_bound, fused_layernorm_linear_bound, fused_layernorm_linear_attained
-%   - beyond the five: zoh_is_exact_flow, abstraction_gap_ge_one,
-%     A_parametrisation_negative, softplus_positive, bounded_dt_positive
-%   - Cauchy-Schwarz for finite sums is not in Complex_Main, so the theory proves it
-%   - worth stating plainly what a machine-checked proof does and does not buy:
-%     Isabelle guarantees the proofs, not that the statements are the intended ones
-%   - the theory's own Scope section is the honest list of what is out of scope
-% ---------------------------------------------------------------------------
+The chain from Proposition~\ref{prop:zoh} to Proposition~\ref{prop:fused} is
+formalised in Isabelle/HOL \citep{nipkow2002isabelle}. The theory is
+\texttt{isabelle/Mamba\_Invariant.thy}, and it builds headless from the repository's
+\texttt{ROOT} file as session \texttt{MambaVLob} under Isabelle2025-2. It contains
+nineteen statements; Isabelle processes its $442$ commands with no errors, and it
+contains no \texttt{sorry} and no \texttt{oops}. The only import is
+\texttt{Complex\_Main}, so checking it requires the Isabelle distribution and nothing
+beyond it. Cauchy--Schwarz for finite sums is not in \texttt{Complex\_Main}; the
+theory proves it from scratch as \texttt{cauchy\_schwarz\_sum}.
 
-\textit{[To be written by D.M.]}
+Table~\ref{tab:mapping} maps the paper to the theory. The theorem to read first is
+\texttt{mamba\_cell\_state\_bounded}. Its hypotheses are $A < 0$, a strictly positive
+timescale at every step, $|B_t u_t| \le K$ at every step, a state started at zero, and
+the update written exactly as the block computes it,
+$h_t = \exp(\Delta_t A)\, h_{t-1} + \left( (\exp(\Delta_t A) - 1)/A \right) B_t u_t$.
+Its conclusion is $|h_t| \le K/|A|$ at every $t$. The convex form of
+equation~\eqref{eq:convex} appears inside the proof rather than in the statement, so
+accepting the theorem does not require trusting the rearrangement.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{@{}lp{0.56\textwidth}@{}}
+\toprule
+Statement in the paper & Theorems in the theory \\
+\midrule
+Proposition~\ref{prop:zoh} & \texttt{zoh\_identity}, \texttt{update\_is\_convex\_combination} \\
+Proposition~\ref{prop:invariant} & \texttt{convex\_recurrence\_invariant}; headline \texttt{mamba\_cell\_state\_bounded} \\
+Its strengthenings & \texttt{Abar\_in\_unit\_interval\_closed}, \texttt{convex\_recurrence\_bounded} \\
+Proposition~\ref{prop:ln} & \texttt{layernorm\_bound}, via \texttt{cauchy\_schwarz\_sum} \\
+Proposition~\ref{prop:fused} & \texttt{fused\_layernorm\_linear\_bound}, \texttt{fused\_layernorm\_linear\_attained} \\
+Architecture facts, Section~\ref{sec:block} & \texttt{A\_parametrisation\_negative}, \texttt{softplus\_positive}, \texttt{bounded\_dt\_positive} \\
+Equation~\eqref{eq:gap} at least $1$ & \texttt{abstraction\_gap\_ge\_one} \\
+\bottomrule
+\end{tabular}
+\caption{The paper's statements against the theorems that carry them.}
+\label{tab:mapping}
+\end{table}
+
+The two strengthenings noted after Proposition~\ref{prop:invariant} are
+\texttt{Abar\_in\_unit\_interval\_closed}, which places the weight in the closed
+interval $[0,1]$, and \texttt{convex\_recurrence\_bounded}, which starts from an
+arbitrary state and concludes $|h_t| \le \max(|h_{-1}|, M)$. The theory also proves
+statements the paper makes in prose. \texttt{zoh\_is\_exact\_flow} shows that the
+discrete step is the flow of $\dot h = A h + B u$ across one step, so the word
+``exact'' in Proposition~\ref{prop:zoh} is discharged rather than asserted.
+\texttt{abstraction\_gap\_ge\_one} shows that equation~\eqref{eq:gap} is bounded below
+by one for every pole and every nondegenerate timescale box. The two construction
+facts of Section~\ref{sec:block} are theorems, with the positivity of the timescale
+proved once for each arm. The hypotheses $A < 0$ and $\Delta_t > 0$ of
+\texttt{mamba\_cell\_state\_bounded} are therefore supplied by the parametrisation
+alone; the initial state and the form of the update are the block's definition, and
+the box on $B_t u_t$ is what Section~\ref{sec:premise} discharges. \texttt{layernorm\_bound} is stated over an arbitrary finite
+index set, so it covers $d = 64$ and every other width, and it is proved from the
+normalisation map itself, with the biased variance and the $\varepsilon$, rather than
+from the constraint set as an assumption. Sixteen of the nineteen supporting interval
+lemmas of Section~\ref{sec:experiments} also discharge under Z3
+\citep{demoura2008z3}; the three that do not
+are polynomial layer-normalisation lemmas the solver stalls on at small fixed widths,
+and they are exactly the statements the theory settles at every width.
+
+What the formalisation guarantees is the proofs. The Isabelle kernel checks every
+inference, so the arguments above cannot contain the kind of gap a hand proof can. It
+does not guarantee that the formal statements are the ones we intended. Statement
+fidelity is a human check, made by reading, and we have made it; the hypotheses of the
+headline theorem are short enough to compare against Section~\ref{sec:block} directly,
+which is why it is stated from the raw update. The theory's closing section records
+what stays outside the formal boundary: the interval propagation that produces the
+numeric radius in Table~\ref{tab:alternatives}, the composition across blocks, and
+floating point are checked by code and tests rather than by proof
+(Sections~\ref{sec:experiments} and~\ref{sec:limitations}). The statements are made
+per scalar cell, which matches the block: $A$ is diagonal, and a block is
+$d_{\mathrm{inner}} \times d_{\mathrm{state}}$ independent cells.
 
 \section{Relation to invariant inference and reachability}
 \label{sec:related}
 
-% ---------------------------------------------------------------------------
-% DANIEL: this section is yours. Facts below were checked against the primary
-% source (Jacoby, Barrett & Katz, ATVA 2020; full version arXiv:2004.02462) on
-% 1 September 2026, so they can be relied on:
-%
-%   - their step is  v_i^t = f(W_i v_{i-1}^t + H_i \tilde{v}_i^t + b_i)  with f = ReLU,
-%     i.e. the recurrence enters through H on the memory unit, and there is a bias.
-%     (NOT ReLU(Wv + Ux) as an earlier draft of ours had it.)
-%   - they state the class limit themselves, verbatim: "While we focus here on vanilla
-%     RNNs, our technique could be extended to, e.g., LSTMs or GRUs; we leave this for
-%     future work." Quoting them is stronger than asserting it ourselves.
-%   - backend is Marabou: "uses the Marabou tool as its FFNN verification back-end"
-%   - the loop "terminates when the property is proven correct, when a counter-example
-%     is found, or when a certain timeout value is exceeded", and in the last case the
-%     results are explicitly "inconclusive"
-%   - the invariant template is affine in time:  alpha_l (t-1) <= v~^t <= alpha_u (t-1)
-%
-% The contrast worth drawing, which our earlier framing missed: their invariants are
-% permitted to GROW with t by construction, ours is constant in t. That is a difference
-% in the shape of the certificate, not only in its tightness.
-%
-% Also for this section: Tran et al. (star sets) as the strongest representative of the
-% unrolling route; and Bonassi et al., where the correct contrast is NOT
-% "training vs construction" (a GRU's box is structural too, since the activation caps
-% it) but that a GRU's box is the activation's range, a constant, whereas ours is a
-% closed form in the trained weights that moves with the model.
-% ---------------------------------------------------------------------------
+Jacoby, Barrett and Katz \citep{jacoby2020rnn} verify recurrent networks by invariant
+inference rather than by unrolling, and theirs is the work ours is most likely to be
+mistaken for. Their step is
+$v_i^t = f(W_i\, v_{i-1}^t + H_i\, \tilde{v}_i^t + b_i)$ with $f = \mathrm{ReLU}$, the
+recurrence entering through $H_i$ on the memory unit, so a single step is piecewise
+linear in the state and the input jointly. Candidate invariants are drawn from a
+template affine in time, $\alpha_l\,(t-1) \le \tilde{v}^t \le \alpha_u\,(t-1)$, and
+each candidate is checked by posing one step to the piecewise-linear verifier Marabou
+\citep{katz2019marabou} as a feed-forward query; the loop ends with a proof, a
+counterexample, or a timeout, and a timeout is reported as inconclusive.
 
-\textit{[To be written by D.M.]}
+The certificates differ in provenance. Theirs is the output of a search: a set of
+numbers for one trained network, not a formula in the parameters, and the search may
+end inconclusively. Ours is an expression in the architecture's own quantities,
+$\sup|Bu|/|A|$, which exists for every parameter value before any verifier runs. The
+certificates also differ in shape. Their template permits the invariant to grow with
+$t$ by construction; ours is constant in $t$, and that difference is what
+Section~\ref{sec:experiments} measures against the unrolled route. They differ,
+finally, in reach. The authors state the covered class themselves: ``While we focus
+here on vanilla RNNs, our technique could be extended to, e.g., LSTMs or GRUs; we
+leave this for future work.'' A selective state space model resists that extension at
+the level of the step itself. The transition coefficient $\exp(\Delta A)$ is
+transcendental in the input and multiplies the state, so one step is not piecewise
+linear in state and input together, and cannot be posed to a piecewise-linear
+back-end as it stands. A relaxation that restores piecewise linearity by bounding
+$\Abar$ and $1 - \Abar$ separately fails the inductive check for every box that is
+not a single point, by the argument of Section~\ref{sec:separate}. An encoding that preserves the coupling
+contains the convex form of equation~\eqref{eq:convex} already, and then nothing
+remains to be inferred, because the radius is forced. On this architecture the search
+and the derivation are not alternatives: the derivation is what would make the search
+well posed.
+
+Star-set reachability \citep{tran2023star} is the strongest representative of the
+unrolling route: within a fixed length the reachable set is propagated precisely, and
+the certificate is valid at the length it was computed for. Section~\ref{sec:experiments}
+reports what that route pays on this model as the length grows, in its interval
+instantiation; a sharper relaxation moves the constants and leaves the shape of the
+certificate, one length at a time, in place.
+
+Bonassi, Farina and Scattolini \citep{bonassi2021gru} establish stability properties
+for gated recurrent units, whose update is likewise a convex combination of the
+previous state and a bounded candidate. The correct contrast is not that their box
+holds by training and ours by construction, because a GRU's box is structural too: the
+saturating activation caps the candidate state whatever the weights are. The contrast
+is what the box is. A GRU's box is the range of its activation, the same constant for
+every trained network. Ours is a closed form in the trained weights, and it moves with
+the model; across the random initialisations of Section~\ref{sec:experiments} it moves
+by roughly thirty percent. The convex weights also have different origins, a learned
+gate there and the discretisation identity here, which is why the bound covers both
+timescale parametrisations rather than depending on what a particular gate computes.
+
+The novelty position is narrow. Inductive invariants for neural sequence models are
+prior art, length-independence obtained through an invariant is prior art, and the
+relation between gain and time constant in Proposition~\ref{prop:zoh} is classical
+linear systems theory. What we did not find in the literature is a closed-form,
+architecture-specific inductive invariant for an input-selective state space model,
+derived from the discretisation rather than inferred by a verifier, with its premise
+discharged by the model's own normalisation. That is a statement about our search, not
+about the literature, and the search was not exhaustive
+(Section~\ref{sec:limitations}).
 
 \section{Experiments}
 \label{sec:experiments}

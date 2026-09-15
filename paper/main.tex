@@ -16,7 +16,6 @@
 \graphicspath{{../docs/figures/}}
 
 \newtheorem{proposition}{Proposition}
-\newtheorem{corollary}{Corollary}
 
 \newcommand{\Abar}{\bar{A}}
 \newcommand{\Bbar}{\bar{B}}
@@ -46,8 +45,8 @@ closed form in the model's own parameters, it holds at every sequence length, an
 requires nothing of the timescale beyond positivity. Its one premise, that the
 equilibrium stays bounded, is discharged by the model's own layer normalisation, so
 the box holds for every input. The argument is formalised in Isabelle/HOL: the
-discretisation identity, the induction, and the normalisation bounds, proved at every
-width rather than checked at ours. On a two-layer model trained on limit order book
+discretisation identity, the induction, and the normalisation bounds, which are proved
+at every width rather than checked at ours. On a two-layer model trained on limit order book
 data, the invariant is 95 times tighter than the fixed point of the standard interval
 recursion. The unrolled bound climbs two orders of magnitude towards that fixed point
 between ten steps and five thousand; the invariant does not move at all. The ratio
@@ -73,12 +72,12 @@ they are pointed at a recurrent model. It also has two costs that are easy to st
 hard to avoid. The certificate is valid at the length it was computed for and at no
 other. And it decays with that length: on the model we certify in
 Section~\ref{sec:experiments}, the unrolled state bound runs from $127.56$ at $L = 10$ to
-$1.226 \times 10^{4}$ at $L = 5000$, while nothing about the network has changed. A model
+$12{,}264$ at $L = 5000$, while nothing about the network has changed. A model
 reading a live stream has no $L$ at all, so there is nothing for this route to certify.
 
 The alternative is an inductive invariant: a set the state begins inside and provably
 cannot leave, established once and valid at every length. Invariants for neural sequence
-models are not new, and we make no claim on the idea. What we contribute is that for a
+models are not new, and we make no claim to the idea. What we contribute is that for a
 selective state space model the invariant need not be searched for at all. It can be
 written down in closed form from the discretisation, and its single premise can be
 discharged from the architecture rather than assumed of the data.
@@ -105,7 +104,8 @@ We claim the following.
     why the standard separated argument cannot reach it.
   \item A discharge of its premise from the model's own layer normalisation
     (Section~\ref{sec:premise}), so the certificate holds for every input in
-    $\mathbb{R}^{L \times d}$ rather than for a data-dependent subset. The fused
+    $\mathbb{R}^{L \times d}$, for the layer width $d$, rather than for a data-dependent
+    subset. The fused
     normalisation bound we use for this is tight, not merely sound.
   \item A closed form for the loss the standard interval argument incurs
     (Section~\ref{sec:gap}). It contains no trained weight, which we confirm against the
@@ -120,7 +120,7 @@ We claim the following.
 
 Limit order book forecasting is the demonstration throughout, and only that. The claim is
 about the architecture: certification consumes no data, and the predictive numbers appear
-solely to establish that the model being certified is a working model rather than an
+solely to establish that the model being certified is a working model and not an
 arbitrary set of weights.
 
 \section{The block, and what varies with time}
@@ -135,7 +135,7 @@ diagonal, strictly negative continuous-time $A$ using that timescale
   [u_0, g]      &= \mathrm{in\_proj}(x_n) \\
   u             &= \mathrm{SiLU}\!\left( \mathrm{DepthwiseCausalConv1d}(u_0) \right) \\
   [p, B, C]     &= \mathrm{x\_proj}(u) \\
-  \Delta        &= \Delta_{\min}\left( \Delta_{\max} / \Delta_{\min} \right)^{\sigma(\mathrm{dt\_proj}(p))} \\
+  \Delta        &= \Delta_{\min}\left( \Delta_{\max} / \Delta_{\min} \right)^{\operatorname{sigmoid}(\mathrm{dt\_proj}(p))} \\
   A             &= -\exp(A_{\log}) \\
   \Abar_t       &= \exp(\Delta_t A),
   \qquad
@@ -150,8 +150,8 @@ one memory cell is one scalar recurrence and a block is $d_{\mathrm{inner}} \tim
 d_{\mathrm{state}}$ independent copies of it. Every statement below is made per cell, and
 the block is their product.
 
-The distinction that governs everything else is which of these are weights. Only
-$A_{\log}$ and $D$ are. The timescale $\Delta$ and the matrices $B$ and $C$ are
+The distinction that governs everything else is which of the state space quantities
+are weights. Only $A_{\log}$ and $D$ are. The timescale $\Delta$ and the matrices $B$ and $C$ are
 activations, recomputed from the block's own input at every position, so the recurrence is
 linear but time-varying and no argument may appeal to time invariance. This is not a
 subtlety of presentation. A block's saved parameters contain no $\Delta$, no $B$ and no
@@ -161,8 +161,9 @@ What is fixed across inputs is the chain of weights that manufactures those acti
 and a bound must therefore hold uniformly over everything that chain is capable of
 emitting.
 
-Two facts hold by construction rather than by training, and both are used below.
-$A = -\exp(A_{\log})$ is strictly negative for every real $A_{\log}$, and $\Delta$ is
+Two facts hold by construction rather than by training, and both are used below. The
+parametrisation $A = -\exp(A_{\log})$ is strictly negative for every real $A_{\log}$, and
+$\Delta$ is
 strictly positive under either parametrisation we consider: the bounded arm written above,
 and the reference arm $\Delta = \mathrm{softplus}(z)$, which imposes no lower bound
 whatsoever. Neither fact depends on the trained weights, which is what allows the
@@ -184,7 +185,7 @@ For diagonal $A < 0$ and $\Delta > 0$, the exact zero-order hold gives
 \end{proposition}
 
 \begin{proof}
-Read elementwise, and let $a < 0$ be a diagonal entry of $A$. Holding $u$ constant across
+Read the identity elementwise, and let $a < 0$ be a diagonal entry of $A$. Holding $u$ constant across
 a step of length $\Delta$ gives the input multiplier $(\exp(\Delta a) - 1)/a$. Since
 $a = -|a|$,
 \[
@@ -199,7 +200,7 @@ available for every parameter value the block can take. Its content is that the 
 $1 - \Abar$ occupies the input gain and the complement of the transition simultaneously.
 That coincidence is what the rest of the paper spends.
 
-It belongs to the exact discretisation rather than to state space models in general. The
+It belongs to the exact discretisation, not to state space models in general. The
 forward Euler surrogate $\Bbar \approx \Delta B$ satisfies the identity only in the limit
 $\Delta \to 0$. Across the trained timescale range, where $\max|\Delta A| = 1.684$, the
 two disagree by $17.3\%$ median and $106.8\%$ maximum relative error, so a model that
@@ -245,8 +246,8 @@ nothing here, which is a point we return to with measurements in
 Section~\ref{sec:experiments}.
 
 Two strengthenings come for free, and both are formalised in Section~\ref{sec:formal}. The
-induction goes through for $a \in [0,1]$ rather than the open interval, which covers the
-two degenerate limits a careful reader will reach for: a timescale large enough to flush
+induction goes through for the closed interval $a \in [0,1]$, which covers the two
+degenerate limits: a timescale large enough to flush
 the state to $c_t$, and one underflowing to exactly zero, where the state is held. From an
 arbitrary initial state the same argument yields $|h_t| \le \max(|h_{-1}|, M)$, so a
 deployment carrying state across window boundaries remains certified. Once the state is
@@ -255,16 +256,16 @@ inside the box it never leaves, which is the property a streaming system actuall
 \subsection{Why the separated argument cannot reach this}
 \label{sec:separate}
 
-It is worth being precise about what the standard route loses, because the same loss
-recurs in Section~\ref{sec:gap} as a measurable quantity and again in
-Section~\ref{sec:related} as an obstruction.
+The standard route loses a specific quantity, and the same loss recurs in
+Section~\ref{sec:gap} as a measurable quantity and again in Section~\ref{sec:related} as
+an obstruction, so we state it precisely here.
 
 Bounding $\Abar$ and $\Bbar$ independently gives
 $|h_t| \le s\,|h_{t-1}| + M_{\mathrm{drive}}$ with $s = \sup \Abar$ and
 $M_{\mathrm{drive}} = \sup|\Bbar u|$, hence $|h| \le M_{\mathrm{drive}}/(1 - s)$. But
 $M_{\mathrm{drive}}$ carries the factor $1 - \Abar$ and is taken at its maximum, so the
 numerator holds $1 - \inf\Abar$ while the denominator holds $1 - \sup\Abar$. The
-cancellation visible in~\eqref{eq:convex} is destroyed. As $\Delta \to 0$ both factors
+cancellation visible in equation~\eqref{eq:convex} is destroyed. As $\Delta \to 0$ both factors
 vanish at the same rate and the true ratio is stable, while the separated bound diverges;
 nothing about the state is diverging, and the divergence is an artefact of having bounded
 the two occurrences of $\Abar$ as though they were unrelated.
@@ -273,10 +274,11 @@ The same dependency loss prevents the induction step itself from being checked b
 arithmetic. In $a h + (1-a) c$ the variable $a$ occurs twice. An interval evaluator bounds
 the two products independently, permitting the first to take $\sup\Abar$ while the second
 takes $1 - \inf\Abar$; the weights then sum past one, the step reports growth, and the
-check fails for every box that is not a single point. Keeping $a$ as one variable, the
-supremum over $a \in [0,1]$ of $aM + (1-a)M_c$ is $\max(M, M_c)$, so the box is preserved
-exactly when $M_c \le M$. We report $\max(M, M_c) - M$ as a residual, and check it rather
-than assume it.
+check fails for every box that is not a single point. If $a$ is kept as one variable, the
+supremum over $a \in [0,1]$ of $aM_h + (1-a)M_c$, for a candidate box $M_h$ on the state
+and the bound $M_c$ on $c_t$, is $\max(M_h, M_c)$, so the box is preserved exactly when
+$M_c \le M_h$. We report $\max(M_h, M_c) - M_h$ as a residual, and check it rather than
+assume it.
 
 \section{Discharging the premise}
 \label{sec:premise}
@@ -290,7 +292,8 @@ lies in a box fixed by its own parameters.
 
 \begin{proposition}[Coordinate bound]
 \label{prop:ln}
-For a layer normalisation with normalised shape $d$ and $\varepsilon > 0$, every
+For a layer normalisation $\mathrm{LN}$ with normalised shape $d$ and $\varepsilon > 0$,
+every
 $x \in \mathbb{R}^{d}$ and every coordinate $i$ satisfy
 \[
   \left| \mathrm{LN}(x)_i - \beta_i \right| \le |\gamma_i|\,\sqrt{d-1}.
@@ -300,32 +303,35 @@ $x \in \mathbb{R}^{d}$ and every coordinate $i$ satisfy
 \begin{proof}
 Write $z = (x - \mu)/\sqrt{\sigma^2 + \varepsilon}$, so that
 $\mathrm{LN}(x) = \gamma \odot z + \beta$. Normalisation forces $\sum_j z_j = 0$ and
-$\sum_j z_j^2 = d\,\sigma^2/(\sigma^2 + \varepsilon) \le d$. Fix $i$ and set $c = z_i$.
-The zero sum gives $\sum_{j \ne i} z_j = -c$, and Cauchy--Schwarz over the remaining
-$d - 1$ coordinates gives $\sum_{j \ne i} z_j^2 \ge c^2/(d-1)$. Adding $c^2$ to both sides
-and comparing with the energy constraint yields $d \ge c^2 d/(d-1)$, hence
-$c^2 \le d - 1$. Scaling by $\gamma_i$ and shifting by $\beta_i$ gives the claim.
+$\sum_j z_j^2 = d\,\sigma^2/(\sigma^2 + \varepsilon) \le d$. Fix $i$.
+The zero sum gives $\sum_{j \ne i} z_j = -z_i$, and Cauchy--Schwarz over the remaining
+$d - 1$ coordinates gives $\sum_{j \ne i} z_j^2 \ge z_i^2/(d-1)$. Adding $z_i^2$ to both
+sides and comparing with the energy constraint yields $d \ge z_i^2 d/(d-1)$, hence
+$z_i^2 \le d - 1$. Scaling by $\gamma_i$ and shifting by $\beta_i$ gives the claim.
 \end{proof}
 
 The proof mentions neither $x$ nor its scale, so the bound holds for inputs no order book
 would ever produce. Informally, pushing one coordinate high requires the other $d-1$ to
-cancel it, and that cancellation is paid for out of a fixed energy budget. Note also that
-the $\varepsilon$ in the denominator works in our favour: it makes the energy constraint an
-inequality rather than an equality, so the bound is conservative in the correct direction.
+cancel it, and that cancellation is paid for out of a fixed energy budget. The
+$\varepsilon$ in the denominator also works in our favour: it makes the energy constraint
+an inequality instead of an equality, so the bound is conservative in the correct
+direction.
 
 Stating the bound coordinatewise, however, throws away the two constraints that produced
 it. Retaining them costs nothing and yields a bound that cannot be improved.
 
 \begin{proposition}[Fused bound, and its attainment]
 \label{prop:fused}
-Let $v_k = W_k \odot \gamma$ and let
+Let $W_k$ be row $k$ of the linear map applied to the normalised output, let
+$v_k = W_k \odot \gamma$ with $\bar{v}_k$ the mean of its entries, and let
 $S = \{\, z : \mathbf{1}^{\top} z = 0,\ \|z\|_2 \le \sqrt{d} \,\}$. Then
 \[
   \sup_{z \in S} \langle v_k, z \rangle
     = \left\| v_k - \bar{v}_k \mathbf{1} \right\|_2 \sqrt{d},
 \]
-attained at
-$z^{\ast} = \sqrt{d}\,(v_k - \bar{v}_k \mathbf{1}) / \|v_k - \bar{v}_k \mathbf{1}\|_2$.
+attained, when $v_k$ is not constant, at
+$z^{\ast} = \sqrt{d}\,(v_k - \bar{v}_k \mathbf{1}) / \|v_k - \bar{v}_k \mathbf{1}\|_2$;
+for constant $v_k$ the supremum is $0$.
 \end{proposition}
 
 \begin{proof}
@@ -344,7 +350,7 @@ discards the zero-sum constraint besides. The difference is not cosmetic, becaus
 radius is $\sup|Bu|/|A|$ and the cost lands on it directly. On the trained model the fused
 bound gives $\sup|u| = 8.4267$ and a radius of $129.6739$, against $61.3134$ and
 $6332.03$ for the coordinatewise route: a factor of $48.8$. Keeping the convolution
-depthwise rather than channel-mixing is worth a further factor of $71$. Neither choice
+depthwise instead of channel-mixing is worth a further factor of $71$. Neither choice
 affects whether the invariant exists, only how much it is worth.
 
 What remains is mechanical. An interval domain carries the normalisation box through the
@@ -356,14 +362,14 @@ so a box straddling it cannot be bounded from its endpoints alone. The causal co
 must hull its input box with zero, because the block left-pads with zeros and zero need not
 lie in the box on $u$; omitting this fails only at the first few positions, which sampling
 from the middle of a sequence would never reveal. And the product of two intervals is taken
-over its four corners, which is exact for independent factors. $B$ and $u$ are not
-independent, and that discard is where most of the remaining looseness lives
+over its four corners, which is exact for independent factors. The factors $B$ and $u$
+are not independent, and that discard is where most of the remaining looseness lives
 (Section~\ref{sec:experiments}).
 
 \section{The abstraction gap in closed form}
 \label{sec:gap}
 
-The loss identified in Section~\ref{sec:separate} can be written down exactly rather than
+The loss identified in Section~\ref{sec:separate} can be written down exactly, not
 merely observed. Writing $\lambda = |A|$ and the propagated timescale box as
 $[\delta_{\mathrm{lo}}, \delta_{\mathrm{hi}}]$,
 \[
@@ -387,8 +393,8 @@ stable to three figures across random initialisations while the radius itself mo
 roughly thirty percent. It increases as $\lambda$ falls, so the slowest pole attains it.
 And it grows like $1/\delta_{\mathrm{lo}}$, which is why lowering the timescale floor by a
 decade costs the separated bound a factor of ten and costs the invariant nothing at all.
-Equation~\eqref{eq:gap} is bounded below by $1$ for any nondegenerate timescale box, so
-the separated bound never beats the invariant, at any pole and any timescale range.
+Equation~\eqref{eq:gap} is also bounded below by $1$ for any nondegenerate timescale box,
+so the separated bound never beats the invariant, at any pole and any timescale range.
 
 We regard this as the part of the work that behaves like a prediction rather than a
 measurement. Equation~\eqref{eq:gap} was derived before it was compared against the
@@ -401,9 +407,9 @@ happened instead.
 The chain from Proposition~\ref{prop:zoh} to Proposition~\ref{prop:fused} is
 formalised in Isabelle/HOL \citep{nipkow2002isabelle}. The theory is
 \texttt{isabelle/Mamba\_Invariant.thy}, and it builds headless from the repository's
-\texttt{ROOT} file as session \texttt{MambaVLob} under Isabelle2025-2. It contains
-nineteen statements; Isabelle processes its $442$ commands with no errors, and it
-contains no \texttt{sorry} and no \texttt{oops}. The only import is
+\texttt{ROOT} file as session \texttt{MambaVLob} under Isabelle2025-2. It has
+nineteen statements; Isabelle processes it with no errors, and it contains no
+\texttt{sorry} and no \texttt{oops}. The only import is
 \texttt{Complex\_Main}, so checking it requires the Isabelle distribution and nothing
 beyond it. Cauchy--Schwarz for finite sums is not in \texttt{Complex\_Main}; the
 theory proves it from scratch as \texttt{cauchy\_schwarz\_sum}.
@@ -413,11 +419,14 @@ Table~\ref{tab:mapping} maps the paper to the theory. The theorem to read first 
 timescale at every step, $|B_t u_t| \le K$ at every step, a state started at zero, and
 the update written exactly as the block computes it,
 $h_t = \exp(\Delta_t A)\, h_{t-1} + \left( (\exp(\Delta_t A) - 1)/A \right) B_t u_t$.
-Its conclusion is $|h_t| \le K/|A|$ at every $t$. The convex form of
-equation~\eqref{eq:convex} appears inside the proof rather than in the statement, so
-accepting the theorem does not require trusting the rearrangement.
+Its conclusion is $|h_t| \le K/|A|$ at every $t$, which is the radius $M$ of
+Proposition~\ref{prop:invariant} with $K = \sup|Bu|$. The theory indexes the state from
+$h_0 = 0$ where the paper writes $h_{-1} = 0$, and we quote its statements in the paper's
+indexing. The convex form of equation~\eqref{eq:convex} appears inside the proof rather
+than in the statement, so accepting the theorem does not require trusting the
+rearrangement.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{@{}lp{0.56\textwidth}@{}}
 \toprule
@@ -425,7 +434,7 @@ Statement in the paper & Theorems in the theory \\
 \midrule
 Proposition~\ref{prop:zoh} & \texttt{zoh\_identity}, \texttt{update\_is\_convex\_combination} \\
 Proposition~\ref{prop:invariant} & \texttt{convex\_recurrence\_invariant}; headline \texttt{mamba\_cell\_state\_bounded} \\
-Its strengthenings & \texttt{Abar\_in\_unit\_interval\_closed}, \texttt{convex\_recurrence\_bounded} \\
+Strengthenings of Proposition~\ref{prop:invariant} & \texttt{Abar\_in\_unit\_interval\_closed}, \texttt{convex\_recurrence\_bounded} \\
 Proposition~\ref{prop:ln} & \texttt{layernorm\_bound}, via \texttt{cauchy\_schwarz\_sum} \\
 Proposition~\ref{prop:fused} & \texttt{fused\_layernorm\_linear\_bound}, \texttt{fused\_layernorm\_linear\_attained} \\
 Architecture facts, Section~\ref{sec:block} & \texttt{A\_parametrisation\_negative}, \texttt{softplus\_positive}, \texttt{bounded\_dt\_positive} \\
@@ -436,40 +445,46 @@ Equation~\eqref{eq:gap} at least $1$ & \texttt{abstraction\_gap\_ge\_one} \\
 \label{tab:mapping}
 \end{table}
 
-The two strengthenings noted after Proposition~\ref{prop:invariant} are
-\texttt{Abar\_in\_unit\_interval\_closed}, which places the weight in the closed
-interval $[0,1]$, and \texttt{convex\_recurrence\_bounded}, which starts from an
-arbitrary state and concludes $|h_t| \le \max(|h_{-1}|, M)$. The theory also proves
-statements the paper makes in prose. \texttt{zoh\_is\_exact\_flow} shows that the
-discrete step is the flow of $\dot h = A h + B u$ across one step, so the word
-``exact'' in Proposition~\ref{prop:zoh} is discharged rather than asserted.
-\texttt{abstraction\_gap\_ge\_one} shows that equation~\eqref{eq:gap} is bounded below
-by one for every pole and every nondegenerate timescale box. The two construction
+The two strengthenings noted after Proposition~\ref{prop:invariant} are carried by
+\texttt{convex\_recurrence\_bounded}, whose induction runs over the closed interval
+$a \in [0,1]$, starts from an arbitrary state, and concludes
+$|h_t| \le \max(|h_{-1}|, M)$; \texttt{Abar\_in\_unit\_interval\_closed} supplies the
+weight in $(0,1]$ when the timescale is only nonnegative. The theory also proves
+statements the paper makes in prose. The lemma \texttt{zoh\_is\_exact\_flow} shows that
+the discrete step solves $\dot h = A h + B u$ across one step from the given initial
+state, which is what the word ``exact'' in Proposition~\ref{prop:zoh} claims; uniqueness
+of that solution is classical and is not formalised. The lemma
+\texttt{abstraction\_gap\_ge\_one} is the lower bound on equation~\eqref{eq:gap} stated
+at the end of Section~\ref{sec:gap}. The two construction
 facts of Section~\ref{sec:block} are theorems, with the positivity of the timescale
 proved once for each arm. The hypotheses $A < 0$ and $\Delta_t > 0$ of
 \texttt{mamba\_cell\_state\_bounded} are therefore supplied by the parametrisation
 alone; the initial state and the form of the update are the block's definition, and
-the box on $B_t u_t$ is what Section~\ref{sec:premise} discharges. \texttt{layernorm\_bound} is stated over an arbitrary finite
-index set, so it covers $d = 64$ and every other width, and it is proved from the
-normalisation map itself, with the biased variance and the $\varepsilon$, rather than
-from the constraint set as an assumption. Sixteen of the nineteen supporting interval
-lemmas of Section~\ref{sec:experiments} also discharge under Z3
-\citep{demoura2008z3}; the three that do not
-are polynomial layer-normalisation lemmas the solver stalls on at small fixed widths,
-and they are exactly the statements the theory settles at every width.
+the box on $B_t u_t$ is what Section~\ref{sec:premise} discharges.
 
-What the formalisation guarantees is the proofs. The Isabelle kernel checks every
+The theorem \texttt{layernorm\_bound} is stated over an arbitrary finite index set, so it
+covers $d = 64$ and every other width, and it is proved from the normalisation map
+itself, with the biased variance and the $\varepsilon$, and not from the constraint set
+as an assumption. The width matters because Z3 \citep{demoura2008z3} does not reach it.
+Six polynomial lemmas supporting the interval domain, among them the coordinate bound and
+the fused tightness statement, were also posed to Z3, at fixed widths where a width
+applies, nineteen instances in all. Sixteen discharge with no counterexample, and the
+three that time out are the coordinate bound at width six and the tightness statement at
+widths four and five, which are exactly the statements the theory settles at every width.
+
+What the formalisation guarantees is that the proofs are correct. The Isabelle kernel
+checks every
 inference, so the arguments above cannot contain the kind of gap a hand proof can. It
 does not guarantee that the formal statements are the ones we intended. Statement
 fidelity is a human check, made by reading, and we have made it; the hypotheses of the
 headline theorem are short enough to compare against Section~\ref{sec:block} directly,
 which is why it is stated from the raw update. The theory's closing section records
 what stays outside the formal boundary: the interval propagation that produces the
-numeric radius in Table~\ref{tab:alternatives}, the composition across blocks, and
+numeric radius reported in Section~\ref{sec:experiments}, the composition across blocks,
+and
 floating point are checked by code and tests rather than by proof
 (Sections~\ref{sec:experiments} and~\ref{sec:limitations}). The statements are made
-per scalar cell, which matches the block: $A$ is diagonal, and a block is
-$d_{\mathrm{inner}} \times d_{\mathrm{state}}$ independent cells.
+per scalar cell, which matches the per-cell structure of Section~\ref{sec:block}.
 
 \section{Relation to invariant inference and reachability}
 \label{sec:related}
@@ -490,8 +505,8 @@ numbers for one trained network, not a formula in the parameters, and the search
 end inconclusively. Ours is an expression in the architecture's own quantities,
 $\sup|Bu|/|A|$, which exists for every parameter value before any verifier runs. The
 certificates also differ in shape. Their template permits the invariant to grow with
-$t$ by construction; ours is constant in $t$, and that difference is what
-Section~\ref{sec:experiments} measures against the unrolled route. They differ,
+$t$ by construction; ours is constant in $t$, and Section~\ref{sec:experiments}
+measures what a certificate that grows with the length costs. They differ,
 finally, in reach. The authors state the covered class themselves: ``While we focus
 here on vanilla RNNs, our technique could be extended to, e.g., LSTMs or GRUs; we
 leave this for future work.'' A selective state space model resists that extension at
@@ -502,16 +517,16 @@ back-end as it stands. A relaxation that restores piecewise linearity by boundin
 $\Abar$ and $1 - \Abar$ separately fails the inductive check for every box that is
 not a single point, by the argument of Section~\ref{sec:separate}. An encoding that preserves the coupling
 contains the convex form of equation~\eqref{eq:convex} already, and then nothing
-remains to be inferred, because the radius is forced. On this architecture the search
+remains to be inferred, because the radius is determined by the bound on $c_t$. On this architecture the search
 and the derivation are not alternatives: the derivation is what would make the search
 well posed.
 
 Star-set reachability \citep{tran2023star} is the strongest representative of the
 unrolling route: within a fixed length the reachable set is propagated precisely, and
 the certificate is valid at the length it was computed for. Section~\ref{sec:experiments}
-reports what that route pays on this model as the length grows, in its interval
-instantiation; a sharper relaxation moves the constants and leaves the shape of the
-certificate, one length at a time, in place.
+reports, in its interval instantiation, what that route pays on this model as the length
+grows; a sharper relaxation changes the constants but not the shape of the certificate,
+which remains one length at a time.
 
 Bonassi, Farina and Scattolini \citep{bonassi2021gru} establish stability properties
 for gated recurrent units, whose update is likewise a convex combination of the
@@ -523,7 +538,7 @@ every trained network. Ours is a closed form in the trained weights, and it move
 the model; across the random initialisations of Section~\ref{sec:experiments} it moves
 by roughly thirty percent. The convex weights also have different origins, a learned
 gate there and the discretisation identity here, which is why the bound covers both
-timescale parametrisations rather than depending on what a particular gate computes.
+timescale parametrisations instead of depending on what a particular gate computes.
 
 The novelty position is narrow. Inductive invariants for neural sequence models are
 prior art, length-independence obtained through an invariant is prior art, and the
@@ -546,32 +561,30 @@ $\mathrm{dt\_rank} = 4$ and $\Delta \in [10^{-3}, 10^{-1}]$, on limit order book
 Databento MBP-10 from Nasdaq TotalView-ITCH, one instrument on one day, $4{,}550{,}476$
 rows after feature construction and $43$ model inputs. The three-way chronological split
 is purged by $100$ ticks at each boundary, so no window straddles a split. Features are
-winsorised to train-split quantiles at inference rather than only during training, which
+winsorised to train-split quantiles at inference and not only during training, which
 makes the standardised input box $[-6.60, 18.87]$ a deployment guarantee rather than a
 historical observation; there are no violations across all rows. On the trained weights
-$A$ spans $[-16.8437, -0.9651]$.
+$A$ spans $[-16.8437, -0.9651]$ at layer~0 and $[-16.5661, -0.9593]$ at layer~1.
 
-None of the certification depends on any of this. The invariant is a statement about the
-architecture and the trained weights, it consumes no data, and it holds for inputs no
-order book would produce.
+None of the certification depends on any of this.
 
 \subsection{The invariant against the alternatives}
 
 Table~\ref{tab:alternatives} reports the certified state bound at $L = 100$. The widened
 column iterates generic interval propagation to convergence, taking $10{,}509$ iterations
 at layer~0 and $10{,}634$ at layer~1, and lands on the geometric fixed point as it should;
-we report it rather than a truncated unrolling so that the comparison is against the best
-the standard route can do rather than against an arbitrary stopping point. Induction holds
-in both layers with residual exactly zero, and the discretisation identity checks exact.
+we report it instead of a truncated unrolling, so that the comparison is against the best
+the standard route can do and not against an arbitrary stopping point. Induction holds in
+both layers with residual exactly zero, and the discretisation identity holds exactly.
 
-\begin{table}[ht]
+\begin{table}[htbp]
 \centering
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Layer & Invariant & Widened fixed point & Unrolled, $L = 100$ & Tighter by \\
 \midrule
-0 & $129.6739$ & $1.235 \times 10^{4}$ & $1169.03$ & $95.23\times$ \\
-1 & $143.5443$ & $1.368 \times 10^{4}$ & $1273.92$ & $95.31\times$ \\
+0 & $129.6739$ & $12{,}349.41$ & $1169.03$ & $95.23\times$ \\
+1 & $143.5443$ & $13{,}681.33$ & $1273.92$ & $95.31\times$ \\
 \bottomrule
 \end{tabular}
 \caption{Certified $\sup|h|$ from the invariant and from the alternatives, computed
@@ -592,28 +605,29 @@ Layer & Invariant & Widened fixed point & Unrolled, $L = 100$ & Tighter by \\
 
 The invariant is $129.67$ at $L = 10$ and $129.67$ at $L = 5000$. Across the same range
 the unrolled bound runs $127.56$, $601.78$, $1169.03$, $4838.40$, $7781.12$ and
-$1.226 \times 10^{4}$ at $L = 10, 50, 100, 500, 1000, 5000$ respectively, which is
-Figure~\ref{fig:horizon}. Below
-$L \approx 10$ the unrolled bound is the tighter of the two, which we state because it is
-true and because it locates precisely where the tradeoff turns: the invariant is not
-uniformly better, it is better everywhere past a handful of steps and it stops moving.
+$12{,}264.34$ at $L = 10, 50, 100, 500, 1000, 5000$ respectively
+(Figure~\ref{fig:horizon}). Below $L \approx 10$ the unrolled bound is the tighter of the
+two, which locates where the trade-off turns: the invariant is not uniformly better; it is
+better everywhere past a handful of steps, and it stops moving.
 
 \subsection{No floor on the timescale}
 
 With $\Delta = \mathrm{softplus}(z)$, which admits no lower bound at all, induction still
 holds and the invariant certifies at $129.7168$ and $143.3978$. The separated argument on
-the same model gives $1.298 \times 10^{7}$ and $1.433 \times 10^{7}$, because
-$\sup\Abar = 1$ and it is dividing by $1 - \sup\Abar$. The invariant needs no floor on the
-timescale; only the geometric argument ever did. Figure~\ref{fig:floor} sweeps the floor
-directly.
+the same model gives no finite bound at all, because $\sup\Abar = 1$ and it divides by
+$1 - \sup\Abar$; the widened interval iteration, stopped at its cap of $10^{5}$ steps, has
+reached $1.298 \times 10^{7}$ and $1.433 \times 10^{7}$ and is still climbing. The
+invariant needs no floor on the timescale; only the geometric argument ever did.
+Figure~\ref{fig:floor} sweeps the floor directly, at a fixed random initialisation,
+because moving the floor changes the architecture and the trained checkpoint exists at one
+floor only.
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.75\textwidth]{bound_vs_floor.pdf}
   \caption{Certified $\sup|h|$ as the timescale floor $\Delta_{\min}$ is lowered,
-    layer~0, at a fixed random initialisation; moving the floor changes the
-    architecture, and the trained checkpoint exists at one floor only. The geometric
-    bound pays a factor of ten per decade of floor; the invariant does not move.}
+    layer~0, at a fixed random initialisation. The geometric bound pays a factor of ten
+    per decade of floor; the invariant does not move.}
   \label{fig:floor}
 \end{figure}
 
@@ -629,10 +643,10 @@ directly.
   \label{fig:gap}
 \end{figure}
 
-Equation~\eqref{eq:gap} reproduces the measured ratio elementwise to $5 \times 10^{-7}$,
-plotted per element in Figure~\ref{fig:gap}. Across eight random initialisations the ratio moves between $95.203$ and $95.209$ while
-the radius itself moves between $101.2$ and $132.2$, which is the weight-independence
-of~\eqref{eq:gap} made visible: the quantity the formula predicts is stable precisely
+Equation~\eqref{eq:gap} reproduces the measured ratio elementwise to $4.8 \times 10^{-7}$,
+plotted per element in Figure~\ref{fig:gap}. Across eight random initialisations the ratio
+moves between $95.203$ and $95.209$ while the radius itself moves between $101.2$ and
+$132.2$, which is the weight-independence of equation~\eqref{eq:gap} made visible: the quantity the formula predicts is stable precisely
 where the quantity it does not predict is not. Figure~\ref{fig:seeds} plots both on one
 scale. Induction holds in all $29$ configurations swept.
 
@@ -652,13 +666,13 @@ Gradient ascent on the input, run against each certified quantity in the unrestr
 regime where the normalisation bound is the only thing holding the certificate up, finds
 no violation. Optimising against a bound also prices it, since
 $\text{attacked} \le \text{true reachable} \le \text{certified}$, so the same procedure
-reports how much room is left. The timescale bounds are near-exact at $1.06\times$ and
-$1.09\times$, $\sup|u|$ is $1.78\times$, and the state bound sits $217\times$ above the
-attacked value.
+reports how much room is left. At layer~0 the two ends of the timescale box are near-exact
+at $1.06\times$ and $1.09\times$, $\sup|u|$ is $1.78\times$, and the state bound sits
+$217\times$ above the attacked value.
 
-That last figure deserves an explanation rather than a defence. Against the certified
-boxes the radius is roughly $630$ times the realised state, and the induction is not where
-that sits. Recomputing $M$ from a realised trace rather than from the certified boxes gives
+That last number deserves an explanation rather than a defence. Against the certified
+boxes the radius is roughly $630\times$ the realised state, and the induction is not where
+that sits. Recomputing $M$ from a realised trace instead of from the certified boxes gives
 $1.0020$ against a realised $\sup|h|$ of $0.2066$ at layer~0, and $0.5139$ against
 $0.1585$ at layer~1. The induction therefore accounts for a factor of three to five, and
 the boxes on $B$ and $u$ account for the remainder. The dominant term is the interval
@@ -674,15 +688,15 @@ certified quantity.
   \caption{Certified radius over realised radius for each certified quantity, both
     layers, log scale. The timescale sits at $1.09\times$ and the transition $\Abar$ at
     $1.0001\times$ and $1.0002\times$; the state carries $499\times$ and $854\times$,
-    and the readout $y$ carries $2482\times$ and $4049\times$. The state factor is
-    attributable to the boxes on $B$ and $u$ rather than to the induction.}
+    and the readout $y$ carries $2482\times$ and $4049\times$.}
   \label{fig:priced}
 \end{figure}
 
 The whole-network output bound, taken through the final normalisation and therefore
 holding for any input in $\mathbb{R}^{L \times 43}$ with no premise at all, is
-$[-5.1242, 4.3374]$. One standardised unit is $0.7042$ basis points of the forward return,
-so the model cannot emit a forecast outside roughly $[-3.600, +3.063]$ basis points. This
+$[-5.1242, 4.3374]$. One standardised unit is $0.7042$ basis points of the forward return
+about a mean of $0.0085$ basis points, so the model cannot emit a forecast outside roughly
+$[-3.600, +3.063]$ basis points. This
 licenses a position limit computed from the weights before the model sees a single tick.
 It says nothing whatever about whether the forecast is any good.
 Figure~\ref{fig:output} drives the model with white noise up to $10^{6}$ standard
@@ -692,18 +706,19 @@ deviations; the output stays inside the certified band.
   \centering
   \includegraphics[width=0.7\textwidth]{certified_output_range.pdf}
   \caption{Realised output ranges under white-noise inputs scaled from $10^{-3}$ to
-    $10^{6}$ standard deviations, against the certified range $[-5.12, 4.34]$, which
+    $10^{6}$ standard deviations, against the certified range $[-5.1242, 4.3374]$, which
     carries no premise on the input.}
   \label{fig:output}
 \end{figure}
 
 \subsection{The certified model is a working model}
 
-Rank information coefficient on the held-out split, over $25{,}600$ overlapping
-observations corresponding to $256$ independent windows: LSTM $+0.1111$, the certified
-model $+0.1044$, its softplus arm $+0.1043$, a causal transformer $+0.1040$, and ridge
-regression $+0.0312$. Standard errors from a circular block bootstrap
-\citep{politis1994stationary} are four to five times the naive independent estimate, and
+The rank information coefficient on the held-out split, over $25{,}600$ overlapping
+observations corresponding to $256$ independent windows, is $+0.1111$ for the LSTM,
+$+0.1044$ for the certified model, $+0.1043$ for its softplus arm, $+0.1040$ for a causal
+transformer, and $+0.0312$ for ridge regression. Standard errors from a circular block
+bootstrap \citep{politis1992circular} are roughly four to five times the naive
+independent estimate for the neural models, and
 Diebold--Mariano tests \citep{diebold1995comparing} with the Harvey--Leybourne--Newbold
 correction \citep{harvey1997testing} separate every neural model from ridge, and separate
 the two Mamba arms from each other with the bounded arm favoured; no other pair
@@ -730,12 +745,11 @@ The exported certificate is a single file containing the equations, the weights,
 certified boxes and the realised envelope. A NumPy reference implementation reads only
 that file, imports nothing from the model, and reproduces the entire forward pass to
 $8.8 \times 10^{-7}$ against the PyTorch model, so the artefact can be checked without
-trusting our implementation. This check has already earned itself once: an earlier version
-of the reference reversed the depthwise convolution kernel, because the underlying
-operator cross-correlates rather than convolves, and every bound and every unit test still
-passed. Sixteen of nineteen supporting interval lemmas discharge under Z3
-\citep{demoura2008z3} with no counterexamples; the remainder are subsumed by the Isabelle
-development of Section~\ref{sec:formal}.
+trusting our implementation. This check has already paid for itself once: an earlier
+version of the reference flipped the depthwise convolution kernel, which is wrong because
+the underlying operator cross-correlates rather than convolves, and every bound and every
+unit test still passed. The polynomial lemmas behind the interval domain, and their status
+under Z3, are recorded in Section~\ref{sec:formal}.
 
 \section{Limitations}
 \label{sec:limitations}
@@ -757,30 +771,32 @@ the reals unless a floor is reintroduced. We regard this as a finding rather tha
 since it locates exactly where a timescale floor matters and where it does not, but a
 restated theorem carrying an explicit error term remains open work.
 
-One further piece of small print belongs here. Our implementation computes
-$\phi(v) = \mathrm{expm1}(v)/v$ with a cubic Taylor branch below $|v| = 10^{-4}$, where
+Our implementation computes
+$\phi(v) = \mathrm{expm1}(v)/v$ with a second-order Taylor branch below $|v| = 10^{-4}$,
+where
 the expression is otherwise $0/0$. On that branch the implemented update departs from the
 exact zero-order hold by a relative error of order $|v|^3/24 \le 4 \times 10^{-14}$, far
 below float32 resolution but nonzero, so the code implements the exact discretisation only
 up to that.
 
 Composition across blocks and through the head is performed by interval arithmetic in code
-rather than by proof. End to end the output bound is several times looser than what the
-model attains, and most of that slack is in the composition rather than in the invariant.
+rather than by proof. End to end, the output bound is several times looser than what the
+model attains, and most of that slack is in the composition, not in the invariant.
 Formalising the interval domain and proving the chain sound by induction over the layers is
 the natural continuation of Section~\ref{sec:formal}.
 
 We attempted two local sensitivity domains, and report their failure because it is
 informative. Both diverge on inputs where the model is measurably well behaved, one
-reaching $10^{24}$ and the other exceeding the unconditional bound above
-$\varepsilon = 10^{-5}$. The attacked width is linear in $\varepsilon$ across five
+reaching $2 \times 10^{25}$ and the other exceeding the unconditional bound from a
+perturbation radius of $10^{-5}$. The attacked width is linear in the radius across five
 decades, placing the model's true local Lipschitz constant at about $1.63$. The domains
 fail, not the model. A relaxation carrying linear coefficients, such as a zonotope, is the
 standard remedy and we have not implemented one.
 
 Finally, the predictive comparison is one instrument on one day, no learning-rate sweep
-was run, and every model plateaus at its first evaluation. Three architectures at one
-setting each is not a comparison of architectures, and we do not offer it as one. The
+was run, and every neural model except the LSTM plateaus at its first evaluation. Three
+architectures at one setting each do not make a comparison of architectures, and we do
+not offer them as one. The
 novelty position in Section~\ref{sec:related} rests on a literature search that was not
 exhaustive.
 
@@ -791,15 +807,14 @@ down in closed form from the model's own parameters. The mechanism is the exact 
 hold, which makes every update a convex combination of the previous state and a bounded
 equilibrium; the premise is discharged by the layer normalisation the architecture already
 contains; and the resulting chain is machine-checked. The certificate holds at every
-sequence length, requires no lower bound on the timescale, and is roughly ninety-five
-times tighter than what generic interval propagation converges to, by a factor we can
+sequence length, requires no lower bound on the timescale, and is roughly $95$ times
+tighter than what generic interval propagation converges to, by a factor we can
 write down in advance and confirm elementwise.
 
-What this does not do is also clear, and we have tried to say so plainly throughout. It
-bounds reachability rather than robustness, it is stated over the reals rather than over
-floating point, and it composes across blocks by code rather than by proof. Each of those
-is a well-posed next step rather than an obstacle, and the last two are the ones we would
-take first.
+What this does not do is also clear. It bounds reachability, not robustness; it is stated
+over the reals, not over floating point; and it composes across blocks by code, not by
+proof. Each of those is a well-posed next step, not an obstacle, and the last two are the
+ones we would take first.
 
 \bibliographystyle{plainnat}
 \bibliography{references}

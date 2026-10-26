@@ -152,9 +152,10 @@ def end_to_end(attack: dict, path: Path) -> dict:
 
 
 def released_local(rel: dict, path: Path) -> dict:
-    """mamba-130m-hf at delta = 1e-6, layer by layer: the endpoint rule over the additive rule
-    at every length (top), and the endpoint rule over the attack where a layer was attacked
-    (bottom)."""
+    """mamba-130m-hf at delta = 1e-6, layer by layer: the theorem's own local form (the
+    recursion) over the additive rule at every length (top), and the endpoint rule over the
+    attack where a layer was attacked (bottom). The endpoint rule over the additive rule is
+    at most one by construction, so it is reported as a range and not drawn."""
     deltas = rel["run"]["deltas"]
     j = _index(deltas, DELTA)
     lengths = rel["run"]["lengths"]
@@ -162,13 +163,15 @@ def released_local(rel: dict, path: Path) -> dict:
            for e in rel["experiments"]}
     layers = sorted({e["layer"] for e in rel["experiments"]})
     fig, (top, bottom) = plt.subplots(2, 1, figsize=COLUMN, sharex=True, layout="constrained")
-    ratios, over_attack = [], []
+    ratios, recursion, over_attack = [], [], []
     for L in lengths:
-        r = [exp[(l, L)]["local"]["log_delta_endpoint"]["lip_max"]
+        ratios += [exp[(l, L)]["local"]["log_delta_endpoint"]["lip_max"]
+                   / exp[(l, L)]["local"]["additive"]["lip_max"] for l in layers]
+        r = [exp[(l, L)]["local"]["log_delta_recursive"]["lip_max"]
              / exp[(l, L)]["local"]["additive"]["lip_max"] for l in layers]
-        ratios += r
-        top.plot(layers, r, color=LOCAL, linewidth=1.0, markersize=3.5, markerfacecolor="white",
-                 label=f"$L = {L}$", **LENGTH_STYLE.get(L, {}))
+        recursion += r
+        top.semilogy(layers, r, color=LOCAL, linewidth=1.0, markersize=3.5,
+                     markerfacecolor="white", label=f"$L = {L}$", **LENGTH_STYLE.get(L, {}))
         att = [l for l in layers if exp[(l, L)]["attacked"]]
         q = [exp[(l, L)]["local"]["log_delta_endpoint"]["lip_max"] / exp[(l, L)]["slope_max"]
              for l in att]
@@ -178,9 +181,12 @@ def released_local(rel: dict, path: Path) -> dict:
         bottom.semilogy(att, q, color=INK, linestyle="none", markersize=4, markerfacecolor="white",
                         marker=LENGTH_STYLE.get(L, {}).get("marker", "o"))
     top.axhline(1.0, color=OTHER, linewidth=1.2, linestyle="--")
-    top.text(layers[-1], 1.0, "additive rule", color=OTHER, fontsize=7.5, ha="right", va="bottom")
-    top.set_ylim(min(ratios) - 0.05, 1.06)
-    top.set_ylabel("endpoint / additive")
+    top.text(layers[-1], 0.97, "additive rule", color=OTHER, fontsize=7.5, ha="right", va="top")
+    top.set_ylim(0.8, 1.25 * max(recursion))
+    top.set_yticks([1, 2, 4])
+    top.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
+    top.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+    top.set_ylabel("recursion / additive")
     bottom.set_ylabel("endpoint / attack")
     bottom.set_yticks([60, 100, 200, 500])
     bottom.yaxis.set_major_formatter(matplotlib.ticker.ScalarFormatter())
@@ -190,7 +196,9 @@ def released_local(rel: dict, path: Path) -> dict:
     handles, labels = top.get_legend_handles_labels()
     fig.legend(handles, labels, loc="outside lower center", ncol=3, frameon=False)
     save(fig, path)
-    return {"endpoint_over_additive": [round(min(ratios), 3), round(max(ratios), 3)],
+    return {"recursion_over_additive": [round(min(recursion), 3), round(max(recursion), 3)],
+            "recursion_pairs_above_one": f"{sum(1 for x in recursion if x > 1)} of {len(recursion)}",
+            "endpoint_over_additive": [round(min(ratios), 3), round(max(ratios), 3)],
             "pairs_below_one": f"{sum(1 for x in ratios if x < 1)} of {len(ratios)}",
             "endpoint_over_attack": [round(min(over_attack), 1), round(max(over_attack), 1)]}
 

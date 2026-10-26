@@ -61,6 +61,7 @@ Everything here holds over the reals. The certificate arithmetic runs in float64
 
 from __future__ import annotations
 
+import hashlib
 import math
 import os
 from dataclasses import dataclass
@@ -92,7 +93,7 @@ DTYPE = torch.float64
 
 # Where the released checkpoint was downloaded to; MAMBA_130M_DIR overrides it. Nothing is
 # ever fetched: every load passes local_files_only=True.
-DEFAULT_MODEL_DIR = Path("C:/Users/humph/hf_models/mamba-130m-hf")
+DEFAULT_MODEL_DIR = Path.home() / "hf_models" / "mamba-130m-hf"
 MODEL_ID = "state-spaces/mamba-130m-hf"
 SAMPLE_TEXT = REPO_ROOT / "data/text/public_domain_sample.txt"
 MAX_TOKENS = 1024
@@ -100,6 +101,17 @@ MAX_TOKENS = 1024
 
 def model_dir() -> Path:
     return Path(os.environ.get("MAMBA_130M_DIR", str(DEFAULT_MODEL_DIR)))
+
+
+def weights_sha256(path: Path | None = None) -> str:
+    """SHA-256 over the checkpoint's weight files, so a run records which weights it used."""
+    p = model_dir() if path is None else Path(path)
+    digest = hashlib.sha256()
+    for f in sorted(p.glob("*.safetensors")) or sorted(p.glob("*.bin")):
+        with open(f, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
 
 
 def model_available(path: Path | None = None) -> bool:

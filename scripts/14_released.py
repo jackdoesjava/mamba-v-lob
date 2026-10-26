@@ -60,6 +60,7 @@ from src.verification.released import (
     reference_forward,
     released_layers,
     rms_norm,
+    weights_sha256,
     tokenise,
 )
 
@@ -1144,7 +1145,7 @@ def main() -> None:
         "provenance": provenance(SEED),
         "model": {
             "id": MODEL_ID,
-            "local_dir": str(model_dir()),
+            "weights_sha256": weights_sha256(model_dir()),
             "transformers_version": transformers.__version__,
             "layers": len(layers),
             "d_model": int(cfg.hidden_size),

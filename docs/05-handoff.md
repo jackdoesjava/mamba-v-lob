@@ -102,8 +102,8 @@ every intermediate and the output.
 ## The sensitivity bound and the released model
 
 `src/verification/incremental.py` bounds the difference of two runs of a block: data-free, from
-the cell theorem with the time-warp term `2 M (e^rho - 1)`, or `2 M tanh(rho/2)` from a common
-start; and locally, around a realised input, with one of four recurrence rules. The endpoint rule
+the cell theorem with the time-warp term `2 M (e^rho - 1)`, or with the sharper common-start
+term `2 M tanh(rho/2)`, which is not in the paper; and locally, around a realised input, with one of four recurrence rules. The endpoint rule
 is the reported one; the additive rule, the running maximum and the recursion are kept as
 `COMPARISON_RULES`. Scripts 12 and 13 write
 [`certification/incremental.md`](certification/incremental.md) and
@@ -113,8 +113,8 @@ is the reported one; the additive rule, the running maximum and the recursion ar
 `state-spaces/mamba-130m-hf` on `data/text/public_domain_sample.txt` and write
 [`certification/released.md`](certification/released.md). The model is not in the repository. It
 is loaded with `local_files_only=True` from `MAMBA_130M_DIR`, or from
-`C:/Users/humph/hf_models/mamba-130m-hf` when that is unset, and the tests that need it skip without
-it. The run used transformers 5.15.1, which `requirements.txt` does not list.
+`~/hf_models/mamba-130m-hf` when that is unset, and the tests that need it skip without
+it. The run used transformers 5.15.1 and records the SHA-256 of the weights.
 
 ## Open tasks
 
@@ -191,9 +191,8 @@ These have been retracted or overreached and must not come back.
   parametrisation. The arms are not independent, and their Diebold-Mariano p-value is 0.621.
 - That the data is anything other than SPY.
 
-What can be claimed, as far as a search that was not exhaustive found: the cell theorem with the
-timescale perturbation measured in `log dt`, a strengthening of the time-warp part of Cao et al.'s
-Theorem 3.3(ii) whose technique is theirs and Horbatko's; its sharp common-start constant
-`tanh(rho/2)` in the hazard-ratio form, the one new piece of mathematics; the discharge of the
-invariant's premise from the block's own normalisation; the closed-form gap; and, as the empirical
-additions, the endpoint form of the local rule and the certification of the released model.
+What can be claimed, as far as a search that was not exhaustive found, is one new result: the cell
+theorem with the timescale perturbation measured in `log dt`, a strengthening of the time-warp
+part of Cao et al.'s Theorem 3.3(ii) whose technique is theirs and Horbatko's. The endpoint form
+of the local rule and the certification of the released model apply it. The sharper common-start
+constant `tanh(rho/2)` that the code computes is not part of the paper.

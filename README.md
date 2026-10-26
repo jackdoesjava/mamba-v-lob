@@ -24,15 +24,16 @@ bound `M_drive / (1 - sup Abar)` bounds `Abar` and `Bbar` separately, discarding
 
 The invariant is not new. It is Horbatko's Lemma 4.4 (arXiv:2604.18580), and the same per-cell
 radius follows from Theorem 3.3(i) of Cao, Liu, Chen and Qin (ICML 2026). The LayerNorm
-coordinate bound that discharges its premise is the Laguerre-Samuelson inequality. The
-framework here is the cell theorem, a bound on two runs of one cell measured in `log dt`, which
-strengthens the time-warp part of Cao et al.'s Theorem 3.3(ii) and follows quickly from their
-lemmas and Horbatko's. The one new piece of mathematics is its sharp constant: from a common
-start the time-warp error is `2 M` times the total-variation distance between the two runs' age
-distributions, whose per-step hazards differ by at most a factor `e^rho`, and that distance is at
-most `tanh(rho/2)`. The empirical additions are the endpoint form of the local rule and the
-certification of the released model. The literature search behind these statements was not
-exhaustive.
+coordinate bound that discharges its premise is the Laguerre-Samuelson inequality. The paper's
+one new result is the cell theorem: with the timescale perturbation measured in `log dt`, two
+runs of one cell that start together stay within `eta + 2 M (e^rho - 1)` of each other at every
+length, with no lower bound on `dt`. It strengthens the time-warp part of Cao et al.'s Theorem
+3.3(ii), whose bound grows with the position unless `dt` has a floor, and it can be derived from
+their lemmas by a change of time variable. The endpoint form of the local rule and the
+certification of the released model are applications of it. The code also computes a sharper
+constant, `2 M tanh(rho/2)`, for two runs from a common start
+([docs/02-invariant.md](docs/02-invariant.md)); it is not part of the paper. The literature
+search behind these statements was not exhaustive.
 
 ## Headline numbers
 
@@ -104,10 +105,11 @@ fails when a figure or a results table goes stale, which is how a plot arguing a
 project had already dropped survived here for several hours. It also rejects phrases from
 retracted claims.
 
-`14_released` needs `transformers` (5.15.1 was used), which `requirements.txt` does not list, and a
-local copy of `state-spaces/mamba-130m-hf`. The model is not committed and nothing is downloaded:
+`14_released` needs `transformers` (5.15.1 was used) and a local copy of
+`state-spaces/mamba-130m-hf`. The model is not committed and nothing is downloaded:
 `src/verification/released.py` loads it with `local_files_only=True` from `MAMBA_130M_DIR`, or from
-`C:/Users/humph/hf_models/mamba-130m-hf` when that is unset. Its tests skip without the model.
+`~/hf_models/mamba-130m-hf` when that is unset, and the run records the SHA-256 of the weights.
+Its tests skip without the model.
 
 Scripts run as modules from the repository root, not as files. Everything is seeded from
 `config.yaml`, and checkpoints carry their architecture, normalisation, split report and git SHA,
@@ -146,7 +148,7 @@ external verifier has consumed the artefact. Set out in [docs/05-handoff.md](doc
 ## Documentation
 
 - [docs/01-problem.md](docs/01-problem.md), the block, what is time-varying, and why bounded verification struggles
-- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant, the cell theorem and its sharp constant
+- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant, the cell theorem and a sharper common-start constant that is not in the paper
 - [docs/03-certificate.md](docs/03-certificate.md), the normalisation bounds, tightness, adversarial search, local rules, the released model
 - [docs/04-results.md](docs/04-results.md), every recorded number in one place, with the data and the predictive comparison
 - [docs/05-handoff.md](docs/05-handoff.md), the artefact, limitations and what the verification side needs next

@@ -197,7 +197,8 @@ discrete argument is Horbatko's Lemma 4.4 applied to the error. Measuring the ti
 perturbation additively, `|a - a~| <= lam exp(-lam dt_min) |dt - dt~|`, is the baseline in
 `src/verification/incremental.py`.
 
-**The sharp constant.** When both runs start from the same state, as they do here, the time-warp
+**A sharper constant from a common start (not in the paper).** When both runs start from the
+same state, as they do here, the time-warp
 term improves to `2 M tanh(rho/2)`, and that is attained in a chattering limit. The cleanest
 statement is in terms of hazards. Unrolled, `h_t` is a weighted sum of the equilibria `c_s` with
 weights `(1 - a_s) prod_{r>s} a_r`, an age distribution whose per-step hazard is `1 - a_s`. The
@@ -206,8 +207,8 @@ distributions, the hazards of the two runs differ at each step by at most a fact
 the total-variation distance is then at most `tanh(rho/2)`. The constant equals the classical
 bound for two laws whose density ratio lies in `[e^-rho, e^rho]` (Kairouz, Oh and Viswanath,
 Remark A.1(b)), but that bound does not apply here, because the density ratio of the two age
-distributions is unbounded. The proof is a potential-function argument whose only inequality is
-weighted AM-GM. `cell_bound` and `cell_bound_common_start` compute the two forms, and the data-free
+distributions is unbounded. The proof, a potential-function argument whose only inequality is
+weighted AM-GM, is in an earlier draft of the paper and is not published here. `cell_bound` and `cell_bound_common_start` compute the two forms, and the data-free
 block certificate built from them is in [certification/incremental.md](certification/incremental.md).
 
 The local version replaces `2 M` by the realised distance `|h_{t-1} - c_t|` of a nominal run. Its
@@ -223,9 +224,7 @@ al.'s Theorem 3.3(i). The scalar case of the discretisation identity is Theorem 
 (2023), and the gain and time-constant relation is classical linear systems theory.
 
 What we did not find, in a search that was not exhaustive, is the cell theorem with the timescale
-perturbation measured in `log dt`, its sharp hazard-ratio constant, the discharge of the
-invariant's premise from the block's own normalisation, the closed form of the gap, or an
-evaluation of the invariant and the sensitivity bound on trained and released models. The cell
-theorem follows quickly from Cao et al.'s lemmas and Horbatko's; the sharp constant is the new
-piece of mathematics. The premise is discharged in [03-certificate.md](03-certificate.md); the
+perturbation measured in `log dt`. It is the paper's one new result. It can be derived from Cao
+et al.'s lemmas by a change of time variable, or from Horbatko's Lemma 4.4 applied to the error
+recursion, and it strengthens the time-warp part of their Theorem 3.3(ii). The premise is discharged in [03-certificate.md](03-certificate.md); the
 block itself is in [01-problem.md](01-problem.md).

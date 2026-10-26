@@ -33,10 +33,14 @@ parametrisation and not from training.
 ## Nothing in the recursion is time-invariant
 
 Only `A_log` and `D` are parameters. `delta`, `B` and `C` are activations, recomputed from
-the block's own input at every timestep, so the system is linear time-varying and no
-argument may lean on time invariance. The common claim that Mamba is an LTI system and is
-therefore boundable by a spectral radius is false. A block's state dict holds `A_log`, `D`
-and the weights of `norm`, `in_proj`, `conv1d`, `x_proj`, `dt_proj` and `out_proj`. It
+the block's own input at every timestep, so the system is linear time-varying in the step
+index and no argument may treat `delta`, `B` or `C` as fixed. Time invariance survives only in
+accumulated time `tau_t = sum_{s<t} delta_s`, in which each cell solves `h' = A h + w` with
+`w` piecewise constant; Cao et al. (ICML 2026) analyse the block that way, and the incremental
+bound of [certification/incremental.md](certification/incremental.md) also follows from it.
+The common claim that Mamba is an LTI system and is therefore boundable by a spectral radius
+is false. A block's state dict holds `A_log`, `D` and the weights of `norm`, `in_proj`,
+`conv1d`, `x_proj`, `dt_proj` and `out_proj`. It
 contains no `delta`, no `B` and no `C`, at any position. A verifier handed the checkpoint
 and asked to reason about `h' = A h + B u` cannot fill in `B`, because the tensor does not
 exist until an input arrives. What is fixed across inputs is the chain of weights that

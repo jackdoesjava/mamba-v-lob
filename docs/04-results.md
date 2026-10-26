@@ -58,8 +58,10 @@ The radius is `sup abs(B u) / abs(A)`, so it moves with the bound on `u`.
 ## Discretisation
 
 Euler against exact zero-order hold, `delta` in `[1e-3, 1e-1]`, `max abs(dt A) = 1.684`; the
-convex form is exact for the zero-order hold and only asymptotic for Euler, so the invariant
-needs the exact discretisation to exist.
+identity `Bbar = (1 - Abar) B / |A|` is exact for the zero-order hold and only asymptotic for the
+exponential-Euler surrogate `Bbar = dt B`. That surrogate still gives a convex update with the
+equilibrium enlarged by `x / (1 - exp(-x))` at `x = |A| dt`, so an invariant survives with a
+radius larger by that factor at the timescale ceiling (paper, Corollary on exponential-Euler).
 
 | median relative error | maximum relative error |
 | --- | --- |
@@ -130,7 +132,10 @@ windows, widths in standardised target units.
 | 1e-1 | 1.6217e-1 | nan | nan | 9.4616 |
 
 The attack width is linear in `eps` across five decades, so the model's true local Lipschitz
-constant is about 1.63. The domains fail, not the model.
+constant is about 1.63. The domains fail, not the model. With a log-timescale recurrence step in
+place of the additive one, norm propagation is finite at `eps = 1e-5` on the same windows, 61.09
+with the recursive form of the step, but still above the unconditional bound; see
+[`certification/incremental.md`](certification/incremental.md).
 
 ## Predictive performance
 

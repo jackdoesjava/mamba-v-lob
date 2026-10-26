@@ -26,6 +26,18 @@ PRODUCED: dict[str, list[str]] = {
         "src/verification/lipschitz.py", "src/verification/sensitivity.py",
     ],
     "docs/certification/smt_lemmas.json": ["scripts/09_check_lemmas.py"],
+    "docs/certification/incremental.json": [
+        "scripts/12_incremental.py", "src/verification/incremental.py",
+        "src/verification/certify.py", "src/verification/intervals.py",
+        "src/verification/invariant.py", "src/verification/lipschitz.py", "src/dataset.py",
+        "src/models/mamba.py",
+    ],
+    "docs/certification/incremental_attack.json": [
+        "scripts/13_incremental_attack.py", "src/verification/incremental.py",
+        "src/verification/certify.py", "src/verification/intervals.py",
+        "src/verification/invariant.py", "src/verification/lipschitz.py", "src/dataset.py",
+        "src/models/mamba.py",
+    ],
     "models/bounds/mamba_certificate.json": [
         "scripts/04_export_bounds.py", "src/verification/certify.py",
         "src/verification/invariant.py", "src/verification/export.py",
@@ -49,6 +61,17 @@ PRODUCED: dict[str, list[str]] = {
     "docs/figures/dm_test_heatmap.pdf": ["scripts/05_figures.py"],
     "docs/figures/regime_conditioned_ic.pdf": ["scripts/05_figures.py"],
     "docs/figures/latency_complexity.pdf": ["scripts/05_figures.py"],
+    "docs/figures/incremental_vs_length.pdf": [
+        "scripts/12_incremental.py", "src/verification/incremental.py",
+        "src/verification/certify.py", "src/verification/intervals.py",
+        "src/verification/invariant.py", "src/models/mamba.py",
+    ],
+    "docs/figures/sensitivity_vs_length.pdf": [
+        "scripts/13_incremental_attack.py", "src/verification/incremental.py",
+        "src/verification/certify.py", "src/verification/intervals.py",
+        "src/verification/invariant.py", "src/verification/lipschitz.py", "src/dataset.py",
+        "src/models/mamba.py",
+    ],
 }
 
 # Written by the same run as their JSON, so they are current exactly when it is. A table
@@ -57,6 +80,8 @@ PRODUCED: dict[str, list[str]] = {
 TWINS: dict[str, str] = {
     "docs/certification/bounds.md": "docs/certification/bounds.json",
     "docs/certification/sweep.md": "docs/certification/sweep.json",
+    "docs/certification/incremental.md": "docs/certification/incremental.json",
+    "docs/certification/incremental_attack.md": "docs/certification/incremental_attack.json",
 }
 
 # Phrases from claims this project retracted. None of them should reach an artefact.

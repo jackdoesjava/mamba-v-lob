@@ -123,9 +123,14 @@ trace instead of the certified boxes gives 1.0020 at layer 0 against 0.2066, and
 layer 1 against 0.1585, so the induction accounts for a factor of 3 to 5 and the boxes on
 `B` and `u` for the remaining 130.
 
-This bounds reachable state and reachable output. It is not a robustness certificate. Nothing
-here bounds `|f(x) - f(x')|` for nearby inputs, and any reading of these numbers as
-adversarial robustness is wrong. A bounded signal is also not a bounded loss: the certified
+The invariant bounds reachable state, and the certified output range comes from `final_norm`
+and the head alone. Neither is a robustness certificate.
+[`certification/incremental.md`](certification/incremental.md) does bound `|F(x) - F(x')|` for
+one block with respect to its normalised input, at every sequence length, but at about 1e6 times
+what an attack reaches, and the local end-to-end bound of
+[`certification/incremental_attack.md`](certification/incremental_attack.md) is 1e5 to 5e5 times
+the attacked width. Any reading of these numbers as adversarial robustness is wrong. A bounded
+signal is also not a bounded loss: the certified
 output range says the model cannot emit an arbitrarily large prediction, and says nothing
 about whether the prediction is right or what happens when it is traded.
 

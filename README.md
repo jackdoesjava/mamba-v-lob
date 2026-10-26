@@ -54,7 +54,8 @@ src/dataset.py     purged chronological splits, enforced input box
 src/features.py    order book feature construction
 src/utils/         config, seeding and provenance, overlap-aware statistics
 scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
-                   07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check
+                   07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check,
+                   12 incremental bound, 13 incremental attack
 tests/             unit tests for the maths, the domain and the models
 isabelle/          the machine-checked invariant and LayerNorm bounds, Isabelle/HOL
 docs/              the five pages listed at the bottom
@@ -77,6 +78,8 @@ python -m scripts.07_attack_bounds           # try to break the certificate
 python -m scripts.08_domains                 # local domains, the negative result
 python -m scripts.09_check_lemmas            # Z3 on the interval lemmas
 python -m scripts.10_sweep                   # seeds and configurations
+python -m scripts.12_incremental             # sensitivity to input perturbations, any length
+python -m scripts.13_incremental_attack      # attack that bound, about 40 minutes on a CPU
 python -m scripts.05_figures
 python -m scripts.11_check_artefacts         # nothing in docs/ is stale
 python -m pytest
@@ -110,7 +113,10 @@ realised `B` and `u` instead of the certified boxes the invariant is 3 to 5 time
 induction accounts for a factor of 5 and the boxes on `B` and `u` for the rest. This bounds reachable state and output; it
 is not a robustness certificate, and a bounded output is not a bounded loss. Both local domains we
 tried diverge on inputs where the model is measurably well behaved, a failure of the domains and
-not of the model. Three lemmas are still hand proofs after Z3 timed out, and no external verifier
+not of the model. With a log-timescale recurrence step in place of the additive one, the
+norm-propagation domain no longer diverges with sequence length, but it stays about 1e5 times the
+attacked width ([docs/certification/incremental_attack.md](docs/certification/incremental_attack.md)).
+Three lemmas are still hand proofs after Z3 timed out, and no external verifier
 has consumed the artefact. Set out in [docs/05-handoff.md](docs/05-handoff.md).
 
 ## Documentation

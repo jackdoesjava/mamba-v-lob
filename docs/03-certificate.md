@@ -163,6 +163,14 @@ at every layer, so both throw away the sign structure of the dependence on the i
 that carries linear coefficients instead, a zonotope or a CROWN-style backward pass, is the standard
 remedy, and it is not implemented here.
 
+Part of the norm-propagation failure is its recurrence step, which perturbs `Abar` additively in
+`delta` and so loses the factor `1 - Abar`. With the log-timescale step of
+`src/verification/incremental.py` the same domain on these windows gives 0.2877 at `eps = 1e-6` and
+61.09 at `eps = 1e-5` (0.7063 and 3.057e4 with the running-maximum form of that step), finite where
+the column above is not but still above the unconditional bound from `eps = 1e-5`. The numbers are in
+[`certification/incremental.md`](certification/incremental.md), and the bound against sequence
+length is in [`certification/incremental_attack.md`](certification/incremental_attack.md).
+
 ## See also
 
 [02-invariant.md](02-invariant.md) for the invariant these bounds feed. The recorded runs are

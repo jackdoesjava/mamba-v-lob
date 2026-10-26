@@ -1,0 +1,97 @@
+{
+  "tag": "transformer",
+  "model_name": "transformer",
+  "dt_parametrisation": null,
+  "processed_file": "data/processed/SPY_features_20210128.parquet",
+  "seed": 1337,
+  "max_steps": 3000,
+  "steps_run": 2250,
+  "early_stopped": true,
+  "wall_s": 770.1,
+  "selected_step": 250,
+  "best_val_rank_ic": 0.16126781684065605,
+  "val_loss_at_best": 0.15186127099208535,
+  "n_params": 72001,
+  "history": [
+    {
+      "step": 250,
+      "train_loss": 0.27047187089920044,
+      "val_loss": 0.15186127099208535,
+      "val_rank_ic": 0.16126781684065605,
+      "val_pred_std": 0.06277546286582947,
+      "elapsed_s": 85.0
+    },
+    {
+      "step": 500,
+      "train_loss": 0.3304387331008911,
+      "val_loss": 0.15378558348864316,
+      "val_rank_ic": 0.13448295602505672,
+      "val_pred_std": 0.08102557063102722,
+      "elapsed_s": 170.7
+    },
+    {
+      "step": 750,
+      "train_loss": 0.26402872800827026,
+      "val_loss": 0.15249143166467546,
+      "val_rank_ic": 0.14124932632941883,
+      "val_pred_std": 0.07466074079275131,
+      "elapsed_s": 256.3
+    },
+    {
+      "step": 1000,
+      "train_loss": 0.25386369228363037,
+      "val_loss": 0.153254205416888,
+      "val_rank_ic": 0.1291395951142705,
+      "val_pred_std": 0.10853224992752075,
+      "elapsed_s": 341.9
+    },
+    {
+      "step": 1250,
+      "train_loss": 0.3468049168586731,
+      "val_loss": 0.15215957671403885,
+      "val_rank_ic": 0.1592969230398871,
+      "val_pred_std": 0.0929536521434784,
+      "elapsed_s": 427.7
+    },
+    {
+      "step": 1500,
+      "train_loss": 0.2443370521068573,
+      "val_loss": 0.15219026064500213,
+      "val_rank_ic": 0.14781095921310874,
+      "val_pred_std": 0.10091078281402588,
+      "elapsed_s": 513.5
+    },
+    {
+      "step": 1750,
+      "train_loss": 0.29999566078186035,
+      "val_loss": 0.15209959395229816,
+      "val_rank_ic": 0.15138127735366447,
+      "val_pred_std": 0.06515379250049591,
+      "elapsed_s": 599.2
+    },
+    {
+      "step": 2000,
+      "train_loss": 0.40239351987838745,
+      "val_loss": 0.1517491476610303,
+      "val_rank_ic": 0.14873946553082468,
+      "val_pred_std": 0.08663420379161835,
+      "elapsed_s": 684.4
+    },
+    {
+      "step": 2250,
+      "train_loss": 0.39286160469055176,
+      "val_loss": 0.15140190217643976,
+      "val_rank_ic": 0.1578051290774756,
+      "val_pred_std": 0.08928915858268738,
+      "elapsed_s": 770.0
+    }
+  ],
+  "provenance": {
+    "git_sha": "3aae7c0d36f8db8c25e8e7f48ed975a9000e8a7a-dirty",
+    "torch_version": "2.11.0+cpu",
+    "numpy_version": "2.4.4",
+    "python_version": "3.14.4",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "seed": 1337
+  }
+}

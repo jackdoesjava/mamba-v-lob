@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "271fb2b3778bbfd9812e9bcac2ff8df278e303ed-dirty",
+    "git_sha": "3aae7c0d36f8db8c25e8e7f48ed975a9000e8a7a-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -293,23 +293,23 @@
   "trained": [
     {
       "checkpoint": "mamba",
-      "invariant": 129.67388916015625,
-      "geometric": 12349.5810546875,
-      "ratio": 95.23568032601312,
+      "invariant": 175.947509765625,
+      "geometric": 16824.205078125,
+      "ratio": 95.62059218988706,
       "holds": true,
-      "sup_A_bar": 0.9990353394276477,
-      "A_abs_min": 0.9651261568069458,
-      "A_abs_max": 16.843673706054688
+      "sup_A_bar": 0.9990882665120613,
+      "A_abs_min": 0.9121493697166443,
+      "A_abs_max": 17.13508415222168
     },
     {
       "checkpoint": "mamba_softplus",
-      "invariant": 129.716796875,
+      "invariant": 287.38690185546875,
       "geometric": Infinity,
       "ratio": Infinity,
       "holds": true,
       "sup_A_bar": 1.0,
-      "A_abs_min": 0.9644871354103088,
-      "A_abs_max": 16.866981506347656
+      "A_abs_min": 0.802557110786438,
+      "A_abs_max": 18.715110778808594
     }
   ],
   "seed_spread": {

@@ -4,7 +4,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Raw and processed market data stays local; see docs/08-data.md for how to rebuild it
+# Raw and processed market data stays local; README.md describes how to rebuild it
 data/raw/
 data/processed/
 

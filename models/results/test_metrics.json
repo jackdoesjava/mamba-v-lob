@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "ad50f2ce40a8e2f5acf2e18c9e6c41842be8e72e-dirty",
+    "git_sha": "3aae7c0d36f8db8c25e8e7f48ed975a9000e8a7a-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -15,11 +15,11 @@
   "models": {
     "Mamba (bounded delta)": {
       "checkpoint": "models\\checkpoints\\best_mamba.pt",
-      "steps": 250,
+      "steps": 750,
       "n_params": 71361,
       "selection_metric": "val_rank_ic",
-      "best_val_rank_ic": 0.13983355493495994,
-      "val_loss_at_best": 0.1527214353531599,
+      "best_val_rank_ic": 0.11700290963092785,
+      "val_loss_at_best": 0.1533206013776362,
       "architecture": {
         "input_dim": 43,
         "d_model": 64,
@@ -36,11 +36,11 @@
     },
     "Mamba (softplus delta)": {
       "checkpoint": "models\\checkpoints\\best_mamba_softplus.pt",
-      "steps": 250,
+      "steps": 2000,
       "n_params": 71361,
       "selection_metric": "val_rank_ic",
-      "best_val_rank_ic": 0.1398392454348228,
-      "val_loss_at_best": 0.1527213136665523,
+      "best_val_rank_ic": 0.11728941270911956,
+      "val_loss_at_best": 0.15375494936481118,
       "architecture": {
         "input_dim": 43,
         "d_model": 64,
@@ -60,8 +60,8 @@
       "steps": 250,
       "n_params": 72001,
       "selection_metric": "val_rank_ic",
-      "best_val_rank_ic": 0.1632298301353078,
-      "val_loss_at_best": 0.15172058429569005,
+      "best_val_rank_ic": 0.16126781684065605,
+      "val_loss_at_best": 0.15186127099208535,
       "architecture": {
         "input_dim": 43,
         "d_model": 64,
@@ -71,11 +71,11 @@
     },
     "LSTM": {
       "checkpoint": "models\\checkpoints\\best_lstm.pt",
-      "steps": 1750,
+      "steps": 750,
       "n_params": 61249,
       "selection_metric": "val_rank_ic",
-      "best_val_rank_ic": 0.10035530378374657,
-      "val_loss_at_best": 0.15445367725566028,
+      "best_val_rank_ic": 0.14394674972327814,
+      "val_loss_at_best": 0.1539466311596334,
       "architecture": {
         "input_dim": 43
       }
@@ -86,164 +86,130 @@
   },
   "metrics": {
     "Mamba (bounded delta)": {
-      "rank_ic": 0.10436756199191799,
-      "se_block_bootstrap": 0.03183821435220871,
+      "rank_ic": 0.13488783303778906,
+      "se_block_bootstrap": 0.030534678026348606,
       "se_naive_iid": 0.00625,
-      "ci_lo": 0.0420310730728571,
-      "ci_hi": 0.16895722389040868,
+      "ci_lo": 0.07522938675112467,
+      "ci_hi": 0.19699523359211754,
       "n": 25600,
       "n_effective": 256.0,
       "alpha": 0.05,
       "excludes_zero": true,
-      "pearson_ic": 0.10910952836275101,
-      "hit_rate": 0.5447265625,
-      "mse": 0.33726751804351807,
-      "pred_std": 0.08293556421995163,
-      "mean_pnl_per_decision": 3.303702214907389e-06,
-      "information_ratio": 0.08065636456012726,
+      "pearson_ic": 0.1426078826189041,
+      "hit_rate": 0.5396875,
+      "mse": 0.3335132598876953,
+      "pred_std": 0.07725729048252106,
+      "mean_pnl_per_decision": 3.987466243415838e-06,
+      "information_ratio": 0.0974946990609169,
       "information_ratio_se": 0.0625,
-      "max_drawdown_logret": 0.026442646980285645
+      "max_drawdown_logret": 0.017058121040463448
     },
     "Mamba (softplus delta)": {
-      "rank_ic": 0.10433913677159092,
-      "se_block_bootstrap": 0.031838377909741394,
+      "rank_ic": 0.12565937540777605,
+      "se_block_bootstrap": 0.02564942720403846,
       "se_naive_iid": 0.00625,
-      "ci_lo": 0.0419886822492429,
-      "ci_hi": 0.1689322875801451,
+      "ci_lo": 0.07687059277024032,
+      "ci_hi": 0.1766213631736776,
       "n": 25600,
       "n_effective": 256.0,
       "alpha": 0.05,
       "excludes_zero": true,
-      "pearson_ic": 0.10907939076423645,
-      "hit_rate": 0.544609375,
-      "mse": 0.3372707664966583,
-      "pred_std": 0.08293550461530685,
-      "mean_pnl_per_decision": 3.3006147077685455e-06,
-      "information_ratio": 0.08058048784732819,
+      "pearson_ic": 0.13908651471138,
+      "hit_rate": 0.543984375,
+      "mse": 0.3343864381313324,
+      "pred_std": 0.10373847186565399,
+      "mean_pnl_per_decision": 3.779757435040665e-06,
+      "information_ratio": 0.0923716127872467,
       "information_ratio_se": 0.0625,
-      "max_drawdown_logret": 0.026468969881534576
+      "max_drawdown_logret": 0.015346948057413101
     },
     "Causal Transformer": {
-      "rank_ic": 0.10395976883329691,
-      "se_block_bootstrap": 0.02389019218388456,
+      "rank_ic": 0.11007747362357506,
+      "se_block_bootstrap": 0.02525851845453776,
       "se_naive_iid": 0.00625,
-      "ci_lo": 0.058324338265523974,
-      "ci_hi": 0.14960696026173909,
+      "ci_lo": 0.06095703121726431,
+      "ci_hi": 0.15932005663344165,
       "n": 25600,
       "n_effective": 256.0,
       "alpha": 0.05,
       "excludes_zero": true,
-      "pearson_ic": 0.10817212611436844,
-      "hit_rate": 0.5496875,
-      "mse": 0.3373079001903534,
-      "pred_std": 0.0729655846953392,
-      "mean_pnl_per_decision": 2.532208554839599e-06,
-      "information_ratio": 0.061738379299640656,
+      "pearson_ic": 0.11197860538959503,
+      "hit_rate": 0.5605078125,
+      "mse": 0.3371283710002899,
+      "pred_std": 0.06320351362228394,
+      "mean_pnl_per_decision": 2.4612390916445293e-06,
+      "information_ratio": 0.060001738369464874,
       "information_ratio_se": 0.0625,
-      "max_drawdown_logret": 0.024771614000201225
+      "max_drawdown_logret": 0.02656153030693531
     },
     "LSTM": {
-      "rank_ic": 0.11111733391590008,
-      "se_block_bootstrap": 0.030577650978416804,
+      "rank_ic": 0.12175361142965041,
+      "se_block_bootstrap": 0.028546729689206147,
       "se_naive_iid": 0.00625,
-      "ci_lo": 0.051553908778325566,
-      "ci_hi": 0.17214047185388984,
+      "ci_lo": 0.06645423113059072,
+      "ci_hi": 0.1778105529530565,
       "n": 25600,
       "n_effective": 256.0,
       "alpha": 0.05,
       "excludes_zero": true,
-      "pearson_ic": 0.12103579193353653,
-      "hit_rate": 0.533046875,
-      "mse": 0.33551642298698425,
-      "pred_std": 0.08062935620546341,
-      "mean_pnl_per_decision": 4.081963197677396e-06,
-      "information_ratio": 0.09982793033123016,
+      "pearson_ic": 0.12426291406154633,
+      "hit_rate": 0.4978125,
+      "mse": 0.3368450999259949,
+      "pred_std": 0.07710177451372147,
+      "mean_pnl_per_decision": 3.830954483419191e-06,
+      "information_ratio": 0.09363368898630142,
       "information_ratio_se": 0.0625,
-      "max_drawdown_logret": 0.015834413468837738
+      "max_drawdown_logret": 0.015281736850738525
     },
     "Ridge": {
-      "rank_ic": 0.0311654212079263,
-      "se_block_bootstrap": 0.007626634129558531,
+      "rank_ic": 0.025234946242781667,
+      "se_block_bootstrap": 0.007572968439057012,
       "se_naive_iid": 0.00625,
-      "ci_lo": 0.016611992646951085,
-      "ci_hi": 0.04600328875447715,
+      "ci_lo": 0.010740387644069815,
+      "ci_hi": 0.04048896275363363,
       "n": 25600,
       "n_effective": 256.0,
       "alpha": 0.05,
       "excludes_zero": true,
-      "pearson_ic": 0.0299108624458313,
-      "hit_rate": 0.5046875,
-      "mse": 0.743446946144104,
-      "pred_std": 0.6501193046569824,
-      "mean_pnl_per_decision": 1.207353079735185e-06,
-      "information_ratio": 0.0293935127556324,
+      "pearson_ic": 0.0265326127409935,
+      "hit_rate": 0.4990625,
+      "mse": 0.7320052981376648,
+      "pred_std": 0.6353573799133301,
+      "mean_pnl_per_decision": 1.0293798595739645e-06,
+      "information_ratio": 0.025057723745703697,
       "information_ratio_se": 0.0625,
-      "max_drawdown_logret": 0.005264920182526112
+      "max_drawdown_logret": 0.0085564274340868
     }
   },
   "diebold_mariano": {
-    "LSTM": {
-      "LSTM": {
-        "stat": 0.0,
-        "p_value": 1.0
-      },
-      "Mamba (bounded delta)": {
-        "stat": -0.55874906166532,
-        "p_value": 0.576337878309537,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "A"
-      },
-      "Mamba (softplus delta)": {
-        "stat": -0.5597452937925957,
-        "p_value": 0.575658080587377,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "A"
-      },
-      "Causal Transformer": {
-        "stat": -0.5886691126780101,
-        "p_value": 0.556088455542529,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "A"
-      },
-      "Ridge": {
-        "stat": -29.35257561368864,
-        "p_value": 0.0,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "A"
-      }
-    },
     "Mamba (bounded delta)": {
-      "LSTM": {
-        "stat": 0.55874906166532,
-        "p_value": 0.576337878309537,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "B"
-      },
       "Mamba (bounded delta)": {
         "stat": 0.0,
         "p_value": 1.0
       },
       "Mamba (softplus delta)": {
-        "stat": -3.1366166713162045,
-        "p_value": 0.001711029951489973,
+        "stat": -0.4945465044692219,
+        "p_value": 0.6209245158194547,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "LSTM": {
+        "stat": -1.178988428903075,
+        "p_value": 0.23841374126149262,
         "n": 25600,
         "horizon": 100,
         "favours": "A"
       },
       "Causal Transformer": {
-        "stat": -0.021555414739281107,
-        "p_value": 0.9828027671442416,
+        "stat": -1.369369202130159,
+        "p_value": 0.17089590914416175,
         "n": 25600,
         "horizon": 100,
         "favours": "A"
       },
       "Ridge": {
-        "stat": -28.078342935079757,
+        "stat": -29.449585581042363,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -251,16 +217,9 @@
       }
     },
     "Mamba (softplus delta)": {
-      "LSTM": {
-        "stat": 0.5597452937925957,
-        "p_value": 0.575658080587377,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "B"
-      },
       "Mamba (bounded delta)": {
-        "stat": 3.1366166713162045,
-        "p_value": 0.001711029951489973,
+        "stat": 0.4945465044692219,
+        "p_value": 0.6209245158194547,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
@@ -269,15 +228,56 @@
         "stat": 0.0,
         "p_value": 1.0
       },
+      "LSTM": {
+        "stat": -0.7204091374633786,
+        "p_value": 0.47127970364828076,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
       "Causal Transformer": {
-        "stat": -0.019813137402714346,
-        "p_value": 0.984192592225662,
+        "stat": -1.054148879129115,
+        "p_value": 0.2918247098398252,
         "n": 25600,
         "horizon": 100,
         "favours": "A"
       },
       "Ridge": {
-        "stat": -28.0776419133037,
+        "stat": -29.248602950531414,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      }
+    },
+    "LSTM": {
+      "Mamba (bounded delta)": {
+        "stat": 1.178988428903075,
+        "p_value": 0.23841374126149262,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "Mamba (softplus delta)": {
+        "stat": 0.7204091374633786,
+        "p_value": 0.47127970364828076,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "LSTM": {
+        "stat": 0.0,
+        "p_value": 1.0
+      },
+      "Causal Transformer": {
+        "stat": -0.061696076279926446,
+        "p_value": 0.9508053463485222,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "A"
+      },
+      "Ridge": {
+        "stat": -31.41403459826407,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -285,23 +285,23 @@
       }
     },
     "Causal Transformer": {
-      "LSTM": {
-        "stat": 0.5886691126780101,
-        "p_value": 0.556088455542529,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "B"
-      },
       "Mamba (bounded delta)": {
-        "stat": 0.021555414739281107,
-        "p_value": 0.9828027671442416,
+        "stat": 1.369369202130159,
+        "p_value": 0.17089590914416175,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
       },
       "Mamba (softplus delta)": {
-        "stat": 0.019813137402714346,
-        "p_value": 0.984192592225662,
+        "stat": 1.054148879129115,
+        "p_value": 0.2918247098398252,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "LSTM": {
+        "stat": 0.061696076279926446,
+        "p_value": 0.9508053463485222,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
@@ -311,7 +311,7 @@
         "p_value": 1.0
       },
       "Ridge": {
-        "stat": -28.138470882400092,
+        "stat": -26.996090995143536,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
@@ -319,29 +319,29 @@
       }
     },
     "Ridge": {
-      "LSTM": {
-        "stat": 29.35257561368864,
-        "p_value": 0.0,
-        "n": 25600,
-        "horizon": 100,
-        "favours": "B"
-      },
       "Mamba (bounded delta)": {
-        "stat": 28.078342935079757,
+        "stat": 29.449585581042363,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
       },
       "Mamba (softplus delta)": {
-        "stat": 28.0776419133037,
+        "stat": 29.248602950531414,
+        "p_value": 0.0,
+        "n": 25600,
+        "horizon": 100,
+        "favours": "B"
+      },
+      "LSTM": {
+        "stat": 31.41403459826407,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,
         "favours": "B"
       },
       "Causal Transformer": {
-        "stat": 28.138470882400092,
+        "stat": 26.996090995143536,
         "p_value": 0.0,
         "n": 25600,
         "horizon": 100,

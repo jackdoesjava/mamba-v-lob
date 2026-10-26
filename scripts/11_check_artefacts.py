@@ -13,6 +13,13 @@ import argparse
 import subprocess
 from pathlib import Path
 
+# scripts/14_released.py, on the released checkpoint and the sample text
+RELEASED_SOURCES = [
+    "scripts/14_released.py", "src/verification/released.py", "src/verification/incremental.py",
+    "src/verification/intervals.py", "src/verification/invariant.py",
+    "src/verification/lipschitz.py", "src/models/mamba.py", "data/text/public_domain_sample.txt",
+]
+
 PRODUCED: dict[str, list[str]] = {
     "docs/certification/bounds.json": [
         "scripts/06_certify.py", "src/verification/invariant.py", "src/verification/certify.py",
@@ -72,6 +79,8 @@ PRODUCED: dict[str, list[str]] = {
         "src/verification/invariant.py", "src/verification/lipschitz.py", "src/dataset.py",
         "src/models/mamba.py",
     ],
+    "docs/certification/released.json": RELEASED_SOURCES,
+    "docs/figures/released_layers.pdf": RELEASED_SOURCES,
 }
 
 # Written by the same run as their JSON, so they are current exactly when it is. A table
@@ -82,15 +91,43 @@ TWINS: dict[str, str] = {
     "docs/certification/sweep.md": "docs/certification/sweep.json",
     "docs/certification/incremental.md": "docs/certification/incremental.json",
     "docs/certification/incremental_attack.md": "docs/certification/incremental_attack.json",
+    "docs/certification/released.md": "docs/certification/released.json",
 }
 
-# Phrases from claims this project retracted. None of them should reach an artefact.
+# Phrases from claims this project retracted. None of them should reach an artefact, the README
+# or the docs. Matching ignores case.
 RETRACTED = [
     "no finite invariant set",
     "makes the state bound usable",
     "delta floor is required",
     "dt_min is necessary",
+    # the gap depends on the weights through the slowest pole lam = |A|
+    "contains no trained weight",
+    "involves no trained weight",
+    # the separated and additive bounds are finite wherever their floor is positive
+    "no finite bound at all",
+    # interval evaluation of the induction step fails at M = M_c when the transition box has
+    # width, and can pass for a smaller equilibrium bound
+    "fails for every box that is not a single point",
+    "for any box that is not a point",
+    "for any non-degenerate box",
+    # the exponential-Euler step is a convex combination too, with a ceiling in place of a floor
+    "needs the exact discretisation to exist",
+    "needs this discretisation to exist",
+    # the forward invariant is Horbatko's Lemma 4.4 and Cao et al.'s Theorem 3.3(i)
+    "first closed-form, architecture-specific",
+    # the two Mamba arms share seed, initialisation and batch order; DM p = 0.621
+    "favouring the constrained parametrisation",
+    "the parametrisation costs no accuracy",
+    # the order book data is SPY; the mis-scaled file was named after the wrong instrument
+    "gme_features",
+    "gme on 2021",
+    "gme, 2021",
 ]
+
+# Prose and artefacts scanned for retracted phrases.
+SCANNED = ["README.md", "isabelle/README.md", "docs/**/*.md", "docs/certification/*.json",
+           "models/bounds/*.json"]
 
 
 def timestamps(use_git: bool) -> dict[str, float]:
@@ -150,20 +187,17 @@ def main() -> None:
         elif json_file in stale_now:
             stale.append((twin, json_file))
 
-    for path in Path("docs").rglob("*.md"):
+    scanned = sorted({path for pattern in SCANNED for path in Path(".").glob(pattern)})
+    for path in scanned:
         text = path.read_text(encoding="utf-8").lower()
         for phrase in RETRACTED:
-            if phrase in text:
-                retracted.append((str(path), phrase))
-    for path in list(Path("models/bounds").glob("*.json")):
-        text = path.read_text(encoding="utf-8").lower()
-        for phrase in RETRACTED:
-            if phrase in text:
+            if phrase.lower() in text:
                 retracted.append((str(path), phrase))
 
     print(f"artefacts checked : {len(PRODUCED) + len(TWINS)}")
     print(f"missing           : {len(missing)}")
     print(f"stale             : {len(stale)}")
+    print(f"files scanned     : {len(scanned)}")
     print(f"retracted phrases : {len(retracted)}")
 
     for a in missing:

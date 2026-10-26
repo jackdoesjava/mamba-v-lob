@@ -22,8 +22,11 @@ from src.models.mamba import LOBMamba, SelectiveSSMBlock
 from src.utils.repro import REPO_ROOT
 from src.verification.certify import certify_block
 from src.verification.incremental import (
+    COMPARISON_RULES,
+    REPORTED_RULE,
     RULES,
     VARIANTS,
+    additive_step,
     block_boxes,
     cell_bound,
     cell_bound_common_start,
@@ -39,14 +42,17 @@ from src.verification.incremental import (
     local_block_sensitivity,
     local_sensitivity_rule,
     local_step,
+    local_step_endpoint,
     local_step_recursive,
     log_delta_slope,
+    log_delta_step,
     realised_gap,
     softplus_log_slope,
+    timescale_offsets,
     weight_free_factor,
 )
 from src.verification.intervals import Interval
-from src.verification.lipschitz import local_sensitivity
+from src.verification.lipschitz import Sens, local_sensitivity
 
 D64 = torch.float64
 SMALL = {"model": {"mamba": {"d_model": 16, "d_state": 4, "expand": 2, "num_layers": 1}}}
@@ -279,6 +285,218 @@ def test_local_steps_survive_overflow_and_report_no_bound_for_infinite_input():
         assert float(out[0]) == pytest.approx(1e-3)          # 0 distance: the overflow is moot
         assert math.isinf(out[1]) and out[1] > 0             # a real overflow is no bound
         assert math.isinf(out[2]) and out[2] > 0             # and so is an infinite input
+
+
+# --- the endpoint form of the local corollary -------------------------------------------------
+
+
+def _endpoint_cells(n, T, seed):
+    """Cells with per-step log budgets rho_t up to 5 and, in half of the cells, an additive
+    budget beta_t >= |dt - dt~| that is sometimes the tighter of the two."""
+    lam, dt, _, _, dc, c, c_t, g = _random_cells(n, T, seed=seed)
+    rho_max = torch.tensor([1e-6, 1e-2, 0.5, 2.0, 5.0], dtype=D64).repeat(n // 5)
+    rho_t, s = _budgets(n, T, g, rho_max)
+    dt_t = dt * torch.exp(s)
+    loose = (torch.rand(n, T, generator=g) > 0.3).to(D64)
+    beta = (dt - dt_t).abs() * (1.0 + 3.0 * torch.rand(n, T, generator=g, dtype=D64) * loose)
+    beta = torch.where((torch.arange(n) % 2 == 0).unsqueeze(1), beta, torch.full_like(beta, math.inf))
+    c_t = c_t * (1 + 9 * torch.rand(n, 1, generator=g, dtype=D64))     # |c~| up to 10, no M
+    c = c_t + (torch.rand(n, T, generator=g, dtype=D64) * 2 - 1) * dc.unsqueeze(1)
+    return lam, dt, dt_t, rho_t, beta, c, c_t, g
+
+
+def test_timescale_offsets_are_the_intersection_of_the_two_intervals():
+    x = torch.tensor([1e-14, 1e-3, 0.5, 4.0, 4.0, 4.0, 0.0], dtype=D64)
+    rho = torch.tensor([0.3, 2.0, 1e-9, 0.1, 0.1, 800.0, 800.0], dtype=D64)
+    dx = torch.tensor([math.inf, 1e-4, math.inf, 1.0, 10.0, 2.0, 1.0], dtype=D64)
+    up, down = timescale_offsets(x, rho, dx)
+    lo = torch.maximum(torch.maximum(x * torch.exp(-rho), x - dx), torch.zeros_like(x))
+    hi = torch.minimum(x * torch.exp(rho), x + dx)
+    finite = torch.isfinite(hi)
+    torch.testing.assert_close(x - down, lo, rtol=1e-12, atol=0.0)
+    torch.testing.assert_close((x + up)[finite], hi[finite], rtol=1e-12, atol=0.0)
+    assert float(up[0]) == pytest.approx(1e-14 * math.expm1(0.3), rel=1e-14)   # no cancellation
+    assert float(up[2]) == pytest.approx(0.5 * 1e-9, rel=1e-6)
+    assert float(up[5]) == 2.0 and float(down[5]) == 2.0                      # e^800 overflows
+    assert float(up[6]) == 0.0 and float(down[6]) == 0.0                      # no nan at x = 0
+    _, down0 = timescale_offsets(x[:3], rho[:3])
+    torch.testing.assert_close(x[:3] - down0, x[:3] * torch.exp(-rho[:3]), rtol=1e-12, atol=0.0)
+
+
+def test_endpoint_step_on_random_sequences():
+    """Sampled pairs with both kinds of timescale budget: the endpoint form holds, with the
+    additive budget it is never above the form without it, and that is never above the
+    recursion."""
+    n, T = 2000, 300
+    lam, dt, dt_t, rho_t, beta, c, c_t, g = _endpoint_cells(n, T, seed=21)
+    ht0 = torch.randn(n, generator=g, dtype=D64)
+    h0 = ht0 + torch.randn(n, generator=g, dtype=D64) * 0.1
+    h = _scan(lam, dt, c, h0)
+    ht = _scan(lam, dt_t, c_t, ht0)
+    h_prev = torch.cat([h0.unsqueeze(1), h[:, :-1]], 1)
+    x = lam.unsqueeze(1) * dt
+    E_end = E_log = E_rec = (h0 - ht0).abs()
+    for t in range(T):
+        gap = (h_prev[:, t] - c[:, t]).abs()
+        dct = (c[:, t] - c_t[:, t]).abs()
+        E_end = local_step_endpoint(E_end, x[:, t], rho_t[:, t], dct, gap, lam * beta[:, t])
+        E_log = local_step_endpoint(E_log, x[:, t], rho_t[:, t], dct, gap)
+        E_rec = local_step_recursive(E_rec, x[:, t], rho_t[:, t], dct, gap)
+        e = (h[:, t] - ht[:, t]).abs()
+        # where beta_t is attained the perturbed run sits on an end of I_t, so e is the bound
+        # up to the rounding of two states of size up to 10
+        assert torch.all(e <= E_end * (1 + 1e-12) + 1e-14 * (1 + h[:, t].abs()))
+        assert torch.all(E_end <= E_log * (1 + 1e-12))
+        assert torch.all(E_log <= E_rec * (1 + 1e-12))
+    # the additive budget is the tighter one in some cells, and the intersection uses it
+    assert bool((E_end < E_log * (1 - 1e-3)).any())
+
+
+def test_endpoint_step_against_a_greedy_adversary():
+    """Each step the adversary takes the perturbed timescale at either end of the log interval
+    and either sign of c - c~, keeping the largest |e_t|. The endpoint bound holds along the run,
+    and from a common start its first step is attained."""
+    n, T = 400, 200
+    g = torch.Generator().manual_seed(22)
+    lam = 10 ** (torch.rand(n, generator=g, dtype=D64) * 2 - 1)
+    dt = 10 ** (torch.rand(n, T, generator=g, dtype=D64) * 6 - 5)
+    rho = 10 ** (torch.rand(n, generator=g, dtype=D64) * 3 - 2.5)
+    dc = 1e-3
+    c = torch.randn(n, T, generator=g, dtype=D64)
+    h = torch.randn(n, generator=g, dtype=D64)
+    ht = h.clone()
+    E = torch.zeros(n, dtype=D64)
+    for t in range(T):
+        x = lam * dt[:, t]
+        best = None
+        for ss, ds in itertools.product((-1.0, 1.0), repeat=2):
+            xt = x * torch.exp(ss * rho)
+            hn = torch.exp(-x) * h - torch.expm1(-x) * c[:, t]
+            hnt = torch.exp(-xt) * ht - torch.expm1(-xt) * (c[:, t] - ds * dc)
+            if best is None:
+                best = (hn, hnt)
+            else:
+                k = (hn - hnt).abs() > (best[0] - best[1]).abs()
+                best = (torch.where(k, hn, best[0]), torch.where(k, hnt, best[1]))
+        E = local_step_endpoint(E, x, rho, torch.full_like(x, dc), (h - c[:, t]).abs())
+        h, ht = best
+        assert torch.all((h - ht).abs() <= E * (1 + 1e-10) + 1e-15)
+        if t == 0:
+            torch.testing.assert_close((h - ht).abs(), E, rtol=1e-9, atol=1e-15)
+
+
+def test_endpoint_step_is_the_largest_one_step_error():
+    """Over a dense grid of perturbed transitions in I_t and every sign of e_{t-1} and c - c~,
+    the one-step error never exceeds the endpoint step, and at the maximising end it equals it."""
+    g = torch.Generator().manual_seed(23)
+    n = 3000
+    x = 10 ** (torch.rand(n, generator=g, dtype=D64) * 6 - 4)
+    rho = 10 ** (torch.rand(n, generator=g, dtype=D64) * 4 - 3)
+    dx = torch.where(torch.rand(n, generator=g) > 0.5,
+                     x * 3 * torch.rand(n, generator=g, dtype=D64), torch.full_like(x, math.inf))
+    E = torch.rand(n, generator=g, dtype=D64) * (torch.rand(n, generator=g) > 0.3).to(D64)
+    dc = torch.rand(n, generator=g, dtype=D64)
+    c = torch.randn(n, generator=g, dtype=D64)
+    h = c + 3 * torch.randn(n, generator=g, dtype=D64)
+    step = local_step_endpoint(E, x, rho, dc, (h - c).abs(), dx)
+
+    up, down = timescale_offsets(x, rho, dx)
+    frac = torch.linspace(0.0, 1.0, 801, dtype=D64).unsqueeze(1)
+    t = -down + frac * (up.clamp(max=50.0) + down)            # both ends are grid points
+    worst = torch.zeros(n, dtype=D64)
+    for se, sc in itertools.product((-1.0, 1.0), repeat=2):
+        ht, ct = h - se * E, c - sc * dc                      # e_{t-1} = se E, c - c~ = sc dc
+        e = ((torch.exp(-x) * h - torch.expm1(-x) * c)
+             - (torch.exp(-(x + t)) * ht - torch.expm1(-(x + t)) * ct))
+        worst = torch.maximum(worst, e.abs().amax(0))
+    tol = 1e-12 * (h.abs() + c.abs() + E + dc)
+    assert torch.all(worst <= step + tol)
+    capped = up <= 50.0
+    assert torch.all((worst >= step - tol)[capped])
+
+
+def test_endpoint_step_equality_cases():
+    g = torch.Generator().manual_seed(24)
+    n = 1000
+    x = 10 ** (torch.rand(n, generator=g, dtype=D64) * 8 - 6)
+    rho = 10 ** (torch.rand(n, generator=g, dtype=D64) * 3 - 2)
+    E = torch.rand(n, generator=g, dtype=D64)
+    dc = torch.rand(n, generator=g, dtype=D64)
+    zero = torch.zeros(n, dtype=D64)
+    # at a realised distance of 0 and with the log budget only, it is the recursion
+    torch.testing.assert_close(local_step_endpoint(E, x, rho, dc, zero),
+                               local_step_recursive(E, x, rho, dc, zero), rtol=1e-12, atol=0.0)
+    # with no timescale perturbation both are the exact recursion of the forcing term
+    gap = torch.rand(n, generator=g, dtype=D64)
+    exact = torch.exp(-x) * E - torch.expm1(-x) * dc
+    for dx in (None, zero):
+        torch.testing.assert_close(local_step_endpoint(E, x, zero, dc, gap, dx), exact,
+                                   rtol=1e-13, atol=0.0)
+    torch.testing.assert_close(local_step_recursive(E, x, zero, dc, gap), exact,
+                               rtol=1e-13, atol=0.0)
+    # an additive budget of 0 pins the transition whatever rho is
+    torch.testing.assert_close(local_step_endpoint(E, x, rho, dc, gap, zero), exact,
+                               rtol=1e-13, atol=0.0)
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, D64])
+def test_endpoint_step_never_overflows(dtype):
+    """Where e^rho - 1 overflows the recursion has no bound, and the endpoint form still has
+    one, since |Abar - Abar~| <= 1: E_t <= E_{t-1} + dc_t + |h_{t-1} - c_t|. An infinite input is
+    still no bound."""
+    E = torch.tensor([0.0, 1.0, 1.0, math.inf, 1.0], dtype=dtype)
+    x = torch.tensor([0.1, 0.1, 1e-12, 0.1, 0.1], dtype=dtype)
+    rho = torch.tensor([200.0, 200.0, 1e4, 1.0, 1.0], dtype=dtype)
+    dc = torch.tensor([1e-3, 1e-3, 1e-3, 1e-3, math.inf], dtype=dtype)
+    gap = torch.tensor([0.0, 0.5, 0.5, 0.5, 0.5], dtype=dtype)
+    out = local_step_endpoint(E, x, rho, dc, gap)
+    rec = local_step_recursive(E, x, rho, dc, gap)
+    assert not torch.isnan(out).any()
+    assert torch.isfinite(out[:3]).all() and math.isinf(out[3]) and math.isinf(out[4])
+    assert torch.all(out[:3] <= E[:3] + dc[:3] + gap[:3])
+    assert math.isinf(rec[2])
+    # x e^-rho is 0 to working precision, so the slow end is 1 and the fast end 0
+    a = math.exp(-0.1)
+    assert float(out[1]) == pytest.approx(max(1.0 + 0.5 * (1 - a), 1e-3 + 0.5 * a), rel=1e-6)
+
+
+def _sens_cells(n, seed, dtype=D64):
+    """Random inputs of one recurrence step of the domain, (n, d, s) cells, with rho infinite
+    in a fifth of the channels."""
+    g = torch.Generator().manual_seed(seed)
+    d, s = 6, 4
+
+    def r(*shape):
+        return torch.randn(*shape, generator=g, dtype=dtype)
+
+    A = -(10 ** (torch.rand(d, s, generator=g, dtype=dtype) * 3 - 1.5))
+    h = Sens(r(n, d, s), torch.rand(n, d, s, generator=g, dtype=dtype) * 10)
+    dt = Sens(10 ** (torch.rand(n, d, 1, generator=g, dtype=dtype) * 6 - 5),
+              10 ** (torch.rand(n, d, 1, generator=g, dtype=dtype) * 6 - 5))
+    u = Sens(r(n, d, 1), torch.rand(n, d, 1, generator=g, dtype=dtype) * 10)
+    B = Sens(r(n, 1, s), torch.rand(n, 1, s, generator=g, dtype=dtype) * 10)
+    log_lip = torch.where(torch.rand(n, d, 1, generator=g) > 0.2,
+                          torch.rand(n, d, 1, generator=g, dtype=dtype) * 1e4,
+                          torch.full((n, d, 1), math.inf, dtype=dtype))
+    return h, dt, u, B, A, log_lip
+
+
+@pytest.mark.parametrize("eps", [1e-7, 1e-4, 1e-2])
+def test_endpoint_step_is_never_above_the_additive_or_the_recursive_step(eps):
+    """On the same inputs of one domain step, the endpoint form is at most the additive step,
+    whose bounds on |Abar - Abar~| and on the gain it never exceeds, and at most the recursion.
+    Where rho is infinite only the additive budget applies and the recursion has no bound."""
+    h, dt, u, B, A, log_lip = _sens_cells(400, seed=25)
+    end = log_delta_step(h, dt, log_lip, u, B, A, eps, endpoint=True)
+    add_ = additive_step(h, dt, u, B, A, eps)
+    rec = log_delta_step(h, dt, log_lip, u, B, A, eps, recursive=True).lip
+    torch.testing.assert_close(end.val, add_.val, rtol=0.0, atol=0.0)
+    assert torch.isfinite(end.lip).all()
+    assert torch.all(end.lip <= add_.lip * (1 + 1e-12))
+    finite = torch.isfinite(rec)
+    assert torch.all(end.lip[finite] <= rec[finite] * (1 + 1e-12))
+    assert bool((end.lip < add_.lip * (1 - 1e-6)).any())
+    assert bool((end.lip[finite] < rec[finite] * (1 - 1e-6)).any())
 
 
 def test_additive_baseline_is_a_valid_bound_on_random_sequences():
@@ -675,7 +893,7 @@ def test_additive_rule_reproduces_the_domain_on_the_trained_model():
                                    equal_nan=True)
 
 
-@pytest.mark.parametrize("rule", ["log_delta", "log_delta_recursive"])
+@pytest.mark.parametrize("rule", ["log_delta", "log_delta_recursive", "log_delta_endpoint"])
 @pytest.mark.parametrize("eps", [1e-7, 1e-6, 1e-5, 1e-3])
 def test_log_delta_rules_are_sound(small_model, rule, eps):
     torch.manual_seed(14)
@@ -701,6 +919,37 @@ def test_recursive_rule_is_never_looser_than_the_running_maximum(eps):
     a = local_block_sensitivity(model.layers[0], xn, eps, "log_delta").lip
     b = local_block_sensitivity(model.layers[0], xn, eps, "log_delta_recursive").lip
     assert torch.all(b <= a * (1 + 1e-5))
+
+
+@pytest.mark.parametrize("eps", [1e-6, 1e-4, 1e-2, 1e-1])
+def test_endpoint_rule_is_never_looser_than_the_recursion_or_the_additive_rule(eps):
+    """Each step of the endpoint rule is at most the recursive and the additive step on the same
+    inputs, and every later stage of the domain is monotone in the sensitivity it receives, so
+    the end-to-end and the block bounds inherit the order. Ties to float32 rounding only."""
+    torch.manual_seed(16)
+    model = LOBMamba(input_dim=8, config=TWO_LAYERS).eval()
+    x = torch.randn(2, 30, 8)
+    end = local_sensitivity_rule(model, x, eps, "log_delta_endpoint")["lipschitz"]
+    for rule in ("additive", "log_delta_recursive"):
+        other = local_sensitivity_rule(model, x, eps, rule)["lipschitz"]
+        assert torch.all((end <= other * (1 + 1e-5)) | ~torch.isfinite(other)), rule
+    xn = model.layers[0].norm(model.proj(x)).detach()
+    end = local_block_sensitivity(model.layers[0], xn, eps, "log_delta_endpoint").lip
+    assert torch.isfinite(end).all()
+    for rule in ("additive", "log_delta_recursive"):
+        other = local_block_sensitivity(model.layers[0], xn, eps, rule).lip
+        assert torch.all((end <= other * (1 + 1e-5)) | ~torch.isfinite(other)), rule
+
+
+def test_reported_rule_is_the_endpoint_form(small_model):
+    assert REPORTED_RULE == "log_delta_endpoint" and RULES == (*COMPARISON_RULES, REPORTED_RULE)
+    torch.manual_seed(17)
+    x = torch.randn(2, 10, 8)
+    default = local_sensitivity_rule(small_model, x, 1e-5)
+    assert default["rule"] == REPORTED_RULE
+    torch.testing.assert_close(default["lipschitz"],
+                               local_sensitivity_rule(small_model, x, 1e-5, REPORTED_RULE)["lipschitz"],
+                               rtol=0.0, atol=0.0)
 
 
 @pytest.mark.parametrize("rule", RULES)

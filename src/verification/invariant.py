@@ -16,9 +16,11 @@ from src.verification.intervals import Interval
 def zoh_is_exact(A: torch.Tensor, dt_max: float, tol: float = 1e-6) -> bool:
     """Check Bbar's multiplier really is (1 - Abar)/|A| over the timescale range.
 
-    The invariant needs the exact discretisation. Reference Mamba's Euler surrogate dt*B
-    matches only as dt -> 0, so this is what stops the bound being applied to a model it
-    does not hold for.
+    The identity holds for the exact zero-order hold, and also for forward Euler, backward
+    Euler and the bilinear rule. Reference Mamba's exponential-Euler surrogate dt*B matches it
+    only as dt -> 0. That surrogate still gives a convex update with an enlarged equilibrium,
+    so an invariant exists there with a larger radius (incremental.euler_cell_bound); this
+    check guards the identity that the exact-hold radius sup|Bu|/|A| relies on.
     """
     dts = torch.logspace(-8, torch.log10(torch.tensor(dt_max)).item(), 32, dtype=torch.float64)
     A64 = A.to(torch.float64)
@@ -55,8 +57,10 @@ def induction_residual(invariant: Interval, equilibrium: Interval) -> torch.Tens
 
     Abar appears in both terms of a h + (1 - a) c, so this step cannot be evaluated with
     interval arithmetic. Bounding the two factors independently lets the first take sup Abar
-    and the second take 1 - inf Abar, which sum to more than one, and the check then fails
-    for any non-degenerate box. Keeping a as a single variable, the supremum over a in [0, 1]
+    and the second take 1 - inf Abar, which sum to more than one. The check then fails for the
+    invariant's own box whenever the timescale box is not a single point, and passes only for
+    boxes at least as large as the geometric fixed point. Keeping a as a single variable, the
+    supremum over a in [0, 1]
     of a M + (1 - a) M_c is max(M, M_c), so the box is preserved exactly when M_c <= M.
 
     That is the same dependency loss that makes the geometric bound diverge, one level up.

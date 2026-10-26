@@ -62,7 +62,8 @@ BLOCK_EPS = [1e-6, 1e-4, 1e-2]
 GAP_WINDOWS, GAP_LENGTH = 8, 1000
 ARMS = {"bounded": "best_mamba.pt", "softplus": "best_mamba_softplus.pt"}
 RULE_NAMES = {"additive": "additive", "log_delta": "log-timescale, running maximum",
-              "log_delta_recursive": "log-timescale, recursive"}
+              "log_delta_recursive": "log-timescale, recursive",
+              "log_delta_endpoint": "log-timescale, endpoint"}
 
 # the colours and type of scripts/05_figures.py, so the figure sits with the paper's others
 OURS = "#1f77b4"
@@ -807,13 +808,20 @@ def markdown(results: dict) -> str:
                "`E_t = K_t + a*_t (E_{t-1} - K_t)` with `K_t` the second argument of that maximum "
                "and `a*_t` the perturbed transition at its worst value in "
                "`[exp(-lam dt e^rho), exp(-lam dt e^-rho)]`; it is never larger than the running "
-               "maximum, and with `rho = 0` it is the exact recursion of the forcing term.", ""]
+               "maximum, and with `rho = 0` it is the exact recursion of the forcing term. The "
+               "endpoint rule, the reported one, bounds the error identity itself, "
+               "`|e_t| <= s E_{t-1} + (1 - s) dc_t + |Abar_t - s| |h_{t-1} - c_t|` with `s` the "
+               "perturbed transition, which is convex in `s`, and takes its larger value at the two "
+               "ends of the interval that holds `s`: the intersection of the interval above with the "
+               "one the additive bound on `|dt - dt~|` gives. It is never larger than the recursive "
+               "rule or the additive rule, and it is finite for every `rho`.", ""]
         rows = [[arm, r["eps"], *[r[rule] for rule in RULES]]
                 for arm, a in local["arms"].items() for r in a["model"]]
         md += [table(rows, ["arm", "eps", *[RULE_NAMES[rule] for rule in RULES]]), ""]
         rows = [[arm, r["layer"], r["sampled"], *[r[f"{rule}@{e:g}"] for e in BLOCK_EPS for rule in RULES]]
                 for arm, a in local["arms"].items() for r in a["block"]]
-        short = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursive"}
+        short = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursive",
+                 "log_delta_endpoint": "endpoint"}
         header = ["arm", "layer", "sampled"] + [f"{short[rule]} @ {e:g}" for e in BLOCK_EPS for rule in RULES]
         md += ["Per block, the local Lipschitz bound on the block's contribution around the "
                "realised normalised input, for any perturbation of it of sup-norm `eps`, against "

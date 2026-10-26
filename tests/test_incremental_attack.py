@@ -229,15 +229,21 @@ def test_log_timescale_steps_never_scale_the_carried_bound_up(eps):
     model, _ = _model(seed=13)
     torch.manual_seed(14)
     x = torch.randn(2, 16, 5)
-    for rule in ("log_delta", "log_delta_recursive"):
+    for rule in ("log_delta", "log_delta_recursive", "log_delta_endpoint"):
         for blk in attack.trace_local(model, x, eps, rule)["blocks"]:
             assert blk["fraction_of_steps_growing"] == 0.0
             assert blk["step_multiplier_max"] <= 1.0
             assert 0.0 <= blk["fraction_of_steps_raised"] <= 1.0
     if eps <= 1e-6:
         # below 1 in the reals; at large rho, exp(-x e^-rho) rounds to 1 in float32
-        for blk in attack.trace_local(model, x, eps, "log_delta_recursive")["blocks"]:
-            assert blk["step_multiplier_max"] < 1.0
+        for rule in ("log_delta_recursive", "log_delta_endpoint"):
+            for blk in attack.trace_local(model, x, eps, rule)["blocks"]:
+                assert blk["step_multiplier_max"] < 1.0
+    # the endpoint rule's multiplier is the upper end of a sub-interval of the recursion's
+    rec = attack.trace_local(model, x, eps, "log_delta_recursive")["blocks"]
+    end = attack.trace_local(model, x, eps, "log_delta_endpoint")["blocks"]
+    for r, e in zip(rec, end):
+        assert e["step_multiplier_max"] <= r["step_multiplier_max"] * (1 + 1e-6)
 
 
 # --- the report -----------------------------------------------------------------------------
@@ -255,6 +261,10 @@ def test_report_renders_from_the_recorded_results(tmp_path):
     if not recorded.exists():
         pytest.skip("incremental_attack.json not found")
     results = json.loads(recorded.read_text())
+    if any(rule not in row for a in results["arms"].values()
+           for row in a["local_end_to_end"]["rows"] for rule in attack.RULES):
+        pytest.skip("incremental_attack.json predates the endpoint rule; rerun "
+                    "scripts/13_incremental_attack.py")
     md = attack.markdown(results)
     for heading in ("## Block output against sequence length", "## The prediction against",
                     "## The local end-to-end certificate", "## Where the end-to-end bound comes from",

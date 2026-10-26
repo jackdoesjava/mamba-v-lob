@@ -3,6 +3,13 @@
 This directory contains the Isabelle theory files for MambaVLob, along with the
 session configuration needed to build them and generate browsable HTML output.
 
+`Mamba_Invariant.thy` machine-checks the zero-order-hold identity, the forward
+invariant `|h_t| <= M` with `M = sup |B u| / |A|` at every sequence length, and
+the LayerNorm coordinate and fused LayerNorm-Linear bounds for every `d`. The
+invariant is Horbatko's Lemma 4.4 (arXiv:2604.18580) and follows from Cao et
+al.'s Theorem 3.3(i); the LayerNorm coordinate bound is the Laguerre–Samuelson
+inequality. The theory checks these known results; it does not claim them.
+
 ## Prerequisites
 
 - [Isabelle2025-2](https://isabelle.in.tum.de/) installed.
@@ -21,8 +28,9 @@ session configuration needed to build them and generate browsable HTML output.
 
 | File/Folder      | Description                                                       |
 |-------------------|--------------------------------------------------------------------|
-| `ROOT`            | Isabelle session configuration            |
-| `Mamba_Invariant.thy` | Theory source file                            |
+| `ROOT`            | Isabelle session configuration; lists `Mamba_Invariant` only |
+| `Mamba_Invariant.thy` | Theory source file, checked                   |
+| `drafts/Mamba_Sensitivity.thy` | **Unchecked draft**, not in `ROOT`; see below |
 | `MambaVLob/`      | **Pre-built** HTML output, committed to the repo so collaborators can browse the theory without building it themselves |
 | `output/`, `document/` | May appear during build (**not tracked**, see `.gitignore`) |
 
@@ -33,7 +41,28 @@ repo without installing Isabelle or running a build. If you don't have
 Isabelle installed and just want to read the theory, open
 `MambaVLob/index.html` in a browser and skip the rest of this file.
 
-## Building (only needed if you've changed the `.thy` file)
+## The unchecked draft
+
+`drafts/Mamba_Sensitivity.thy` states the lemmas behind the sensitivity bound
+of `../docs/02-invariant.md`: the timescale rescaling bound
+`|exp(-x) - exp(-x e^s)| <= |e^s - 1| (1 - exp(-x))` (`exp_rescale_bound`),
+the error recursion for two runs of the convex update (`error_recursion`), and
+the cell bound `|h t - g t| <= max |h 0 - g 0| (eta + 2 M k)`
+(`cell_sensitivity_bound`). It was written without access to Isabelle and has
+never been loaded, so every proof method in it is unverified and nothing in it
+may be cited as machine-checked. It imports `../Mamba_Invariant`.
+
+To check it, add `"drafts/Mamba_Sensitivity"` under `theories` in `ROOT` and
+run the build below, or open it in Isabelle/jEdit against this session:
+
+```bash
+isabelle jedit -d . -l MambaVLob drafts/Mamba_Sensitivity.thy
+```
+
+Move it out of `drafts/`, keep it in `ROOT` and regenerate `MambaVLob/` only
+once it builds with no errors.
+
+## Building (only needed if you've changed a `.thy` file)
 
 If you've edited the theory and need to regenerate the HTML, from this
 directory in the Cygwin terminal (Windows) or a normal terminal

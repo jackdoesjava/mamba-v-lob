@@ -1,7 +1,7 @@
 seed: 1337
 
 data:
-  processed_file: "data/processed/GME_features_20210128.parquet"
+  processed_file: "data/processed/SPY_features_20210128.parquet"
   batch_size: 128
   seq_length: 100
   prediction_horizon: 100   # must match PREDICTION_HORIZON in python/features.py

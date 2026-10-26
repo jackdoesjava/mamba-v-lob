@@ -71,7 +71,7 @@ divides by 1 - sup Abar, while the invariant does not depend on the floor at all
 
 | checkpoint | invariant | geometric | ratio | induction holds |
 | --- | --- | --- | --- | --- |
-| mamba | 129.674 | 1.235e+04 | 95.236 | yes |
-| mamba_softplus | 129.717 | inf | inf | yes |
+| mamba | 175.948 | 1.682e+04 | 95.621 | yes |
+| mamba_softplus | 287.387 | inf | inf | yes |
 
 The induction step holds in all 29 configurations.

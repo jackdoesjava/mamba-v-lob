@@ -18,7 +18,8 @@ radius M bounding h~ and c~ is a convex combination again, so
 With a common start the time-warp term improves to its exact worst case 2 M tanh(rho/2)
 (`cell_bound_common_start`). Form (2) puts the realised distance |h_{t-1} - c_t| of a nominal run
 in place of 2 M and needs nothing about the perturbed run (`local_step`, and the recursion of its
-proof, `local_step_recursive`).
+proof, `local_step_recursive`). Form (2) without the lemma, maximised over the interval that holds
+a~_t, is the endpoint form (`local_step_endpoint`), the step of the reported local certificate.
 
 Bounding the decay additively, |a - a~| <= lam exp(-lam dt_min) |dt - dt~|, loses the (1 - a)
 factor. That bound grows linearly in t when there is no floor, and with a floor it is
@@ -65,8 +66,14 @@ DTYPE = torch.float64
 # Recurrence steps of the local domain. "additive" is the step of lipschitz.py. "log_delta" is the
 # local corollary, a running maximum. "log_delta_recursive" is the one-step inequality in that
 # corollary's proof with the perturbed transition at its worst admissible value; it is never
-# larger than the running maximum, and unlike it the carried bound decays.
-RULES = ("additive", "log_delta", "log_delta_recursive")
+# larger than the running maximum, and unlike it the carried bound decays. "log_delta_endpoint"
+# maximises error form (2) itself over the interval that holds the perturbed transition, the
+# intersection of the intervals given by rho_t and by the additive bound on |dt - dt~|; it is
+# never larger than the recursion or than the additive step, and it is the reported rule. The
+# first three are kept for comparison.
+COMPARISON_RULES = ("additive", "log_delta", "log_delta_recursive")
+REPORTED_RULE = "log_delta_endpoint"
+RULES = (*COMPARISON_RULES, REPORTED_RULE)
 
 # The two time-warp terms of the data-free certificate: the cell theorem, and the exact constant
 # with a common start (both runs of the block start from h_{-1} = 0).
@@ -188,6 +195,69 @@ def local_step_recursive(E_prev, x, rho, dc, gap):
     out = K + a * (E_prev - K)
     # an infinite input is no bound, and inf - inf or 0 * inf must not turn it into one
     return torch.where(torch.isfinite(E_prev) & torch.isfinite(K), out, torch.full_like(out, math.inf))
+
+
+def timescale_offsets(x, rho, dx=None) -> tuple[torch.Tensor, torch.Tensor]:
+    """The interval of x~ = lam dt~ around the nominal x = lam dt, as offsets (up, down):
+    x~ lies in [x - down, x + up].
+
+    |log dt - log dt~| <= rho gives x~ in [x e^-rho, x e^rho], so up = x (e^rho - 1) and
+    down = x (1 - e^-rho). An additive bound |dt - dt~| <= beta, passed as dx = lam beta, gives
+    x~ in [x - dx, x + dx], and dt~ > 0 gives x~ >= 0. The interval is the intersection, so up is
+    the smaller of the two upward offsets and down the smallest of the downward ones and x. Each
+    offset is formed directly rather than as a difference of two ends, so it keeps its relative
+    precision when it is far below x.
+    """
+    x = torch.as_tensor(x)
+    rho = torch.as_tensor(rho, dtype=x.dtype)
+    pos = x > 0
+    # x = 0 with rho = inf would give 0 * inf; the interval is then the point 0
+    up = torch.where(pos, x * torch.expm1(rho), torch.zeros_like(x))
+    down = x * -torch.expm1(-rho)
+    if dx is not None:
+        dx = torch.as_tensor(dx, dtype=x.dtype)
+        up = torch.minimum(up, dx)
+        down = torch.minimum(down, dx)
+    return up, torch.minimum(down, x)
+
+
+def local_step_endpoint(E_prev, x, rho, dc, gap, dx=None):
+    """The endpoint form of the local corollary: error form (2), maximised over the transitions
+    the perturbed run can take.
+
+    Form (2) with |e_{t-1}| <= E_{t-1}, |c_t - c~_t| <= dc_t and the nominal distance
+    gap_t = |h_{t-1} - c_t| gives, with a = exp(-x) and the perturbed transition s = a~_t,
+
+        |e_t| <= f(s) = s E_{t-1} + (1 - s) dc_t + |a - s| gap_t.
+
+    f is convex in s, the sum of two affine terms and |a - s| times a constant, so its largest
+    value over the interval I_t that holds a~_t is at one of the two ends, and
+
+        E_t = max(f(exp(-(x + up))), f(exp(-(x - down))))
+
+    with (up, down) from `timescale_offsets`. I_t is the intersection of the interval given by
+    rho_t and, when dx = lam beta_t is passed, the one given by |dt - dt~| <= beta_t, so the step
+    uses whichever is tighter in each cell. The ends enter through 1 - s and |a - s| formed with
+    expm1, a - exp(-(x + up)) = exp(-x)(1 - exp(-up)) and exp(-(x - down)) - a =
+    exp(-(x - down))(1 - exp(-down)), so a timescale far below 1/lam is not lost to rounding.
+
+    Properties, all over the reals. (i) The lemma with the runs exchanged gives
+    |a - s| <= (e^rho - 1)(1 - s) on the rho interval, so f(s) <= K_t + s (E_{t-1} - K_t) there,
+    and E_t is never larger than `local_step_recursive`; with gap = 0 and no dx the two are
+    equal, and with rho = 0 both are the exact recursion of the forcing term. (ii) |a - s| <= 1,
+    so E_t <= E_{t-1} + dc_t + gap_t is finite whenever its inputs are, for every rho_t; e^rho
+    overflowing makes up infinite and the lower end 0, which f takes as it is. (iii) For a given
+    (E_{t-1}, dc_t, gap_t, I_t) the step is attained: at the maximising end, e_{t-1} and
+    c_t - c~_t of the sign of (a - s)(h_{t-1} - c_t) give |e_t| = E_t.
+    """
+    up, down = timescale_offsets(x, rho, dx)
+    fast = torch.exp(-(x + up))                       # the lower end of I_t
+    slow = torch.exp(-(x - down))                     # the upper end
+    f_fast = fast * E_prev + -torch.expm1(-(x + up)) * dc + torch.exp(-x) * -torch.expm1(-up) * gap
+    f_slow = slow * E_prev + -torch.expm1(-(x - down)) * dc + slow * -torch.expm1(-down) * gap
+    out = torch.maximum(f_fast, f_slow)
+    ok = torch.isfinite(torch.as_tensor(E_prev)) & torch.isfinite(torch.as_tensor(dc))
+    return torch.where(ok, out, torch.full_like(out, math.inf))
 
 
 def euler_gain(x: torch.Tensor) -> torch.Tensor:
@@ -832,7 +902,7 @@ def additive_step(h: Sens, dt_t: Sens, u_t: Sens, B_t: Sens, A: torch.Tensor, ep
 
 def log_delta_step(
     h: Sens, dt_t: Sens, log_lip_t: torch.Tensor, u_t: Sens, B_t: Sens, A: torch.Tensor,
-    eps: float, recursive: bool = False,
+    eps: float, recursive: bool = False, endpoint: bool = False,
 ) -> Sens:
     """The local corollary as a recurrence step. h.lip * eps carries E_t; the value is the
     nominal state, computed as SelectiveSSMBlock.forward computes it.
@@ -841,7 +911,9 @@ def log_delta_step(
     distance |h_{t-1} - c_t| is taken on the nominal values. recursive=False applies
     `local_step`, the running maximum, and recursive=True `local_step_recursive`, which also
     lets the carried bound decay. Neither grows with rho_t beyond e^{rho_t} - 1 times a realised
-    distance.
+    distance. endpoint=True applies `local_step_endpoint` with both the log-timescale bound rho_t
+    and the additive one the domain carries, |dt - dt~| <= dt_t.lip eps, the bound the additive
+    step uses; it overrides recursive.
     """
     dtA = dt_t.val * A.unsqueeze(0)
     lam = A.abs().unsqueeze(0)
@@ -851,7 +923,9 @@ def log_delta_step(
     rho = log_lip_t * eps
     dc = Bu.lip * eps / lam
     gap = (h.val - c).abs()
-    if recursive:
+    if endpoint:
+        E = local_step_endpoint(E_prev, dt_t.val * lam, rho, dc, gap, dx=lam * (dt_t.lip * eps))
+    elif recursive:
         E = local_step_recursive(E_prev, dt_t.val * lam, rho, dc, gap)
     else:
         E = local_step(E_prev, torch.expm1(rho), dc, gap)
@@ -910,7 +984,8 @@ def _block_rule(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str,
             h = additive_step(h, dt_t, u_t, B_t, A, eps)
         else:
             h = log_delta_step(h, dt_t, log_lip[:, t].unsqueeze(-1), u_t, B_t, A, eps,
-                               recursive=rule == "log_delta_recursive")
+                               recursive=rule == "log_delta_recursive",
+                               endpoint=rule == "log_delta_endpoint")
 
         cy = mul(h, C_t, eps)
         ys_v.append(cy.val.sum(-1) + block.D * u.val[:, t])
@@ -924,7 +999,7 @@ def _block_rule(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str,
 
 @torch.no_grad()
 def local_sensitivity_rule(model: LOBMamba, x: torch.Tensor, eps: float,
-                           rule: str = "log_delta") -> dict:
+                           rule: str = REPORTED_RULE) -> dict:
     """lipschitz.local_sensitivity with the recurrence step chosen by `rule`.
 
     rule="additive" returns exactly what lipschitz.local_sensitivity returns.
@@ -956,7 +1031,7 @@ def local_sensitivity_rule(model: LOBMamba, x: torch.Tensor, eps: float,
 
 @torch.no_grad()
 def local_block_sensitivity(block: SelectiveSSMBlock, xn: torch.Tensor, eps: float,
-                            rule: str = "log_delta") -> Sens:
+                            rule: str = REPORTED_RULE) -> Sens:
     """Local bound on the block's contribution around a nominal normalised input xn, for any
     perturbation of xn of sup-norm at most eps, LayerNorm output or not."""
     return _block_rule(block, Sens(xn, torch.ones_like(xn)), eps, rule, normalised=True)

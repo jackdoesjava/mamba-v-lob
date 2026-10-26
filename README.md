@@ -2,9 +2,11 @@
 
 The hidden state of a Mamba-style selective state space model stays inside a box we can write
 down in closed form from the model's own parameters. It holds at every step of every sequence,
-at any length, and it is derived by hand rather than found by a verifier. The reason is that the
-exact zero-order hold makes the state update a convex combination, so a bound on the drive is
-already a bound on the state. Limit order book forecasting is the demonstration; the claim is
+at any length. The reason is that the exact zero-order hold makes the state update a convex
+combination, so a bound on the drive is already a bound on the state. The same argument applied
+to the difference of two runs bounds how far a perturbed input can move the state, again at every
+length and with no floor on the timescale. Limit order book forecasting is the demonstration, and
+the released language model `state-spaces/mamba-130m-hf` is the second test case; the claims are
 about the architecture, not about finance.
 
 For diagonal `A < 0` the exact discretisation gives
@@ -20,45 +22,56 @@ If `|c_t| <= M` for every admissible input, then `|h_{t-1}| <= M` gives `|h_t| <
 bound `M_drive / (1 - sup Abar)` bounds `Abar` and `Bbar` separately, discarding the
 `(1 - Abar)` factor, which is why it diverges as `dt -> 0` when nothing is diverging.
 
-As far as we can tell this is the first closed-form, architecture-specific inductive invariant
-for an input-selective state space model, derived analytically rather than inferred by a
-verifier, whose assumptions are discharged by the model's own normalisation bounds. Invariants
-for neural sequence models are not new; Jacoby, Barrett and Katz (ATVA 2020) infer them for RNNs
-with a verifier, and Bonassi, Farina and Scattolini (2021) get a convex combination for GRUs out
-of a learned gate rather than out of a discretisation.
+The invariant is not new. It is Horbatko's Lemma 4.4 (arXiv:2604.18580), and the same per-cell
+radius follows from Theorem 3.3(i) of Cao, Liu, Chen and Qin (ICML 2026). The LayerNorm
+coordinate bound that discharges its premise is the Laguerre-Samuelson inequality. The
+framework here is the cell theorem, a bound on two runs of one cell measured in `log dt`, which
+strengthens the time-warp part of Cao et al.'s Theorem 3.3(ii) and follows quickly from their
+lemmas and Horbatko's. The one new piece of mathematics is its sharp constant: from a common
+start the time-warp error is `2 M` times the total-variation distance between the two runs' age
+distributions, whose per-step hazards differ by at most a factor `e^rho`, and that distance is at
+most `tanh(rho/2)`. The empirical additions are the endpoint form of the local rule and the
+certification of the released model. The literature search behind these statements was not
+exhaustive.
 
 ## Headline numbers
 
-Trained model, `L = 100`, layer 0, input-independent unless stated.
+Trained bounded-timescale model, `L = 100`, layer 0, input-independent unless stated.
 
 | quantity | value |
 | --- | --- |
-| certified `sup abs(h)` from the invariant | `129.67` |
-| converged fixed point of the interval recursion | `1.235e4`, so the invariant is `95x` tighter |
-| dependence on sequence length | none; `129.67` at `L = 10` and at `L = 5000` |
-| dependence on the weights | none to three figures; the ratio is `95.2` across 8 seeds |
-| induction residual | exactly `0`, and the zero-order hold identity is exact to `1e-14` |
-| certified output range, for any input at all | `[-5.1242, 4.3374]` |
-| adversarial search against the trained model | no violation found |
+| certified `sup abs(h)` from the invariant | `175.95` (layer 1: `137.22`) |
+| converged fixed point of the interval recursion | `1.682e4`, so the invariant is `95.6x` tighter |
+| dependence on sequence length | none; `175.95` at `L = 10` and at `L = 5000` |
+| dependence on the weights | only through the slowest pole; the ratio is `95.20` to `95.21` across 8 untrained seeds and `95.62` on the trained checkpoint |
+| induction residual | exactly `0`, and the zero-order hold identity checks exact |
+| certified output range, for any input at all | `[-3.5643, 3.1277]` |
+| adversarial search against the certificate | no violation found |
+| data-free sensitivity bound per block | the same at every length, `3.06e5` to `3.23e6` times the attacked slope |
+| local sensitivity bound per block, endpoint rule, `delta = 1e-6` | `3.37` to `12.6` times the attacked slope |
+| released model, local endpoint rule against the additive rule | tighter in 72 of 72 (layer, length) pairs at each of `delta = 1e-6, 1e-4, 1e-2` |
 | machine-checked lemmas, Z3 | 16 of 19 discharged, zero counterexamples |
 
-The invariant needs no floor on `delta`: the softplus arm certifies at `129.72` while the
-geometric argument diverges. Numbers are in [docs/03-certificate.md](docs/03-certificate.md).
+The invariant needs no floor on `delta`: the softplus arm certifies at `287.39` while the
+geometric argument diverges. Numbers are in [docs/04-results.md](docs/04-results.md).
 
 ## Layout
 
 ```
 src/models/        the selective SSM and the transformer and LSTM baselines
-src/verification/  interval domain, the invariant, certificate export, NumPy reference
+src/verification/  interval domain, the invariant, the sensitivity bound (incremental.py),
+                   the released-model certificate (released.py), export, NumPy reference
 src/dataset.py     purged chronological splits, enforced input box
 src/features.py    order book feature construction
 src/utils/         config, seeding and provenance, overlap-aware statistics
 scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
                    07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check,
-                   12 incremental bound, 13 incremental attack
+                   12 sensitivity bound, 13 attack on it, 14 released model
 tests/             unit tests for the maths, the domain and the models
-isabelle/          the machine-checked invariant and LayerNorm bounds, Isabelle/HOL
-docs/              the five pages listed at the bottom
+data/text/         public_domain_sample.txt, the text the released model is certified on
+isabelle/          the machine-checked invariant and LayerNorm bounds, Isabelle/HOL, and an
+                   unchecked draft of the sensitivity lemmas in isabelle/drafts
+docs/              the five pages listed at the bottom, the recorded runs in docs/certification
 ```
 
 ## Running
@@ -79,7 +92,8 @@ python -m scripts.08_domains                 # local domains, the negative resul
 python -m scripts.09_check_lemmas            # Z3 on the interval lemmas
 python -m scripts.10_sweep                   # seeds and configurations
 python -m scripts.12_incremental             # sensitivity to input perturbations, any length
-python -m scripts.13_incremental_attack      # attack that bound, about 40 minutes on a CPU
+python -m scripts.13_incremental_attack      # attack that bound, about an hour on a CPU
+python -m scripts.14_released                # mamba-130m-hf, about 1.5 hours on a CPU
 python -m scripts.05_figures
 python -m scripts.11_check_artefacts         # nothing in docs/ is stale
 python -m pytest
@@ -87,7 +101,13 @@ python -m pytest
 
 `11_check_artefacts` is the one to run before quoting a number or submitting anything. Nothing
 fails when a figure or a results table goes stale, which is how a plot arguing a claim this
-project had already dropped survived here for several hours.
+project had already dropped survived here for several hours. It also rejects phrases from
+retracted claims.
+
+`14_released` needs `transformers` (5.15.1 was used), which `requirements.txt` does not list, and a
+local copy of `state-spaces/mamba-130m-hf`. The model is not committed and nothing is downloaded:
+`src/verification/released.py` loads it with `local_files_only=True` from `MAMBA_130M_DIR`, or from
+`C:/Users/humph/hf_models/mamba-130m-hf` when that is unset. Its tests skip without the model.
 
 Scripts run as modules from the repository root, not as files. Everything is seeded from
 `config.yaml`, and checkpoints carry their architecture, normalisation, split report and git SHA,
@@ -95,11 +115,12 @@ so an export can rebuild its model without being told what it was.
 
 ## Data
 
-Databento MBP-10 from Nasdaq TotalView-ITCH, GME on 2021-01-28. One instrument, one day,
-4,550,476 rows after feature construction and 43 model inputs. The purged three-way chronological
-split, 100 ticks at each boundary, gives 3,185,134 train windows, 682,372 validation and 682,473
-test. Features are winsorised to train-split quantiles at inference, so the input box
-`[-6.60, 18.87]` is enforced rather than observed, with zero violations across all 4.55M rows.
+Databento MBP-10 from Nasdaq TotalView-ITCH, SPY (the S&P 500 ETF) on 2021-01-28. One
+instrument, one day, 4,550,476 rows after feature construction in
+`data/processed/SPY_features_20210128.parquet`, and 43 model inputs. Raw and processed data stay
+local. The purged three-way chronological split, 100 ticks at each boundary, gives 3,185,134 train
+windows, 682,372 validation and 682,473 test. Features are winsorised to train-split quantiles at
+inference, so the input box `[-22.48, 19.25]` is enforced rather than observed.
 
 None of the certification depends on any of this. The invariant is a statement about the
 architecture and the trained weights, and it holds for inputs no order book would produce. The
@@ -108,21 +129,24 @@ supports nothing beyond that.
 
 ## Limitations
 
-Against a realised trace the certified radius is about 630 times the realised state; fed the
-realised `B` and `u` instead of the certified boxes the invariant is 3 to 5 times loose, so the
-induction accounts for a factor of 5 and the boxes on `B` and `u` for the rest. This bounds reachable state and output; it
-is not a robustness certificate, and a bounded output is not a bounded loss. Both local domains we
-tried diverge on inputs where the model is measurably well behaved, a failure of the domains and
-not of the model. With a log-timescale recurrence step in place of the additive one, the
-norm-propagation domain no longer diverges with sequence length, but it stays about 1e5 times the
-attacked width ([docs/certification/incremental_attack.md](docs/certification/incremental_attack.md)).
-Three lemmas are still hand proofs after Z3 timed out, and no external verifier
-has consumed the artefact. Set out in [docs/05-handoff.md](docs/05-handoff.md).
+The certified radius is 162 times the largest state realised on held-out batches at layer 0 and
+382 times at layer 1, and 63 and 49 times what a gradient attack reaches. This bounds reachable
+state and output; it is not a robustness certificate, and a bounded output is not a bounded
+loss. The data-free sensitivity bound is sound at every length and 3.1e5 to 3.2e6 times the
+attacked sensitivity. With the endpoint rule the local block bound is within a factor of 13 of
+the attack, but end to end it is 5.7e5 times the attack on the bounded arm and 1.6e7 times on the
+softplus arm, and of the `eps` values tested end to end from `1e-6` up it is below the global
+certified width only at `1e-6` on the bounded arm. The two Mamba arms share seed, initialisation
+and batch order and were selected at different steps, so they are not independent models and
+support no conclusion about the parametrisation. On the released model the data-free certificate
+is finite and vacuous, and the bounds cover the float64 map, not the float32 rounding in
+transformers' implementation. The Isabelle sensitivity draft has never been checked, and no
+external verifier has consumed the artefact. Set out in [docs/05-handoff.md](docs/05-handoff.md).
 
 ## Documentation
 
 - [docs/01-problem.md](docs/01-problem.md), the block, what is time-varying, and why bounded verification struggles
-- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant and its proof
-- [docs/03-certificate.md](docs/03-certificate.md), tightness, adversarial search, machine-checked lemmas
-- [docs/04-results.md](docs/04-results.md), data, baselines and the predictive comparison
-- [docs/05-handoff.md](docs/05-handoff.md), limitations and what the verification side needs next
+- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant, the cell theorem and its sharp constant
+- [docs/03-certificate.md](docs/03-certificate.md), the normalisation bounds, tightness, adversarial search, local rules, the released model
+- [docs/04-results.md](docs/04-results.md), every recorded number in one place, with the data and the predictive comparison
+- [docs/05-handoff.md](docs/05-handoff.md), the artefact, limitations and what the verification side needs next

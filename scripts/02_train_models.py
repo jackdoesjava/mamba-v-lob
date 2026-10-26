@@ -76,9 +76,17 @@ def main() -> None:
         default=None,
         help="override config; used by the certification ablation",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="override the config seed (initialisation and batch order), for seed variation",
+    )
     args = parser.parse_args()
 
     config = load_config()
+    if args.seed is not None:
+        config["seed"] = args.seed
     seed = int(config.get("seed", 1337))
     set_seed(seed)
 
@@ -115,6 +123,8 @@ def main() -> None:
     tag = args.tag or args.model
     CHECKPOINT_DIR.mkdir(parents=True, exist_ok=True)
     ckpt_path = CHECKPOINT_DIR / f"best_{tag}.pt"
+    # The checkpoint's history stops at the selected step; the full curve goes here.
+    curve_path = CHECKPOINT_DIR / f"curve_{tag}.json"
 
     print(
         f"\n{args.model} | {n_params:,} params | device={device} | amp={use_amp} | "
@@ -126,6 +136,7 @@ def main() -> None:
     # selection is on val rank IC, not val loss: loss alone prefers the zero predictor
     best_score = -float("inf")
     best_val_loss = float("inf")
+    best_step = None
     since_improve = 0
     history: list[dict] = []
     step = 0
@@ -171,6 +182,7 @@ def main() -> None:
                 if val["rank_ic"] > best_score + 1e-5:
                     best_score = val["rank_ic"]
                     best_val_loss = val["loss"]
+                    best_step = step
                     since_improve = 0
                     torch.save(
                         {
@@ -207,9 +219,37 @@ def main() -> None:
                         stop = True
                         break
 
+    wall_s = time.perf_counter() - t0
+    curve_path.write_text(
+        json.dumps(
+            {
+                "tag": tag,
+                "model_name": args.model,
+                "dt_parametrisation": (
+                    config["model"]["mamba"]["dt_parametrisation"]
+                    if args.model == "mamba"
+                    else None
+                ),
+                "processed_file": config["data"]["processed_file"],
+                "seed": seed,
+                "max_steps": max_steps,
+                "steps_run": step,
+                "early_stopped": stop,
+                "wall_s": round(wall_s, 1),
+                "selected_step": best_step,
+                "best_val_rank_ic": best_score,
+                "val_loss_at_best": best_val_loss,
+                "n_params": n_params,
+                "history": history,
+                "provenance": provenance(seed),
+            },
+            indent=2,
+        )
+    )
     print(
-        f"\ndone: {step} steps in {(time.perf_counter() - t0) / 60:.1f} min | "
-        f"best val rank IC {best_score:+.6f} (val loss there {best_val_loss:.6f})"
+        f"\ndone: {step} steps in {wall_s / 60:.1f} min | "
+        f"best val rank IC {best_score:+.6f} (val loss there {best_val_loss:.6f}) | "
+        f"curve in {curve_path}"
     )
 
 

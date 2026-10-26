@@ -10,8 +10,9 @@ Three measurements, on both trained arms:
   model  the spread of the prediction over an eps ball at the model input, the quantity
          scripts/08_domains.py attacks, at the same lengths.
   local  the norm-propagation certificate of src/verification/lipschitz.py with the additive
-         recurrence step and with the two log-timescale steps (the local corollary's running
-         maximum, and the recursion in its proof), on the windows and eps values of
+         recurrence step and with the three log-timescale steps (the local corollary's running
+         maximum, the recursion in its proof, and the endpoint form, the reported one), on the
+         windows and eps values of
          docs/certification/domains.json, traced stage by stage so that the growth of the bound
          can be assigned to LayerNorm, the feed-forward layers and the recurrence.
 
@@ -47,6 +48,7 @@ from src.utils.config import load_config
 from src.utils.repro import provenance, set_seed
 from src.verification.certify import certify_output_range
 from src.verification.incremental import (
+    REPORTED_RULE,
     RULES,
     BlockIncrement,
     _log_delta_lip,
@@ -57,6 +59,7 @@ from src.verification.incremental import (
     local_block_sensitivity,
     local_sensitivity_rule,
     log_delta_step,
+    timescale_offsets,
 )
 from src.verification.lipschitz import Sens, _causal_conv, _delta, add, layer_norm, linear, mul, silu
 
@@ -65,8 +68,10 @@ FIG_DIR = Path("docs/figures")
 DOMAINS = OUT_DIR / "domains.json"
 ARMS = {"bounded": "best_mamba.pt", "softplus": "best_mamba_softplus.pt"}
 RULE_NAMES = {"additive": "additive", "log_delta": "log-timescale, running maximum",
-              "log_delta_recursive": "log-timescale, recursive"}
-SHORT = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursive"}
+              "log_delta_recursive": "log-timescale, recursive",
+              "log_delta_endpoint": "log-timescale, endpoint"}
+SHORT = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursive",
+         "log_delta_endpoint": "endpoint"}
 LENGTHS = [10, 100, 1000, 5000]
 BLOCK_DELTAS = [1e-6, 1e-4, 1e-2, 1e-1]
 MODEL_EPS = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]   # the eps values of docs/certification/domains.json
@@ -468,7 +473,9 @@ def _block_trace(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str, rec, 
     bound; it measures how much of the recurrence stage's growth comes through the timescale.
     The step multiplier is the largest factor one step applies to the carried bound: for the
     additive rule Abar plus its sensitivity, which can exceed 1; for the running maximum 1; for
-    the recursive rule the slowest admissible perturbed transition, below 1.
+    the recursive rule the slowest admissible perturbed transition, below 1; for the endpoint rule
+    the upper end of the interval it maximises over, the slowest transition that both the log and
+    the additive timescale budgets admit, at most that of the recursive rule.
     """
     L = x.val.shape[1]
     xn = layer_norm(x, block.norm, eps)
@@ -518,16 +525,23 @@ def _block_trace(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str, rec, 
             h_frozen = additive_step(h_frozen, still, u_t, B_t, A, eps)
         else:
             recursive = rule == "log_delta_recursive"
+            endpoint = rule == "log_delta_endpoint"
             ll = log_lip[:, t].unsqueeze(-1)
-            if recursive:
+            lam_dt = dt_t.val * A.abs().unsqueeze(0)
+            if endpoint:
+                # f is affine in E_{t-1} with coefficient the chosen end, at most the upper one
+                _, down = timescale_offsets(lam_dt, ll * eps, A.abs().unsqueeze(0) * (dt_t.lip * eps))
+                growth = torch.exp(-(lam_dt - down))
+            elif recursive:
                 # the carried bound is scaled by the perturbed transition, at most the slowest
-                growth = torch.exp(-dt_t.val * A.abs().unsqueeze(0) * torch.exp(-ll * eps))
+                growth = torch.exp(-lam_dt * torch.exp(-ll * eps))
             else:
                 # a running maximum carries the bound over unscaled
                 growth = torch.ones_like(h.val)
-            h = log_delta_step(h, dt_t, ll, u_t, B_t, A, eps, recursive=recursive)
+            h = log_delta_step(h, dt_t, ll, u_t, B_t, A, eps, recursive=recursive,
+                               endpoint=endpoint)
             h_frozen = log_delta_step(h_frozen, still, torch.zeros_like(ll), u_t, B_t, A, eps,
-                                      recursive=recursive)
+                                      recursive=recursive, endpoint=endpoint)
         growth_max = _fmax(growth_max, _lip_max(growth))
         growth_cells += int((growth > 1.0).sum())
         raised_cells += int((h.lip > before).sum())
@@ -884,12 +898,18 @@ def compare_checkpoints(paths: dict[str, Path]) -> dict:
     when = (f"Both checkpoints are the weights at training step {steps[a]}" if steps[a] == steps[b]
             else f"The checkpoints are the weights at training steps {steps[a]} ({a}) and "
                  f"{steps[b]} ({b})")
+    close = worst <= 0.05 and steps[a] == steps[b]
     note = (
         f"{when} of {budget[a]}, where validation rank IC peaked, from the same seed. "
         "Outside the timescale parameters (`dt_proj` and the timescale rows of `x_proj`) their "
         f"weights differ by at most {100 * worst:.2g} percent of each tensor's largest entry "
-        f"(`{where}`). The attacked sensitivities of the two arms are therefore close, and the "
-        "arms differ mainly in the bounds, where the timescale parametrisation enters."
+        f"(`{where}`). "
+        + ("The attacked sensitivities of the two arms are therefore close, and the arms differ "
+           "mainly in the bounds, where the timescale parametrisation enters."
+           if close else
+           "The arms therefore differ in their weights as well as in the timescale "
+           "parametrisation, so a difference between them, attacked or certified, is not due to "
+           "the parametrisation alone.")
     )
     return {"selected_at_step": steps, "max_steps": budget,
             "max_relative_difference_outside_timescale": worst, "where": where, "note": note}
@@ -977,10 +997,10 @@ def figure(arms: dict, lengths: list[int], path: Path, curves: dict) -> None:
         ax.loglog(lengths, [_plot(r["per_delta"][k]["local"]["log_delta"]["lip_max"]) for r in rows],
                   color=LOCAL, linewidth=1.4, marker="D", markersize=4,
                   label="local, log-timescale, maximum")
-        ax.loglog(lengths, [_plot(r["per_delta"][k]["local"]["log_delta_recursive"]["lip_max"])
+        ax.loglog(lengths, [_plot(r["per_delta"][k]["local"][REPORTED_RULE]["lip_max"])
                             for r in rows],
                   color=LOCAL, linewidth=1.2, linestyle="--", marker="D", markersize=4,
-                  markerfacecolor="white", label="local, log-timescale, recursive")
+                  markerfacecolor="white", label=f"local, {RULE_NAMES[REPORTED_RULE]}")
         ax.loglog(lengths, [r["per_delta"][k]["slope_max"] for r in rows], color=INK,
                   linewidth=1.2, marker="o", markersize=5, label="attack, worst position")
         ax.loglog(lengths, [r["per_delta"][k]["last_slope_max"] for r in rows], color=INK,
@@ -1009,15 +1029,15 @@ def figure(arms: dict, lengths: list[int], path: Path, curves: dict) -> None:
                             for L in lengths],
                   color=LOCAL, linewidth=1.4, marker="D", markersize=4,
                   label="local, log-timescale, maximum")
-        ax.loglog(lengths, [_plot(m[str(L)]["per_eps"][j]["log_delta_recursive"]["width_median"]
+        ax.loglog(lengths, [_plot(m[str(L)]["per_eps"][j][REPORTED_RULE]["width_median"]
                                   / (2 * e)) for L in lengths],
                   color=LOCAL, linewidth=1.2, linestyle="--", marker="D", markersize=4,
-                  markerfacecolor="white", label="local, log-timescale, recursive")
+                  markerfacecolor="white", label=f"local, {RULE_NAMES[REPORTED_RULE]}")
         ax.loglog(lengths, [m[str(L)]["per_eps"][j]["attack_width_median"] / (2 * e)
                             for L in lengths],
                   color=INK, linewidth=1.2, marker="o", markersize=5, label="attack")
-        colours = {"additive": OTHER, "log_delta": LOCAL, "log_delta_recursive": LOCAL}
-        for rule in RULES:
+        colours = {"additive": OTHER, "log_delta": LOCAL, REPORTED_RULE: LOCAL}
+        for rule in colours:
             vals = [m[str(L)]["per_eps"][j][rule]["width_median"] / (2 * e) for L in lengths]
             bad = [L for L, v in zip(lengths, vals) if not math.isfinite(v)]
             good = [(L, v) for L, v in zip(lengths, vals) if math.isfinite(v)]
@@ -1028,7 +1048,7 @@ def figure(arms: dict, lengths: list[int], path: Path, curves: dict) -> None:
                             xytext=(bad[0], v_last / 100), fontsize=7.5, color=INK,
                             ha="center", va="top",
                             arrowprops={"arrowstyle": "-", "color": colours[rule], "linewidth": 0.8})
-        ax.text(0.04, 0.96, f"{arm} arm, prediction\n" + r"$\epsilon = 10^{-6}$",
+        ax.text(0.04, 0.96, f"{arm} arm, prediction\n" + r"$\kappa = 10^{-6}$",
                 transform=ax.transAxes, va="top", fontsize=8.5, color=INK, linespacing=1.3)
         ax.set_xlabel("sequence length $L$")
     for ax in (*ax_top, *ax_bot):
@@ -1037,7 +1057,7 @@ def figure(arms: dict, lengths: list[int], path: Path, curves: dict) -> None:
         lo, hi = axes[0].get_ylim()
         axes[0].set_ylim(lo, hi * 100)                # room for the two-line panel label
     ax_top[0].set_ylabel(r"block: $\|F(x) - F(\tilde x)\|_\infty / \delta$")
-    ax_bot[0].set_ylabel(r"prediction: width $/\, 2\epsilon$")
+    ax_bot[0].set_ylabel(r"prediction: width $/\, 2\kappa$")
     for sub, ax in ((top, ax_top[0]), (bottom, ax_bot[0])):
         handles, labels = ax.get_legend_handles_labels()
         sub.legend(handles, labels, loc="outside lower center", ncol=3, frameon=False,
@@ -1154,10 +1174,14 @@ def markdown(results: dict) -> str:
         "the common-start one, and with the additive ones taken at the window's length. The local "
         "columns are the local block bound around each window at "
         f"`delta = {k0_delta:g}`, maximised over windows, positions and coordinates, with the "
-        "additive recurrence step and with the two log-timescale steps: the running maximum of the "
-        "local corollary, `E_t = max(E_{t-1}, dc_t + (e^rho_t - 1)|h_{t-1} - c_t|)`, and the "
+        "additive recurrence step and with the three log-timescale steps: the running maximum of "
+        "the local corollary, `E_t = max(E_{t-1}, dc_t + (e^rho_t - 1)|h_{t-1} - c_t|)`; the "
         "recursion in its proof, `E_t = K_t + a*_t (E_{t-1} - K_t)` with `K_t` the second argument "
-        "of that maximum and `a*_t` the perturbed transition at its worst admissible value.",
+        "of that maximum and `a*_t` the perturbed transition at its worst admissible value; and "
+        "the endpoint form, the reported one, "
+        "`E_t = max_s [s E_{t-1} + (1 - s) dc_t + |Abar_t - s| |h_{t-1} - c_t|]` over the two ends "
+        "of the interval that holds the perturbed transition `s`, the intersection of the "
+        "log-timescale interval with the one the additive bound on `|dt - dt~|` gives.",
         "",
     ]
     rows = []
@@ -1369,18 +1393,20 @@ def markdown(results: dict) -> str:
                     b = next((d for d in blocks if d["layer"] == bad), None)
                     if b is not None and b["rho_max"] is not None:
                         rho = b["rho_max"]
+                        overflow = rule != "log_delta_endpoint" and rho > 88.72
                         text += (" The step never scales the carried bound up; there the largest "
                                  f"relative timescale perturbation in block {b['layer']} is "
                                  + ("not finite, because the sensitivity that reaches it is not."
                                     if not math.isfinite(rho) else
                                     f"`rho = {fmt(rho)}`"
                                     + (", beyond 88.7, where `e^rho - 1` overflows float32."
-                                       if rho > 88.72 else ".")))
+                                       if overflow else ".")))
             parts.append(text)
         useful = {rule: loc["divergence"][rule]["largest_useful_eps"] for rule in RULES}
         parts.append(
             "The largest `eps` at which the bound is below the global certified width is "
-            + ", ".join(f"{fmt(useful[rule])} with the {RULE_NAMES[rule]} rule" for rule in RULES)
+            + ", ".join((f"{useful[rule]:g}" if useful[rule] is not None else "none of the tested")
+                        + f" with the {RULE_NAMES[rule]} rule" for rule in RULES)
             + "."
         )
         md += [" ".join(parts), ""]
@@ -1473,7 +1499,10 @@ def markdown(results: dict) -> str:
         "`L_log_delta eps`. The step multiplier is the largest factor that one step applies to "
         "the carried bound: `Abar + |A| exp(-|A| dt_lo) L_dt eps` for the additive rule, which can "
         "exceed 1; 1 for the running maximum; and the slowest admissible perturbed transition "
-        "`exp(-|A| dt e^-rho)`, below 1, for the recursive rule. The fraction growing counts the "
+        "`exp(-|A| dt e^-rho)`, below 1, for the recursive rule; and for the endpoint rule the "
+        "upper end of the interval it maximises over, the slowest transition that both the log "
+        "and the additive timescale budgets admit, at most the recursive rule's. The fraction "
+        "growing counts the "
         "(cell, step) pairs with a multiplier above 1; the fraction raised counts those at which "
         "the carried bound increases at all. The last two columns are the largest state "
         "sensitivity with the timescale's own sensitivity and without it. The run without it is "

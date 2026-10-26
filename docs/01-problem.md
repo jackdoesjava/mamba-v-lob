@@ -36,8 +36,9 @@ Only `A_log` and `D` are parameters. `delta`, `B` and `C` are activations, recom
 the block's own input at every timestep, so the system is linear time-varying in the step
 index and no argument may treat `delta`, `B` or `C` as fixed. Time invariance survives only in
 accumulated time `tau_t = sum_{s<t} delta_s`, in which each cell solves `h' = A h + w` with
-`w` piecewise constant; Cao et al. (ICML 2026) analyse the block that way, and the incremental
-bound of [certification/incremental.md](certification/incremental.md) also follows from it.
+`w` piecewise constant; Cao et al. (ICML 2026, Lemma 3.1) analyse the block that way, and the
+sensitivity bound of [certification/incremental.md](certification/incremental.md) also follows
+from it.
 The common claim that Mamba is an LTI system and is therefore boundable by a spectral radius
 is false. A block's state dict holds `A_log`, `D` and the weights of `norm`, `in_proj`,
 `conv1d`, `x_proj`, `dt_proj` and `out_proj`. It
@@ -54,7 +55,7 @@ recurrence a fixed number of steps and propagates a bound through the resulting 
 network, which is what IBP and CROWN style methods do and what star set reachability does
 for recurrent networks (Tran et al., HSCC 2023). The bound is tied to the length it was
 computed for and grows with it. On layer 0 here the unrolled state bound
-runs from `127.56` at `L = 10` to `1169.03` at `L = 100` and `1.226e4` at `L = 5000`, while
+runs from `168.84` at `L = 10` to `1514.25` at `L = 100` and `1.665e4` at `L = 5000`, while
 nothing about the network has changed.
 
 The second infers an invariant with a verifier and then checks it, which is what Jacoby,
@@ -65,9 +66,12 @@ sequence models is prior art rather than anything new here. The cost is that the
 comes out of a search that can return unknown, and that the search returns a set of numbers
 for one checkpoint rather than a formula in the architecture's own quantities.
 
-The route taken here is to write the invariant down in closed form from the discretisation,
-then discharge its premise with the model's own normalisation bounds. That is
-[02-invariant.md](02-invariant.md).
+A third route needs no search. Horbatko (arXiv:2604.18580, Lemma 4.4) writes the
+zero-order-hold update as a convex combination and proves the invariant by induction, and the
+same per-cell radius follows from Cao et al.'s Theorem 3.3(i). This repository takes that route,
+discharges the invariant's premise with the model's own normalisation bounds, evaluates it on a
+trained model and on the released `mamba-130m-hf`, and extends it to the difference of two runs.
+That is [02-invariant.md](02-invariant.md).
 
 ## Symbols
 
@@ -81,7 +85,7 @@ then discharge its premise with the model's own normalisation bounds. That is
 | `dt_rank` | 4 | rank of the timescale projection, `ceil(d_model/16)` |
 | `L` | 100 | lookback window, in ticks |
 | `A_log` | `(d_inner, d_state)` | parameter, initialised S4D-Real |
-| `A` | `(d_inner, d_state)` | `-exp(A_log)`; on the trained weights it spans `[-16.8437, -0.9651]` |
+| `A` | `(d_inner, d_state)` | `-exp(A_log)`; on the trained weights it spans `[-17.1351, -0.9121]` |
 | `D` | `(d_inner,)` | parameter, the skip path `D * u` |
 | `delta` | `(batch, L, d_inner)` | activation; one timescale per channel per step |
 | `dt_min`, `dt_max` | `1e-3`, `1e-1` | the closed range `delta` is confined to |
@@ -97,6 +101,11 @@ then discharge its premise with the model's own normalisation bounds. That is
 | `w_lo`, `w_hi` | `(43,)` each | winsorisation limits, the 0.1% and 99.9% train-split quantiles, applied at inference |
 
 Winsorisation runs at inference and not only during training, so the standardised input box
-`[-6.60, 18.87]` is enforced rather than observed. A bar marks a discretisation and not a
+`[-22.48, 19.25]` is enforced rather than observed. A bar marks a discretisation and not a
 normalisation: `A` and `B` name the continuous-time system `h' = A h + B u`, and `Abar` and
 `Bbar` name its exact zero-order hold over one step of length `delta`.
+
+The released model differs from this block in three places: RMSNorm in place of LayerNorm, the
+exponential-Euler input term `dt B u` in place of the zero-order hold, and an unclamped softplus
+timescale. It has 24 layers with `d_model = 768`, `d_inner = 1536`, `d_state = 16` and
+`dt_rank = 48`. [03-certificate.md](03-certificate.md) covers what changes in the argument.

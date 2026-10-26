@@ -1,3 +1,9 @@
+"""MBP-10 rows to stationary order-book features.
+
+Prices arrive in dollars: DBNStore.to_df() defaults to price_type="float", which has already
+scaled the 1e-9 fixed-point integers. See README.md for the feature definitions.
+"""
+
 from pathlib import Path
 from typing import List
 import polars as pl
@@ -7,8 +13,6 @@ class OrderBookNormalizer:
         self.num_levels = num_levels
 
     def process_dbn_dataframe(self, df: pl.DataFrame) -> pl.DataFrame:
-        PRICE_SCALE = 1e9
-
         # ts_event arrives as Datetime; Polars will not divide that, so cast to Int64
         # epoch nanoseconds first.
         df = df.with_columns([
@@ -19,12 +23,13 @@ class OrderBookNormalizer:
             .alias("delta_t")
         ])
 
+        # Prices are float dollars already (see the module docstring). Dividing them by 1e9
+        # again put SPY's mid at about 3.8e-7 and every spread and level distance below the
+        # 1e-8 floor that src/dataset.py then put on a feature's standard deviation (it now
+        # refuses a negligible spread instead of flooring it; see check_spread there).
         price_cols = [f"ask_px_{i:02d}" for i in range(self.num_levels)] + \
                      [f"bid_px_{i:02d}" for i in range(self.num_levels)]
-        
-        df = df.with_columns([
-            (pl.col(col) / PRICE_SCALE).alias(col) for col in price_cols
-        ])
+        df = df.with_columns([pl.col(col).cast(pl.Float64).alias(col) for col in price_cols])
 
         df = df.with_columns([
             ((pl.col("ask_px_00") + pl.col("bid_px_00")) / 2.0).alias("mid_price"),

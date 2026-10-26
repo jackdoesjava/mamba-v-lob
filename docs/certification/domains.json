@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "ccc727a3b2dab40e9e058db47c02a2da860fefbf-dirty",
+    "git_sha": "3aae7c0d36f8db8c25e8e7f48ed975a9000e8a7a-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -10,59 +10,59 @@
   "checkpoint": "models/checkpoints/best_mamba.pt",
   "windows": 4,
   "seq_len": 100,
-  "global_certified_width": 9.46164083480835,
+  "global_certified_width": 6.691956520080566,
   "rows": [
     {
       "eps": 1e-06,
-      "attack": 1.5869736671447754e-06,
-      "lipschitz": 2.1798062324523926,
-      "interval": 0.5513806939125061,
-      "global": 9.46164083480835,
-      "lipschitz_over_attack": 1373561.690140845,
-      "interval_over_attack": 347441.61502347415
+      "attack": 1.519918441772461e-06,
+      "lipschitz": Infinity,
+      "interval": 1.2480707168579102,
+      "global": 6.691956520080566,
+      "lipschitz_over_attack": Infinity,
+      "interval_over_attack": 821143.2156862745
     },
     {
       "eps": 1e-05,
-      "attack": 1.6324222087860107e-05,
+      "attack": 1.4983117580413818e-05,
       "lipschitz": Infinity,
-      "interval": 20.30777931213379,
-      "global": 9.46164083480835,
+      "interval": 42265.171875,
+      "global": 6.691956520080566,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 1244027.3847558193
+      "interval_over_attack": 2820852979.906514
     },
     {
       "eps": 0.0001,
-      "attack": 0.00016298145055770874,
+      "attack": 0.00014989078044891357,
       "lipschitz": Infinity,
-      "interval": 27576192.0,
-      "global": 9.46164083480835,
+      "interval": 3038204928.0,
+      "global": 6.691956520080566,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 169198346840.30975
+      "interval_over_attack": 20269458327595.367
     },
     {
       "eps": 0.001,
-      "attack": 0.0016294196248054504,
+      "attack": 0.001498885452747345,
       "lipschitz": Infinity,
-      "interval": 2.16977429090279e+25,
-      "global": 9.46164083480835,
+      "interval": 4.6797851256545385e+26,
+      "global": 6.691956520080566,
       "lipschitz_over_attack": Infinity,
-      "interval_over_attack": 1.3316240076351462e+28
+      "interval_over_attack": 3.1221766260235846e+29
     },
     {
       "eps": 0.01,
-      "attack": 0.016309894621372223,
+      "attack": 0.014989979565143585,
       "lipschitz": Infinity,
       "interval": NaN,
-      "global": 9.46164083480835,
+      "global": 6.691956520080566,
       "lipschitz_over_attack": Infinity,
       "interval_over_attack": NaN
     },
     {
       "eps": 0.1,
-      "attack": 0.16217315196990967,
+      "attack": 0.15275511145591736,
       "lipschitz": NaN,
       "interval": NaN,
-      "global": 9.46164083480835,
+      "global": 6.691956520080566,
       "lipschitz_over_attack": NaN,
       "interval_over_attack": NaN
     }

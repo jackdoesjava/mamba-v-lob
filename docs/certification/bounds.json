@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "c5f26552ddaafa75e1ed4fdc04b64463eda87874-dirty",
+    "git_sha": "3aae7c0d36f8db8c25e8e7f48ed975a9000e8a7a-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -11,107 +11,107 @@
   "bounds": [
     {
       "layer": 0,
-      "invariant": 129.67388916015625,
-      "widened": 12349.40625,
-      "widening_iterations": 10509,
-      "geometric": 12349.5810546875,
-      "unrolled_at_L": 1169.0269775390625,
+      "invariant": 175.947509765625,
+      "widened": 16822.09375,
+      "widening_iterations": 11120,
+      "geometric": 16824.205078125,
+      "unrolled_at_L": 1514.25341796875,
       "seq_len": 100,
       "invariant_holds": true,
       "zoh_exact": true,
-      "tighter_than_widened": 95.23433229296937
+      "tighter_than_widened": 95.60859242855022
     },
     {
       "layer": 1,
-      "invariant": 143.54425048828125,
-      "widened": 13681.3251953125,
-      "widening_iterations": 10634,
-      "geometric": 13681.9033203125,
-      "unrolled_at_L": 1273.9185791015625,
+      "invariant": 137.21827697753906,
+      "widened": 13062.41796875,
+      "widening_iterations": 10880,
+      "geometric": 13063.3525390625,
+      "unrolled_at_L": 1273.5948486328125,
       "seq_len": 100,
       "invariant_holds": true,
       "zoh_exact": true,
-      "tighter_than_widened": 95.31085465822558
+      "tighter_than_widened": 95.19444680746251
     }
   ],
   "scaling": [
     {
       "seq_len": 10,
-      "invariant": 129.67388916015625,
-      "unrolled": 127.56034851074219
+      "invariant": 175.947509765625,
+      "unrolled": 168.84442138671875
     },
     {
       "seq_len": 50,
-      "invariant": 129.67388916015625,
-      "unrolled": 601.7821655273438
+      "invariant": 175.947509765625,
+      "unrolled": 798.2132568359375
     },
     {
       "seq_len": 100,
-      "invariant": 129.67388916015625,
-      "unrolled": 1169.0269775390625
+      "invariant": 175.947509765625,
+      "unrolled": 1514.25341796875
     },
     {
       "seq_len": 500,
-      "invariant": 129.67388916015625,
-      "unrolled": 4838.40283203125
+      "invariant": 175.947509765625,
+      "unrolled": 6313.86572265625
     },
     {
       "seq_len": 1000,
-      "invariant": 129.67388916015625,
-      "unrolled": 7781.1171875
+      "invariant": 175.947509765625,
+      "unrolled": 10233.640625
     },
     {
       "seq_len": 5000,
-      "invariant": 129.67388916015625,
-      "unrolled": 12264.3388671875
+      "invariant": 175.947509765625,
+      "unrolled": 16647.689453125
     }
   ],
   "structural": [
     {
       "variant": "fused LayerNorm and Linear",
-      "radius": 129.67388916015625,
-      "u_abs_max": 8.426708221435547
+      "radius": 175.947509765625,
+      "u_abs_max": 9.268129348754883
     },
     {
       "variant": "LayerNorm box only",
-      "radius": 6332.0322265625,
-      "u_abs_max": 61.313385009765625
+      "radius": 8075.22265625,
+      "u_abs_max": 62.05979537963867
     },
     {
       "variant": "depthwise convolution",
-      "radius": 129.67388916015625,
-      "u_abs_max": 8.426708221435547
+      "radius": 175.947509765625,
+      "u_abs_max": 9.268129348754883
     },
     {
       "variant": "dense convolution",
-      "radius": 9239.7197265625,
-      "u_abs_max": 56.32474899291992
+      "radius": 12124.1455078125,
+      "u_abs_max": 58.55318069458008
     }
   ],
   "softplus": [
     {
       "layer": 0,
-      "invariant": 129.716796875,
-      "widened": 12975343.0,
+      "invariant": 287.38690185546875,
+      "widened": 28755282.0,
       "widening_iterations": 100000,
       "geometric": Infinity,
-      "unrolled_at_L": 12971.611328125,
+      "unrolled_at_L": 28738.67578125,
       "seq_len": 100,
       "invariant_holds": true,
       "zoh_exact": true,
-      "tighter_than_widened": 100028.24084920576
+      "tighter_than_widened": 100057.73337040067
     },
     {
       "layer": 1,
-      "invariant": 143.39784240722656,
-      "widened": 14327494.0,
+      "invariant": 208.67897033691406,
+      "widened": 20864310.0,
       "widening_iterations": 100000,
       "geometric": Infinity,
-      "unrolled_at_L": 14339.357421875,
+      "unrolled_at_L": 20867.7890625,
       "seq_len": 100,
       "invariant_holds": true,
       "zoh_exact": true,
-      "tighter_than_widened": 99914.29270820021
+      "tighter_than_widened": 99982.81075622706
     }
   ],
   "discretisation": {
@@ -119,12 +119,12 @@
       0.001,
       0.1
     ],
-    "max_abs_dtA": 1.6843674182891846,
-    "median_rel_error": 0.17306886613368988,
-    "max_rel_error": 1.068134069442749
+    "max_abs_dtA": 1.7135084867477417,
+    "median_rel_error": 0.1731559783220291,
+    "max_rel_error": 1.090236783027649
   },
   "output_range": {
-    "lo": -5.124204158782959,
-    "hi": 4.337436676025391
+    "lo": -3.5642733573913574,
+    "hi": 3.127683162689209
   }
 }

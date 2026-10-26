@@ -29,6 +29,40 @@ FORBIDDEN_COLUMNS = {
 }
 
 
+# A train-split standard deviation at or below this fraction of the column's largest
+# winsorised magnitude means the column is constant up to float32 rounding (eps 1.2e-7), and
+# dividing by it would turn rounding noise into an input of order one.
+STD_RTOL = 1e-5
+
+
+class DegenerateColumnError(ValueError):
+    """A train-split column has no usable spread, so it cannot be standardised."""
+
+
+def check_spread(
+    std: np.ndarray, scale: np.ndarray, names: list[str], rtol: float = STD_RTOL
+) -> None:
+    """Refuse to standardise a column whose spread is negligible relative to its scale.
+
+    The test is relative, so a column measured in small units passes. An absolute floor
+    (formerly std = max(std, 1e-8)) silently replaced the true spread of 1e-11 to 3e-9 of
+    21 price columns whose prices were 1e9 too small, and the models were trained on those
+    columns at a standard deviation of 0.001 to 0.24 instead of 1.
+    """
+    std = np.asarray(std, dtype=np.float64)
+    scale = np.asarray(scale, dtype=np.float64)
+    bad = ~np.isfinite(std) | (std <= rtol * scale) | (std == 0.0)
+    if bad.any():
+        rows = ", ".join(
+            f"{names[i]} (std {std[i]:.3g}, max |x| {scale[i]:.3g})" for i in np.flatnonzero(bad)
+        )
+        raise DegenerateColumnError(
+            f"{int(bad.sum())} train-split column(s) have a standard deviation at or below "
+            f"{rtol:g} times their largest magnitude, so standardising them would amplify "
+            f"float32 rounding: {rows}. Drop the column or fix its construction."
+        )
+
+
 @dataclass
 class Normalisation:
     """The affine map from raw features to model inputs, serialised next to the weights."""
@@ -157,9 +191,17 @@ class LOBDataModule:
 
         clipped_train = np.clip(train_raw, lo, hi)
         mean = clipped_train.mean(axis=0).astype(np.float32)
-        std = np.maximum(clipped_train.std(axis=0), 1e-8).astype(np.float32)
+        std = clipped_train.std(axis=0).astype(np.float32)
+        scale = np.maximum(np.abs(lo), np.abs(hi))
+        check_spread(std, scale, list(feature_names))
 
         train_targets = targets[self.idx_train[0] : self.idx_train[1]]
+        target_std = float(train_targets.std())
+        check_spread(
+            np.array([target_std]),
+            np.array([float(np.abs(train_targets).max())]),
+            ["target_log_return"],
+        )
         self.normalisation = Normalisation(
             feature_names=list(feature_names),
             winsor_lo=lo.tolist(),
@@ -167,7 +209,7 @@ class LOBDataModule:
             mean=mean.tolist(),
             std=std.tolist(),
             target_mean=float(train_targets.mean()),
-            target_std=float(max(train_targets.std(), 1e-8)),
+            target_std=target_std,
             winsor_quantile=winsor_q,
         )
 

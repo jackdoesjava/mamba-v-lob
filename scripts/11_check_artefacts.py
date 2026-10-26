@@ -81,6 +81,15 @@ PRODUCED: dict[str, list[str]] = {
     ],
     "docs/certification/released.json": RELEASED_SOURCES,
     "docs/figures/released_layers.pdf": RELEASED_SOURCES,
+    "docs/figures/sensitivity_local.pdf": [
+        "scripts/15_local_figures.py", "docs/certification/incremental_attack.json",
+    ],
+    "docs/figures/end_to_end.pdf": [
+        "scripts/15_local_figures.py", "docs/certification/incremental_attack.json",
+    ],
+    "docs/figures/released_local.pdf": [
+        "scripts/15_local_figures.py", "docs/certification/released.json",
+    ],
 }
 
 # Written by the same run as their JSON, so they are current exactly when it is. A table

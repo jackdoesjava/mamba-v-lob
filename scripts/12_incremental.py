@@ -426,7 +426,6 @@ def figure(incs: dict[str, list[BlockIncrement]], path: Path) -> None:
     for ax, (arm, layers) in zip(axes, incs.items()):
         inc = layers[0]
         ours = float(inc.output_slope().max())
-        common = float(inc.output_slope("common_start").max())
         floored = [float(inc.additive_output_slope(int(L), floor=True).max()) for L in lengths]
         free = [float(inc.additive_output_slope(int(L), floor=False).max()) for L in lengths]
         ax.loglog(lengths, free, color=OTHER, linewidth=1.6, linestyle="--",
@@ -434,10 +433,8 @@ def figure(incs: dict[str, list[BlockIncrement]], path: Path) -> None:
         ax.loglog(lengths, floored, color=OTHER, linewidth=2.0, label="additive, certified floor")
         ax.loglog(lengths, [ours] * len(lengths), color=OURS, linewidth=2.2,
                   label="log-timescale")
-        ax.loglog(lengths, [common] * len(lengths), color=OURS, linewidth=1.6, linestyle="--",
-                  label="log-timescale, common start")
         ax.set_xlabel("sequence length $L$")
-        ax.text(0.04, 0.96, f"{arm} arm, layer 0", transform=ax.transAxes, va="top",
+        ax.text(0.04, 0.96, f"{arm} arm, block 0", transform=ax.transAxes, va="top",
                 fontsize=9, color=INK)
         if arm == "softplus":
             # the certified floor is about 1e-13, so the two additive curves coincide here

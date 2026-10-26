@@ -95,6 +95,7 @@ python -m scripts.10_sweep                   # seeds and configurations
 python -m scripts.12_incremental             # sensitivity to input perturbations, any length
 python -m scripts.13_incremental_attack      # attack that bound, about an hour on a CPU
 python -m scripts.14_released                # mamba-130m-hf, about 1.5 hours on a CPU
+python -m scripts.15_local_figures           # the local-certificate figures, from 13 and 14's output
 python -m scripts.05_figures
 python -m scripts.11_check_artefacts         # nothing in docs/ is stale
 python -m pytest

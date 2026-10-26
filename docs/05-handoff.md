@@ -116,6 +116,10 @@ is loaded with `local_files_only=True` from `MAMBA_130M_DIR`, or from
 `~/hf_models/mamba-130m-hf` when that is unset, and the tests that need it skip without
 it. The run used transformers 5.15.1 and records the SHA-256 of the weights.
 
+`scripts/15_local_figures.py` draws the paper's figures of the local certificates
+(`sensitivity_local`, `end_to_end` and `released_local` in `docs/figures/`) from the JSON that
+scripts 13 and 14 write. It recomputes nothing and runs in seconds.
+
 ## Open tasks
 
 1. Check the Isabelle sensitivity draft. `isabelle/drafts/Mamba_Sensitivity.thy` states the

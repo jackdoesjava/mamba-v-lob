@@ -29,11 +29,12 @@ one new result is the cell theorem: with the timescale perturbation measured in 
 runs of one cell that start together stay within `eta + 2 M (e^rho - 1)` of each other at every
 length, with no lower bound on `dt`. It strengthens the time-warp part of Cao et al.'s Theorem
 3.3(ii), whose bound grows with the position unless `dt` has a floor, and it can be derived from
-their lemmas by a change of time variable. The endpoint form of the local rule and the
-certification of the released model are applications of it. The code also computes a sharper
-constant, `2 M tanh(rho/2)`, for two runs from a common start
-([docs/02-invariant.md](docs/02-invariant.md)); it is not part of the paper. The literature
-search behind these statements was not exhaustive.
+their lemmas by a change of time variable. A construction in the paper shows that no bound below
+`eta + 2 M tanh(rho/2)` holds, so the constant is within a factor `e^rho + 1` of the best
+possible. The endpoint form of the local rule and the certification of the released model are
+applications of it. The code also uses `2 M tanh(rho/2)` as an upper bound for two runs from a
+common start ([docs/02-invariant.md](docs/02-invariant.md)); that direction is not part of the
+paper. The literature search behind these statements was not exhaustive.
 
 ## Headline numbers
 
@@ -49,8 +50,10 @@ Trained bounded-timescale model, `L = 100`, layer 0, input-independent unless st
 | certified output range, for any input at all | `[-3.5643, 3.1277]` |
 | adversarial search against the certificate | no violation found |
 | data-free sensitivity bound per block | the same at every length, `3.06e5` to `3.23e6` times the attacked slope |
-| local sensitivity bound per block, endpoint rule, `delta = 1e-6` | `3.37` to `12.6` times the attacked slope |
+| local sensitivity bound per block, endpoint rule, `delta = 1e-6` | `3.37` to `12.6` times the attacked slope (additive rule `3.41` to `18.0`) |
+| what the log-timescale interval adds to that local bound, `delta <= 1e-4` | at most `0.034` per cent; the gain over the additive rule is the convex step's |
 | released model, local endpoint rule against the additive rule | tighter in 72 of 72 (layer, length) pairs at each of `delta = 1e-6, 1e-4, 1e-2` |
+| released model, what the log-timescale interval adds to the endpoint rule | at most `0.07` per cent at `delta = 1e-6`; the gain over the additive rule is the convex step's |
 | machine-checked lemmas, Z3 | 16 of 19 discharged, zero counterexamples |
 
 The invariant needs no floor on `delta`: the softplus arm certifies at `287.39` while the
@@ -67,7 +70,8 @@ src/features.py    order book feature construction
 src/utils/         config, seeding and provenance, overlap-aware statistics
 scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
                    07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check,
-                   12 sensitivity bound, 13 attack on it, 14 released model
+                   12 sensitivity bound, 13 attack on it, 14 released model,
+                   15 local-certificate figures, 16 worst cases of the cell theorem
 tests/             unit tests for the maths, the domain and the models
 data/text/         public_domain_sample.txt, the text the released model is certified on
 isabelle/          the machine-checked invariant and LayerNorm bounds, Isabelle/HOL, and an
@@ -96,6 +100,7 @@ python -m scripts.12_incremental             # sensitivity to input perturbation
 python -m scripts.13_incremental_attack      # attack that bound, about an hour on a CPU
 python -m scripts.14_released                # mamba-130m-hf, about 1.5 hours on a CPU
 python -m scripts.15_local_figures           # the local-certificate figures, from 13 and 14's output
+python -m scripts.16_cell_tightness          # worst cases found against the cell theorem, minutes on a CPU
 python -m scripts.05_figures
 python -m scripts.11_check_artefacts         # nothing in docs/ is stale
 python -m pytest
@@ -104,7 +109,9 @@ python -m pytest
 `11_check_artefacts` is the one to run before quoting a number or submitting anything. Nothing
 fails when a figure or a results table goes stale, which is how a plot arguing a claim this
 project had already dropped survived here for several hours. It also rejects phrases from
-retracted claims.
+retracted claims. By default it compares commit times, so a fresh clone does not look stale; it
+therefore cannot see edits that are not yet committed, and before committing it should be run as
+`python -m scripts.11_check_artefacts --mtime`, which compares file times.
 
 `14_released` needs `transformers` (5.15.1 was used) and a local copy of
 `state-spaces/mamba-130m-hf`. The model is not committed and nothing is downloaded:
@@ -149,7 +156,7 @@ external verifier has consumed the artefact. Set out in [docs/05-handoff.md](doc
 ## Documentation
 
 - [docs/01-problem.md](docs/01-problem.md), the block, what is time-varying, and why bounded verification struggles
-- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant, the cell theorem and a sharper common-start constant that is not in the paper
+- [docs/02-invariant.md](docs/02-invariant.md), the discretisation identity, the invariant, the cell theorem, the construction that bounds its constant from below, and the sharper common-start constant
 - [docs/03-certificate.md](docs/03-certificate.md), the normalisation bounds, tightness, adversarial search, local rules, the released model
 - [docs/04-results.md](docs/04-results.md), every recorded number in one place, with the data and the predictive comparison
 - [docs/05-handoff.md](docs/05-handoff.md), the artefact, limitations and what the verification side needs next

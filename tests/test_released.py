@@ -402,13 +402,19 @@ def test_local_domain_runs_the_nominal_pass_and_the_recursion_is_below_the_maxim
                          <= out["log_delta"]["lipschitz"] * (1 + 1e-12))
         end = out["log_delta_endpoint"]["lipschitz"]
         assert torch.isfinite(end).all()
-        for rule in ("additive", "log_delta_recursive"):
+        for rule in ("additive", "log_delta_recursive", "additive_endpoint"):
             other = out[rule]["lipschitz"]
             assert torch.all((end <= other * (1 + 1e-10)) | ~torch.isfinite(other)), (eps, rule)
+        # the ablation drops the log-timescale bound and is still never above the additive step
+        abl = out["additive_endpoint"]["lipschitz"]
+        assert torch.isfinite(abl).all()
+        add_ = out["additive"]["lipschitz"]
+        assert torch.all((abl <= add_ * (1 + 1e-10)) | ~torch.isfinite(add_)), eps
     with pytest.raises(ValueError):
         local_mixer_sensitivity(layer, v, 1e-3, "exact")
     assert local_mixer_sensitivity(layer, v, 1e-3)["rule"] == REPORTED_RULE == "log_delta_endpoint"
-    assert LOCAL_RULES == ("additive", "log_delta", "log_delta_recursive", "log_delta_endpoint")
+    assert LOCAL_RULES == ("additive", "log_delta", "log_delta_recursive", "additive_endpoint",
+                           "log_delta_endpoint")
 
 
 # --- the endpoint form for the exponential-Euler cell ---------------------------------------------

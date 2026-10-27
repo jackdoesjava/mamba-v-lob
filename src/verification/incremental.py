@@ -63,15 +63,17 @@ from src.verification.lipschitz import (
 # 2e-13, where float32 rounds exp(-lam dt) to exactly 1.
 DTYPE = torch.float64
 
-# Recurrence steps of the local domain. "additive" is the step of lipschitz.py. "log_delta" is the
-# local corollary, a running maximum. "log_delta_recursive" is the one-step inequality in that
-# corollary's proof with the perturbed transition at its worst admissible value; it is never
-# larger than the running maximum, and unlike it the carried bound decays. "log_delta_endpoint"
-# maximises error form (2) itself over the interval that holds the perturbed transition, the
-# intersection of the intervals given by rho_t and by the additive bound on |dt - dt~|; it is
-# never larger than the recursion or than the additive step, and it is the reported rule. The
-# first three are kept for comparison.
-COMPARISON_RULES = ("additive", "log_delta", "log_delta_recursive")
+# Recurrence steps of the local domain. "additive" is the step of lipschitz.py with the timescale's
+# slope taken over the local box (`_delta_tight`). "log_delta" is the local corollary, a running
+# maximum. "log_delta_recursive" is the one-step inequality in that corollary's proof with the
+# perturbed transition at its worst admissible value; it is never larger than the running
+# maximum, and unlike it the carried bound decays. "log_delta_endpoint" maximises error form (2)
+# itself over the interval that holds the perturbed transition, the intersection of the intervals
+# given by rho_t and by the additive bound on |dt - dt~|; it is never larger than the recursion or
+# than the additive step, and it is the reported rule. "additive_endpoint" does the same over the
+# additive interval alone, the ablation that isolates what rho_t adds. The first four are kept for
+# comparison.
+COMPARISON_RULES = ("additive", "log_delta", "log_delta_recursive", "additive_endpoint")
 REPORTED_RULE = "log_delta_endpoint"
 RULES = (*COMPARISON_RULES, REPORTED_RULE)
 
@@ -902,7 +904,7 @@ def additive_step(h: Sens, dt_t: Sens, u_t: Sens, B_t: Sens, A: torch.Tensor, ep
 
 def log_delta_step(
     h: Sens, dt_t: Sens, log_lip_t: torch.Tensor, u_t: Sens, B_t: Sens, A: torch.Tensor,
-    eps: float, recursive: bool = False, endpoint: bool = False,
+    eps: float, recursive: bool = False, endpoint: bool = False, additive_only: bool = False,
 ) -> Sens:
     """The local corollary as a recurrence step. h.lip * eps carries E_t; the value is the
     nominal state, computed as SelectiveSSMBlock.forward computes it.
@@ -913,7 +915,9 @@ def log_delta_step(
     lets the carried bound decay. Neither grows with rho_t beyond e^{rho_t} - 1 times a realised
     distance. endpoint=True applies `local_step_endpoint` with both the log-timescale bound rho_t
     and the additive one the domain carries, |dt - dt~| <= dt_t.lip eps, the bound the additive
-    step uses; it overrides recursive.
+    step uses; it overrides recursive. additive_only=True applies `local_step_endpoint` with the
+    additive bound alone (rho = inf): the convex step of the proof without the log-timescale
+    bound. It is the ablation that isolates what rho_t adds, and it overrides the other two.
     """
     dtA = dt_t.val * A.unsqueeze(0)
     lam = A.abs().unsqueeze(0)
@@ -923,7 +927,10 @@ def log_delta_step(
     rho = log_lip_t * eps
     dc = Bu.lip * eps / lam
     gap = (h.val - c).abs()
-    if endpoint:
+    if additive_only:
+        E = local_step_endpoint(E_prev, dt_t.val * lam, torch.full_like(rho, math.inf), dc, gap,
+                                dx=lam * (dt_t.lip * eps))
+    elif endpoint:
         E = local_step_endpoint(E_prev, dt_t.val * lam, rho, dc, gap, dx=lam * (dt_t.lip * eps))
     elif recursive:
         E = local_step_recursive(E_prev, dt_t.val * lam, rho, dc, gap)
@@ -941,13 +948,30 @@ def _log_delta_lip(block: SelectiveSSMBlock, pre: Sens, eps: float) -> torch.Ten
     return log_delta_slope(block, Interval(lo, hi)).to(pre.lip.dtype) * pre.lip
 
 
+def _delta_tight(block: SelectiveSSMBlock, pre: Sens, eps: float) -> Sens:
+    """The timescale and its sensitivity over the pre-activation's local box, with the slope of
+    `delta_slope`, the supremum of |dt'| over the box that the data-free baseline also uses.
+
+    lipschitz._delta bounds the bounded map's slope dt ln(r) sigmoid' by dt_max ln(r) sigmoid',
+    which is up to dt_max/dt_min times larger where the realised dt is small, and that looseness
+    would pass to every rule that uses the additive bound on the timescale. For softplus the
+    two agree.
+    """
+    if block.dt_parametrisation != "bounded":
+        return _delta(block, pre, eps)
+    lo, hi = pre.box(eps)
+    slope = delta_slope(block, Interval(lo, hi)).to(pre.lip.dtype)
+    return Sens(block.delta_from_pre(pre.val), slope * pre.lip)
+
+
 def _block_rule(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str,
                 normalised: bool = False) -> Sens:
     """lipschitz._block with its recurrence step chosen by `rule`.
 
-    rule="additive" reproduces lipschitz._block exactly. With normalised=True, x is the block's
-    normalised input and the result is its contribution before the residual, the map the
-    data-free certificate bounds.
+    The timescale's sensitivity is `_delta_tight`, so rule="additive" is lipschitz._block with
+    the bounded map's slope tightened, and is lipschitz._block exactly for softplus. With
+    normalised=True, x is the block's normalised input and the result is its contribution before
+    the residual, the map the data-free certificate bounds.
     """
     if rule not in RULES:
         raise ValueError(f"unknown rule: {rule!r}")
@@ -963,7 +987,7 @@ def _block_rule(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str,
     r, n = block.dt_rank, block.d_state
     pre = linear(Sens(proj.val[..., :r], proj.lip[..., :r]),
                  block.dt_proj.weight, block.dt_proj.bias)
-    delta = _delta(block, pre, eps)
+    delta = _delta_tight(block, pre, eps)
     log_lip = _log_delta_lip(block, pre, eps) if rule != "additive" else None
     B = Sens(proj.val[..., r : r + n], proj.lip[..., r : r + n])
     C = Sens(proj.val[..., r + n :], proj.lip[..., r + n :])
@@ -985,7 +1009,8 @@ def _block_rule(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str,
         else:
             h = log_delta_step(h, dt_t, log_lip[:, t].unsqueeze(-1), u_t, B_t, A, eps,
                                recursive=rule == "log_delta_recursive",
-                               endpoint=rule == "log_delta_endpoint")
+                               endpoint=rule == "log_delta_endpoint",
+                               additive_only=rule == "additive_endpoint")
 
         cy = mul(h, C_t, eps)
         ys_v.append(cy.val.sum(-1) + block.D * u.val[:, t])
@@ -1002,7 +1027,8 @@ def local_sensitivity_rule(model: LOBMamba, x: torch.Tensor, eps: float,
                            rule: str = REPORTED_RULE) -> dict:
     """lipschitz.local_sensitivity with the recurrence step chosen by `rule`.
 
-    rule="additive" returns exactly what lipschitz.local_sensitivity returns.
+    rule="additive" returns what lipschitz.local_sensitivity returns with the bounded map's
+    timescale slope tightened (`_delta_tight`): never more, and exactly the same for softplus.
     """
     model.eval()
     h = linear(Sens(x, torch.ones_like(x)), model.proj[0].weight, model.proj[0].bias)

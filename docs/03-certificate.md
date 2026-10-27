@@ -182,17 +182,28 @@ log-timescale rules from the cell theorem, with `rho_t` the relative timescale p
   maximum is at an end of `I_t`. It is never above the recursion or the additive step, and it is
   finite for every `rho`.
 
+A fourth rule, the additive endpoint rule, is the endpoint form on the interval that the additive
+bound alone gives (`rho = inf`). It lies between the endpoint form and the additive step, so the
+ratio of the endpoint form to it is what the log-timescale bound adds along an input; it is the
+ablation the paper reports. As `delta -> 0` the two intervals agree to first order, because `rho_t`
+and the additive bound come from one bound on the change of `z` through `(log dt)'` and
+`dt' = dt (log dt)'`, so the ratio tends to 1. Every rule takes the timescale's slope over the local
+box (`_delta_tight`, `delta_slope`), the same slope as the data-free baseline. An earlier version
+of the local additive step used `dt_max ln R sigma'(z)` for the bounded map, up to `dt_max / dt`
+times too large, which made the additive rule and the additive interval look worse than they are.
+
 For the exponential-Euler cell of the released model the corresponding bound,
 `s E_{t-1} + x~ db_t + |(Abar_t - s) h_{t-1} + (x - x~) b|` with `x = lam dt` and `b = B u / lam`, is
 not convex in `s`, because the Euler equilibrium moves with `dt`. Its exact maximum over `I_t` is at
 an end or at one closed-form stationary point per sign branch, and without the additive interval it
 can be infinite. The derivation is in the docstring of `src/verification/released.py`.
 
-On the trained bounded arm at `eps = 1e-6` the end-to-end width is 0.8506 with the endpoint rule,
-0.8564 with the recursion, 10.17 with the running maximum and infinite with the additive step; at
-`eps = 1e-4` only the endpoint rule is finite, at 7.8e28. Around one block's own normalised input the endpoint
-rule is 3.37 to 12.6 times the attacked block slope, but the end-to-end bound is 5.7e5 times the
-attack on the bounded arm and 1.6e7 times on the softplus arm. The two measurements place most of the
+On the trained bounded arm at `eps = 1e-6` the end-to-end width is 0.8503 with the endpoint rule,
+0.8514 with the additive endpoint rule, 0.8564 with the recursion, 1.291 with the additive step and
+10.17 with the running maximum; at `eps = 1e-4` only the endpoint and additive endpoint rules are
+finite, at 7.5e28 and 8.1e28. Around one block's own normalised input the endpoint rule is 3.37 to
+12.6 times the attacked block slope and the additive step 3.41 to 18.0 times, but the end-to-end
+bound is 5.7e5 times the attack on the bounded arm and 1.6e7 times on the softplus arm. The two measurements place most of the
 excess outside the block interiors, in the LayerNorms, the stem and the head, and in chaining stage
 bounds that are each computed on their own. A relaxation that carries linear coefficients, a zonotope
 or a CROWN-style backward pass, is the standard remedy, and it is not implemented here. The numbers
@@ -218,10 +229,13 @@ floating point.
 
 The local certificate around a realised input is where the endpoint rule matters. It is below the
 additive rule in all 72 (layer, length) pairs at `delta = 1e-6`, `1e-4` and `1e-2`. At
-`delta = 1e-6` it is 60 to 496 times the attacked slope. At `delta = 1e-2` the additive rule is
-infinite in every pair and the endpoint rule is the only one with no vacuous pair, but its bound on
-the change is still 2.4e4 to 6.7e6 times the largest realised output, so it says nothing useful
-there. The numbers are
+`delta = 1e-6` it is 60 to 496 times the attacked slope. The ablation places the gain: the
+log-timescale interval lowers the endpoint rule below the additive endpoint rule by at most 0.07
+per cent at `delta = 1e-6`, 8.4 per cent at `1e-4` and 39.3 per cent at `1e-2`, so at small `delta`
+the gain over the additive rule is the convex step's. At `delta = 1e-2` the additive rule is
+infinite in every pair, and only the endpoint and additive endpoint rules have no vacuous pair,
+but the endpoint rule's bound on the change is still 2.4e4 to 6.7e6 times the largest realised
+output, so it says nothing useful there. The numbers are
 in [04-results.md](04-results.md) and [`certification/released.md`](certification/released.md).
 
 ## See also

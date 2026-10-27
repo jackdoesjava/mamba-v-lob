@@ -910,7 +910,7 @@ def local_step_euler_endpoint(E_prev, x, rho, h_prev, b, db, dx=None):
 
 def euler_log_delta_step(h: Sens, dt_t: Sens, log_lip_t: torch.Tensor, u_t: Sens, B_t: Sens,
                          A: torch.Tensor, eps: float, recursive: bool = False,
-                         endpoint: bool = False) -> Sens:
+                         endpoint: bool = False, additive_only: bool = False) -> Sens:
     """Corollary cor:local for the exponential-Euler cell, as a recurrence step. h.lip * eps
     carries E_t and the value is the nominal state.
 
@@ -922,7 +922,9 @@ def euler_log_delta_step(h: Sens, dt_t: Sens, log_lip_t: torch.Tensor, u_t: Sens
     incremental.local_step (the running maximum) or local_step_recursive (the recursion E_t =
     K_t + a*_t (E_{t-1} - K_t)) with the realised distance |h_{t-1} - c_t| of the nominal run.
     endpoint=True applies `local_step_euler_endpoint` instead, with rho and the additive bound
-    |dt - dt~| <= dt_t.lip eps that the domain carries; it overrides recursive.
+    |dt - dt~| <= dt_t.lip eps that the domain carries; it overrides recursive. additive_only=True
+    applies it with the additive bound alone (rho = inf), the ablation that isolates what the
+    log-timescale bound adds; it overrides the other two.
     """
     lam = A.abs().unsqueeze(0)
     x = dt_t.val * lam
@@ -935,7 +937,10 @@ def euler_log_delta_step(h: Sens, dt_t: Sens, log_lip_t: torch.Tensor, u_t: Sens
     dc = psi * db + _times(kappa, psi * (b.abs() + db))
     gap = (h.val - psi * b).abs()
     E_prev = h.lip * eps
-    if endpoint:
+    if additive_only:
+        E = local_step_euler_endpoint(E_prev, x, torch.full_like(rho, math.inf), h.val, b, db,
+                                      dx=lam * (dt_t.lip * eps))
+    elif endpoint:
         E = local_step_euler_endpoint(E_prev, x, rho, h.val, b, db, dx=lam * (dt_t.lip * eps))
     elif recursive:
         E = local_step_recursive(E_prev, x, rho, dc, gap)
@@ -952,7 +957,8 @@ def _times(kappa: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
 
 
 # The comparison rules and the reported one, as in incremental.RULES. "log_delta_endpoint" is
-# `local_step_euler_endpoint`, never larger than the recursion or than the additive step.
+# `local_step_euler_endpoint`, never larger than the recursion or than the additive step, and
+# "additive_endpoint" is the same step with the additive interval alone.
 LOCAL_RULES = RULES
 
 
@@ -1001,7 +1007,8 @@ def local_mixer_sensitivity(layer: ReleasedLayer, v: torch.Tensor, eps: float,
         else:
             h = euler_log_delta_step(h, dt_t, log_lip[:, t].unsqueeze(-1), u_t, B_t, A, eps,
                                      recursive=rule == "log_delta_recursive",
-                                     endpoint=rule == "log_delta_endpoint")
+                                     endpoint=rule == "log_delta_endpoint",
+                                     additive_only=rule == "additive_endpoint")
         m = h.lip.max()
         E_max = math.nan if torch.isnan(m) else max(E_max, float(m))
         cy = mul(h, C_t, eps)

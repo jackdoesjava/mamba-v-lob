@@ -1,6 +1,6 @@
 {
   "provenance": {
-    "git_sha": "c73659a285135e3b6db595514ac5dec9442c6744-dirty",
+    "git_sha": "9e966de3cc94ca5ee4e91f4bf9c0107711a596fa-dirty",
     "torch_version": "2.11.0+cpu",
     "numpy_version": "2.4.4",
     "python_version": "3.14.4",
@@ -892,37 +892,42 @@
         "model": [
           {
             "eps": 1e-07,
-            "additive": 0.4798794090747833,
+            "additive": 0.04901251196861267,
             "log_delta": 0.131559818983078,
             "log_delta_recursive": 0.04090551659464836,
-            "log_delta_endpoint": 0.040784794837236404
+            "additive_endpoint": 0.04078706353902817,
+            "log_delta_endpoint": 0.040784116834402084
           },
           {
             "eps": 1e-06,
-            "additive": Infinity,
+            "additive": 1.2914645671844482,
             "log_delta": 10.172592163085938,
             "log_delta_recursive": 0.8564144968986511,
-            "log_delta_endpoint": 0.8505750894546509
+            "additive_endpoint": 0.8514494299888611,
+            "log_delta_endpoint": 0.8502722382545471
           },
           {
             "eps": 1e-05,
             "additive": Infinity,
             "log_delta": 538308518084608.0,
             "log_delta_recursive": 63586988032.0,
-            "log_delta_endpoint": 57278369792.0
+            "additive_endpoint": 64299020288.0,
+            "log_delta_endpoint": 55252738048.0
           },
           {
             "eps": 0.0001,
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
-            "log_delta_endpoint": 7.821567297323764e+28
+            "additive_endpoint": 8.099502648909705e+28,
+            "log_delta_endpoint": 7.4553605269667265e+28
           },
           {
             "eps": 0.001,
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           },
           {
@@ -930,6 +935,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           },
           {
@@ -937,6 +943,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           }
         ],
@@ -944,34 +951,40 @@
           {
             "layer": 0,
             "sampled": 1.0633545561472557,
-            "additive@1e-06": 145.3782196044922,
+            "additive@1e-06": 53.52241516113281,
             "log_delta@1e-06": 91.29827117919922,
             "log_delta_recursive@1e-06": 46.88243103027344,
+            "additive_endpoint@1e-06": 46.800193786621094,
             "log_delta_endpoint@1e-06": 46.8001823425293,
-            "additive@0.0001": 150.3255157470703,
+            "additive@0.0001": 53.82591247558594,
             "log_delta@0.0001": 91.81443786621094,
             "log_delta_recursive@0.0001": 47.077362060546875,
-            "log_delta_endpoint@0.0001": 46.99165725708008,
-            "additive@0.01": 1.142117999604733e+23,
+            "additive_endpoint@0.0001": 46.99300765991211,
+            "log_delta_endpoint@0.0001": 46.99129867553711,
+            "additive@0.01": 105.15901947021484,
             "log_delta@0.01": 156.69581604003906,
             "log_delta_recursive@0.01": 72.01856994628906,
-            "log_delta_endpoint@0.01": 71.22949981689453
+            "additive_endpoint@0.01": 71.6298599243164,
+            "log_delta_endpoint@0.01": 71.14410400390625
           },
           {
             "layer": 1,
             "sampled": 1.0442521184550468,
-            "additive@1e-06": 35.02218246459961,
+            "additive@1e-06": 20.642671585083008,
             "log_delta@1e-06": 30.30143928527832,
             "log_delta_recursive@1e-06": 20.00298500061035,
+            "additive_endpoint@1e-06": 19.988853454589844,
             "log_delta_endpoint@1e-06": 19.988849639892578,
-            "additive@0.0001": 35.806636810302734,
+            "additive@0.0001": 20.755908966064453,
             "log_delta@0.0001": 30.529308319091797,
             "log_delta_recursive@0.0001": 20.09467124938965,
-            "log_delta_endpoint@0.0001": 20.080007553100586,
-            "additive@0.01": 1.395931973985239e+17,
+            "additive_endpoint@0.0001": 20.080074310302734,
+            "log_delta_endpoint@0.0001": 20.079940795898438,
+            "additive@0.01": 39.9341926574707,
             "log_delta@0.01": 59.255062103271484,
             "log_delta_recursive@0.01": 32.22040939331055,
-            "log_delta_endpoint@0.01": 32.0721435546875
+            "additive_endpoint@0.01": 32.11734390258789,
+            "log_delta_endpoint@0.01": 32.04777145385742
           }
         ]
       },
@@ -982,6 +995,7 @@
             "additive": 0.7646065354347229,
             "log_delta": 11.329472541809082,
             "log_delta_recursive": 0.33064743876457214,
+            "additive_endpoint": 0.3275693655014038,
             "log_delta_endpoint": 0.32673031091690063
           },
           {
@@ -989,6 +1003,7 @@
             "additive": 1517180420096.0,
             "log_delta": 3750312804352.0,
             "log_delta_recursive": 67.63748931884766,
+            "additive_endpoint": 68.4173812866211,
             "log_delta_endpoint": 61.172142028808594
           },
           {
@@ -996,6 +1011,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": 3.367760135412777e+18,
+            "additive_endpoint": 2.3329001349473894e+17,
             "log_delta_endpoint": 1.668013771320197e+17
           },
           {
@@ -1003,6 +1019,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           },
           {
@@ -1010,6 +1027,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           },
           {
@@ -1017,6 +1035,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           },
           {
@@ -1024,6 +1043,7 @@
             "additive": Infinity,
             "log_delta": Infinity,
             "log_delta_recursive": Infinity,
+            "additive_endpoint": Infinity,
             "log_delta_endpoint": Infinity
           }
         ],
@@ -1034,14 +1054,17 @@
             "additive@1e-06": 221.1907196044922,
             "log_delta@1e-06": 505.3957824707031,
             "log_delta_recursive@1e-06": 168.9723663330078,
+            "additive_endpoint@1e-06": 168.22259521484375,
             "log_delta_endpoint@1e-06": 168.22213745117188,
             "additive@0.0001": 222.70774841308594,
             "log_delta@0.0001": 507.57696533203125,
             "log_delta_recursive@0.0001": 169.64453125,
+            "additive_endpoint@0.0001": 168.8897705078125,
             "log_delta_endpoint@0.0001": 168.8429718017578,
             "additive@0.01": 574.49658203125,
             "log_delta@0.01": 769.7997436523438,
             "log_delta_recursive@0.01": 254.5842742919922,
+            "additive_endpoint@0.01": 256.7468566894531,
             "log_delta_endpoint@0.01": 244.95144653320312
           },
           {
@@ -1050,14 +1073,17 @@
             "additive@1e-06": 90.49893951416016,
             "log_delta@1e-06": 174.4458770751953,
             "log_delta_recursive@1e-06": 73.00287628173828,
+            "additive_endpoint@1e-06": 72.8103256225586,
             "log_delta_endpoint@1e-06": 72.81021118164062,
             "additive@0.0001": 91.11854553222656,
             "log_delta@0.0001": 175.29290771484375,
             "log_delta_recursive@0.0001": 73.32655334472656,
+            "additive_endpoint@0.0001": 73.12821197509766,
             "log_delta_endpoint@0.0001": 73.11827850341797,
             "additive@0.01": 219.1212158203125,
             "log_delta@0.01": 278.0274353027344,
             "log_delta_recursive@0.01": 114.76078033447266,
+            "additive_endpoint@0.01": 114.12298583984375,
             "log_delta_endpoint@0.01": 111.73844146728516
           }
         ]

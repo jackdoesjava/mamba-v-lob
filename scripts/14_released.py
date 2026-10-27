@@ -75,11 +75,13 @@ CHUNK = 128
 SEED = 1337
 RULE_NAMES = {"additive": "additive", "log_delta": "log-timescale, running maximum",
               "log_delta_recursive": "log-timescale, recursion",
+              "additive_endpoint": "additive interval, endpoint",
               "log_delta_endpoint": "log-timescale, endpoint"}
 SHORT = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursion",
-         "log_delta_endpoint": "endpoint"}
+         "additive_endpoint": "additive endpoint", "log_delta_endpoint": "endpoint"}
 LEGEND = {"additive": "local, additive", "log_delta": r"local, log-$\Delta$, max",
           "log_delta_recursive": r"local, log-$\Delta$, recursion",
+          "additive_endpoint": "local, additive endpoint",
           "log_delta_endpoint": r"local, log-$\Delta$, endpoint"}
 
 # the colours and type of scripts/05_figures.py and scripts/13_incremental_attack.py
@@ -604,6 +606,8 @@ def figure(results: dict, path: Path) -> None:
                                 linestyle=":", markerfacecolor="white"),
               "log_delta_recursive": dict(color=LOCAL, marker="D", markersize=3, linewidth=0.9,
                                           linestyle="--", markerfacecolor="white"),
+              "additive_endpoint": dict(color=OTHER, marker="s", markersize=3, linewidth=0.9,
+                                        linestyle="--", markerfacecolor="white"),
               "log_delta_endpoint": dict(color=LOCAL, marker="D", markersize=3, linewidth=1.1)}
     for ax, d in zip(axes, panels):
         j = deltas.index(d)

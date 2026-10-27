@@ -103,9 +103,13 @@ every intermediate and the output.
 
 `src/verification/incremental.py` bounds the difference of two runs of a block: data-free, from
 the cell theorem with the time-warp term `2 M (e^rho - 1)`, or with the sharper common-start
-term `2 M tanh(rho/2)`, which is not in the paper; and locally, around a realised input, with one of four recurrence rules. The endpoint rule
-is the reported one; the additive rule, the running maximum and the recursion are kept as
-`COMPARISON_RULES`. Scripts 12 and 13 write
+term `2 M tanh(rho/2)`, which the paper states only as a lower bound (Proposition 3.3); and
+locally, around a realised input, with one of five recurrence rules. The endpoint rule is the
+reported one. The additive rule, the running maximum, the recursion and the additive endpoint
+rule are kept as `COMPARISON_RULES`; the last is the endpoint step on the interval of transitions
+that the additive timescale bound alone allows, the ablation that measures what the log-timescale
+bound adds along an input. Every local rule takes the timescale's slope over the local box
+(`_delta_tight`), the same slope that the data-free baseline uses. Scripts 12 and 13 write
 [`certification/incremental.md`](certification/incremental.md) and
 [`certification/incremental_attack.md`](certification/incremental_attack.md).
 
@@ -197,6 +201,8 @@ These have been retracted or overreached and must not come back.
 
 What can be claimed, as far as a search that was not exhaustive found, is one new result: the cell
 theorem with the timescale perturbation measured in `log dt`, a strengthening of the time-warp
-part of Cao et al.'s Theorem 3.3(ii) whose technique is theirs and Horbatko's. The endpoint form
-of the local rule and the certification of the released model apply it. The sharper common-start
-constant `tanh(rho/2)` that the code computes is not part of the paper.
+part of Cao et al.'s Theorem 3.3(ii) whose technique is theirs and Horbatko's, together with a
+construction showing that its constant is within a factor `e^rho + 1` of the best possible. The
+endpoint form of the local rule and the certification of the released model apply it. That the
+sharper common-start constant `tanh(rho/2)` that the code computes is also an upper bound is not
+part of the paper.

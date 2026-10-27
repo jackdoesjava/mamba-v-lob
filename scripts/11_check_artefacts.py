@@ -20,6 +20,12 @@ RELEASED_SOURCES = [
     "src/verification/lipschitz.py", "src/models/mamba.py", "data/text/public_domain_sample.txt",
 ]
 
+# scripts/16_cell_tightness.py, a search over the cell alone, with no checkpoint or data
+CELL_TIGHTNESS_SOURCES = [
+    "scripts/16_cell_tightness.py", "src/verification/incremental.py",
+    "src/verification/intervals.py", "src/models/mamba.py",
+]
+
 PRODUCED: dict[str, list[str]] = {
     "docs/certification/bounds.json": [
         "scripts/06_certify.py", "src/verification/invariant.py", "src/verification/certify.py",
@@ -90,6 +96,8 @@ PRODUCED: dict[str, list[str]] = {
     "docs/figures/released_local.pdf": [
         "scripts/15_local_figures.py", "docs/certification/released.json",
     ],
+    "docs/certification/cell_tightness.json": CELL_TIGHTNESS_SOURCES,
+    "docs/figures/cell_tightness.pdf": CELL_TIGHTNESS_SOURCES,
 }
 
 # Written by the same run as their JSON, so they are current exactly when it is. A table
@@ -101,6 +109,7 @@ TWINS: dict[str, str] = {
     "docs/certification/incremental.md": "docs/certification/incremental.json",
     "docs/certification/incremental_attack.md": "docs/certification/incremental_attack.json",
     "docs/certification/released.md": "docs/certification/released.json",
+    "docs/certification/cell_tightness.md": "docs/certification/cell_tightness.json",
 }
 
 # Phrases from claims this project retracted. None of them should reach an artefact, the README

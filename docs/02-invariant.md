@@ -197,9 +197,11 @@ discrete argument is Horbatko's Lemma 4.4 applied to the error. Measuring the ti
 perturbation additively, `|a - a~| <= lam exp(-lam dt_min) |dt - dt~|`, is the baseline in
 `src/verification/incremental.py`.
 
-**A sharper constant from a common start (not in the paper).** When both runs start from the
-same state, as they do here, the time-warp
-term improves to `2 M tanh(rho/2)`, and that is attained in a chattering limit. The cleanest
+**A sharper constant from a common start (only its lower bound is in the paper).** When both
+runs start from the same state, as they do here, the time-warp term improves to
+`2 M tanh(rho/2)`, and that is attained in a chattering limit. The paper's Proposition 3.3 gives
+the chattering construction, so no constant below `eta + 2 M tanh(rho/2)` can hold; the upper
+bound below is not in the paper. The cleanest
 statement is in terms of hazards. Unrolled, `h_t` is a weighted sum of the equilibria `c_s` with
 weights `(1 - a_s) prod_{r>s} a_r`, an age distribution whose per-step hazard is `1 - a_s`. The
 time-warp error of two runs is `2 M` times the total-variation distance between their age

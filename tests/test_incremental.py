@@ -26,6 +26,7 @@ from src.verification.incremental import (
     REPORTED_RULE,
     RULES,
     VARIANTS,
+    _delta_tight,
     additive_step,
     block_boxes,
     cell_bound,
@@ -52,7 +53,7 @@ from src.verification.incremental import (
     weight_free_factor,
 )
 from src.verification.intervals import Interval
-from src.verification.lipschitz import Sens, local_sensitivity
+from src.verification.lipschitz import Sens, _delta, local_sensitivity
 
 D64 = torch.float64
 SMALL = {"model": {"mamba": {"d_model": 16, "d_state": 4, "expand": 2, "num_layers": 1}}}
@@ -873,27 +874,60 @@ def small_model():
 
 
 @pytest.mark.parametrize("eps", [1e-7, 1e-5, 1e-3])
-def test_additive_rule_reproduces_the_norm_propagation_domain(small_model, eps):
+def test_additive_rule_is_the_norm_propagation_domain_with_the_tight_timescale_slope(small_model,
+                                                                                      eps):
+    """The local rules take the timescale's slope from delta_slope. On softplus that is the
+    slope lipschitz._delta uses, so the additive rule is the domain exactly; on the bounded map
+    it is never larger, so the additive rule is never looser than the domain."""
     torch.manual_seed(12)
     x = torch.randn(2, 12, 8)
     old = local_sensitivity(small_model, x, eps)
     new = local_sensitivity_rule(small_model, x, eps, "additive")
+    torch.testing.assert_close(new["nominal"], old["nominal"], rtol=0.0, atol=0.0)
+    assert torch.all(new["lipschitz"] <= old["lipschitz"] * (1 + 1e-6))
+    cfg = copy.deepcopy(SMALL)
+    cfg["model"]["mamba"]["dt_parametrisation"] = "softplus"
+    torch.manual_seed(11)
+    soft = LOBMamba(input_dim=8, config=cfg).eval()
+    old = local_sensitivity(soft, x, eps)
+    new = local_sensitivity_rule(soft, x, eps, "additive")
     for key in ("nominal", "lipschitz", "lo", "hi"):
         torch.testing.assert_close(new[key], old[key], rtol=0.0, atol=0.0, equal_nan=True)
 
 
-def test_additive_rule_reproduces_the_domain_on_the_trained_model():
+def test_additive_rule_is_tighter_than_the_domain_on_the_trained_bounded_model():
     model = _load("bounded")
     torch.manual_seed(13)
     x = torch.randn(2, 24, model.input_dim)
     for eps in (1e-6, 1e-5):
-        old = local_sensitivity(model, x, eps)
-        new = local_sensitivity_rule(model, x, eps, "additive")
-        torch.testing.assert_close(new["lipschitz"], old["lipschitz"], rtol=0.0, atol=0.0,
-                                   equal_nan=True)
+        old = local_sensitivity(model, x, eps)["lipschitz"]
+        new = local_sensitivity_rule(model, x, eps, "additive")["lipschitz"]
+        assert torch.all(new <= old * (1 + 1e-6))
+        assert bool((new < old * (1 - 1e-3)).any())
 
 
-@pytest.mark.parametrize("rule", ["log_delta", "log_delta_recursive", "log_delta_endpoint"])
+@pytest.mark.parametrize("arm", ["bounded", "softplus"])
+def test_tight_timescale_slope_is_sound_and_never_above_the_domains(arm):
+    """_delta_tight bounds |dt(z~) - dt(z)| by its slope times |z~ - z| on the local box, and its
+    slope is never above lipschitz._delta's; the two agree for softplus."""
+    block = SelectiveSSMBlock(d_model=16, d_state=4, dt_parametrisation=arm).double()
+    g = torch.Generator().manual_seed(27)
+    pre = Sens(torch.randn(3, 40, block.d_inner, generator=g, dtype=torch.float64) * 4,
+               torch.rand(3, 40, block.d_inner, generator=g, dtype=torch.float64))
+    for eps in (1e-6, 1e-2, 0.3):
+        tight, loose = _delta_tight(block, pre, eps), _delta(block, pre, eps)
+        torch.testing.assert_close(tight.val, loose.val, rtol=0.0, atol=0.0)
+        assert torch.all(tight.lip <= loose.lip * (1 + 1e-12))
+        if arm == "softplus":
+            torch.testing.assert_close(tight.lip, loose.lip, rtol=0.0, atol=0.0)
+        for _ in range(20):
+            step = (2 * torch.rand(pre.val.shape, generator=g, dtype=torch.float64) - 1) * pre.lip * eps
+            moved = (block.delta_from_pre(pre.val + step) - tight.val).abs()
+            assert torch.all(moved <= tight.lip * eps * (1 + 1e-9) + 1e-15)
+
+
+@pytest.mark.parametrize("rule", ["log_delta", "log_delta_recursive", "log_delta_endpoint",
+                                  "additive_endpoint"])
 @pytest.mark.parametrize("eps", [1e-7, 1e-6, 1e-5, 1e-3])
 def test_log_delta_rules_are_sound(small_model, rule, eps):
     torch.manual_seed(14)
@@ -939,6 +973,36 @@ def test_endpoint_rule_is_never_looser_than_the_recursion_or_the_additive_rule(e
     for rule in ("additive", "log_delta_recursive"):
         other = local_block_sensitivity(model.layers[0], xn, eps, rule).lip
         assert torch.all((end <= other * (1 + 1e-5)) | ~torch.isfinite(other)), rule
+
+
+@pytest.mark.parametrize("eps", [1e-7, 1e-4, 1e-2])
+def test_additive_endpoint_step_lies_between_the_endpoint_and_the_additive_step(eps):
+    """The ablation drops the log-timescale bound: its interval contains the endpoint form's, so
+    its step is never below the endpoint step, and it is still never above the additive step.
+    Where rho is infinite the two endpoint forms coincide."""
+    h, dt, u, B, A, log_lip = _sens_cells(400, seed=26)
+    end = log_delta_step(h, dt, log_lip, u, B, A, eps, endpoint=True).lip
+    abl = log_delta_step(h, dt, log_lip, u, B, A, eps, additive_only=True).lip
+    add_ = additive_step(h, dt, u, B, A, eps).lip
+    assert torch.isfinite(abl).all()
+    assert torch.all(end <= abl * (1 + 1e-12))
+    assert torch.all(abl <= add_ * (1 + 1e-12))
+    inf_rho = ~torch.isfinite(log_lip.expand_as(end))
+    torch.testing.assert_close(abl[inf_rho], end[inf_rho], rtol=1e-12, atol=0.0)
+    assert bool((end < abl * (1 - 1e-6)).any())
+
+
+@pytest.mark.parametrize("eps", [1e-6, 1e-2])
+def test_additive_endpoint_rule_lies_between_the_endpoint_and_the_additive_rule(eps):
+    torch.manual_seed(18)
+    model = LOBMamba(input_dim=8, config=TWO_LAYERS).eval()
+    xn = model.layers[0].norm(model.proj(torch.randn(2, 30, 8))).detach()
+    end = local_block_sensitivity(model.layers[0], xn, eps, "log_delta_endpoint").lip
+    abl = local_block_sensitivity(model.layers[0], xn, eps, "additive_endpoint").lip
+    add_ = local_block_sensitivity(model.layers[0], xn, eps, "additive").lip
+    assert torch.isfinite(abl).all()
+    assert torch.all(end <= abl * (1 + 1e-5))
+    assert torch.all((abl <= add_ * (1 + 1e-5)) | ~torch.isfinite(add_))
 
 
 def test_reported_rule_is_the_endpoint_form(small_model):

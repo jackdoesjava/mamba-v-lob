@@ -63,6 +63,7 @@ GAP_WINDOWS, GAP_LENGTH = 8, 1000
 ARMS = {"bounded": "best_mamba.pt", "softplus": "best_mamba_softplus.pt"}
 RULE_NAMES = {"additive": "additive", "log_delta": "log-timescale, running maximum",
               "log_delta_recursive": "log-timescale, recursive",
+              "additive_endpoint": "additive interval, endpoint",
               "log_delta_endpoint": "log-timescale, endpoint"}
 
 # the colours and type of scripts/05_figures.py, so the figure sits with the paper's others
@@ -380,10 +381,15 @@ def local_comparison(models: dict[str, LOBMamba], dm, windows: int) -> dict:
 
     out = {"windows": int(x.shape[0]), "seq_len": int(x.shape[1]), "arms": {}}
     for arm, model in models.items():
-        # the additive rule is the existing step; confirm it before quoting it as that
+        # the additive rule is the step of lipschitz.py with the timescale's slope taken over the
+        # local box (_delta_tight): the same on softplus and never larger on the bounded map;
+        # confirm that before quoting it as that step
         old = local_sensitivity(model, x, 1e-6)["lipschitz"]
         new = local_sensitivity_rule(model, x, 1e-6, "additive")["lipschitz"]
-        assert torch.equal(old, new), "the additive rule no longer reproduces lipschitz.py"
+        if any(block.dt_parametrisation == "bounded" for block in model.layers):
+            assert torch.all(new <= old * (1 + 1e-6)), "the additive rule is above lipschitz.py"
+        else:
+            assert torch.equal(old, new), "the additive rule no longer reproduces lipschitz.py"
 
         model_rows = []
         for eps in LOCAL_EPS:
@@ -799,7 +805,9 @@ def markdown(results: dict) -> str:
                f"Median certified output width over {local['windows']} held-out windows of length "
                f"{local['seq_len']}, perturbing the network input by `eps`, with the norm-propagation "
                "domain of `src/verification/lipschitz.py` and its recurrence step replaced. The "
-               "additive rule reproduces that domain exactly. The running maximum is the local "
+               "additive rule is that domain with the timescale's slope taken over the local box, "
+               "the same as `lipschitz._delta` on softplus and never larger on the bounded map. "
+               "The running maximum is the local "
                "corollary, `E_t = max(E_{t-1}, dc_t + (e^rho_t - 1)|h_{t-1} - c_t|)`. The "
                "recursive rule is the one-step inequality in its proof, "
                "`E_t = K_t + a*_t (E_{t-1} - K_t)` with `K_t` the second argument of that maximum "
@@ -811,14 +819,16 @@ def markdown(results: dict) -> str:
                "perturbed transition, which is convex in `s`, and takes its larger value at the two "
                "ends of the interval that holds `s`: the intersection of the interval above with the "
                "one the additive bound on `|dt - dt~|` gives. It is never larger than the recursive "
-               "rule or the additive rule, and it is finite for every `rho`.", ""]
+               "rule or the additive rule, and it is finite for every `rho`. The additive interval, "
+               "endpoint rule takes the same maximum over the additive interval alone; it lies "
+               "between the endpoint rule and the additive rule and isolates what `rho` adds.", ""]
         rows = [[arm, r["eps"], *[r[rule] for rule in RULES]]
                 for arm, a in local["arms"].items() for r in a["model"]]
         md += [table(rows, ["arm", "eps", *[RULE_NAMES[rule] for rule in RULES]]), ""]
         rows = [[arm, r["layer"], r["sampled"], *[r[f"{rule}@{e:g}"] for e in BLOCK_EPS for rule in RULES]]
                 for arm, a in local["arms"].items() for r in a["block"]]
         short = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursive",
-                 "log_delta_endpoint": "endpoint"}
+                 "additive_endpoint": "additive endpoint", "log_delta_endpoint": "endpoint"}
         header = ["arm", "layer", "sampled"] + [f"{short[rule]} @ {e:g}" for e in BLOCK_EPS for rule in RULES]
         md += ["Per block, the local Lipschitz bound on the block's contribution around the "
                "realised normalised input, for any perturbation of it of sup-norm `eps`, against "

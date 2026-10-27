@@ -51,6 +51,7 @@ from src.verification.incremental import (
     REPORTED_RULE,
     RULES,
     BlockIncrement,
+    _delta_tight,
     _log_delta_lip,
     additive_step,
     contribution,
@@ -61,7 +62,7 @@ from src.verification.incremental import (
     log_delta_step,
     timescale_offsets,
 )
-from src.verification.lipschitz import Sens, _causal_conv, _delta, add, layer_norm, linear, mul, silu
+from src.verification.lipschitz import Sens, _causal_conv, add, layer_norm, linear, mul, silu
 
 OUT_DIR = Path("docs/certification")
 FIG_DIR = Path("docs/figures")
@@ -69,9 +70,10 @@ DOMAINS = OUT_DIR / "domains.json"
 ARMS = {"bounded": "best_mamba.pt", "softplus": "best_mamba_softplus.pt"}
 RULE_NAMES = {"additive": "additive", "log_delta": "log-timescale, running maximum",
               "log_delta_recursive": "log-timescale, recursive",
+              "additive_endpoint": "additive interval, endpoint",
               "log_delta_endpoint": "log-timescale, endpoint"}
 SHORT = {"additive": "additive", "log_delta": "maximum", "log_delta_recursive": "recursive",
-         "log_delta_endpoint": "endpoint"}
+         "additive_endpoint": "additive endpoint", "log_delta_endpoint": "endpoint"}
 LENGTHS = [10, 100, 1000, 5000]
 BLOCK_DELTAS = [1e-6, 1e-4, 1e-2, 1e-1]
 MODEL_EPS = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]   # the eps values of docs/certification/domains.json
@@ -494,7 +496,7 @@ def _block_trace(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str, rec, 
     r, n = block.dt_rank, block.d_state
     pre = linear(Sens(proj.val[..., :r], proj.lip[..., :r]),
                  block.dt_proj.weight, block.dt_proj.bias)
-    delta = _delta(block, pre, eps)
+    delta = _delta_tight(block, pre, eps)
     log_lip = _log_delta_lip(block, pre, eps) if rule != "additive" else None
     B = Sens(proj.val[..., r : r + n], proj.lip[..., r : r + n])
     C = Sens(proj.val[..., r + n :], proj.lip[..., r + n :])
@@ -526,11 +528,14 @@ def _block_trace(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str, rec, 
         else:
             recursive = rule == "log_delta_recursive"
             endpoint = rule == "log_delta_endpoint"
+            additive_only = rule == "additive_endpoint"
             ll = log_lip[:, t].unsqueeze(-1)
             lam_dt = dt_t.val * A.abs().unsqueeze(0)
-            if endpoint:
-                # f is affine in E_{t-1} with coefficient the chosen end, at most the upper one
-                _, down = timescale_offsets(lam_dt, ll * eps, A.abs().unsqueeze(0) * (dt_t.lip * eps))
+            if endpoint or additive_only:
+                # f is affine in E_{t-1} with coefficient the chosen end, at most the upper one;
+                # the ablation drops the log-timescale bound, so only the additive interval binds
+                rho = torch.full_like(ll, math.inf) if additive_only else ll * eps
+                _, down = timescale_offsets(lam_dt, rho, A.abs().unsqueeze(0) * (dt_t.lip * eps))
                 growth = torch.exp(-(lam_dt - down))
             elif recursive:
                 # the carried bound is scaled by the perturbed transition, at most the slowest
@@ -539,9 +544,10 @@ def _block_trace(block: SelectiveSSMBlock, x: Sens, eps: float, rule: str, rec, 
                 # a running maximum carries the bound over unscaled
                 growth = torch.ones_like(h.val)
             h = log_delta_step(h, dt_t, ll, u_t, B_t, A, eps, recursive=recursive,
-                               endpoint=endpoint)
+                               endpoint=endpoint, additive_only=additive_only)
             h_frozen = log_delta_step(h_frozen, still, torch.zeros_like(ll), u_t, B_t, A, eps,
-                                      recursive=recursive, endpoint=endpoint)
+                                      recursive=recursive, endpoint=endpoint,
+                                      additive_only=additive_only)
         growth_max = _fmax(growth_max, _lip_max(growth))
         growth_cells += int((growth > 1.0).sum())
         raised_cells += int((h.lip > before).sum())
@@ -854,13 +860,16 @@ def local_end_to_end(model: LOBMamba, m64: LOBMamba, x: torch.Tensor, budget: Bu
             "first_non_finite_stage": (traces[f"{first:g}"][rule]["first_non_finite_stage"]
                                        if first is not None else None),
         }
-    reproduces = None
+    # The additive rule uses the tight timescale slope (_delta_tight), and domains.json the
+    # looser one of lipschitz._delta, so on the bounded map it can only be smaller; on softplus
+    # the two agree.
+    at_most = None
     if domains is not None:
         pairs = [(r["additive"], r["domains_json_lipschitz"]) for r in rows
                  if "domains_json_lipschitz" in r]
-        reproduces = all(
-            (a == b) or (math.isnan(a) and math.isnan(b))
-            or (math.isfinite(a) and math.isfinite(b) and abs(a - b) <= 1e-6 * abs(b))
+        at_most = all(
+            (a == b) or (math.isnan(a) and math.isnan(b)) or math.isinf(b)
+            or (math.isfinite(a) and a <= b * (1 + 1e-6))
             for a, b in pairs
         ) if pairs else None
     return {
@@ -869,7 +878,7 @@ def local_end_to_end(model: LOBMamba, m64: LOBMamba, x: torch.Tensor, budget: Bu
         "global_certified_width": global_width,
         "rows": rows,
         "divergence": divergence,
-        "additive_reproduces_domains_json": reproduces,
+        "additive_at_most_domains_json": at_most,
         "traces": traces,
     }
 
@@ -1204,6 +1213,7 @@ def markdown(results: dict) -> str:
     ]
 
     sentences = []
+    growth_all, growth_last = [], []
     for arm, a in arms.items():
         for lay in a["block"]["layers"]:
             s0 = lay["lengths"][str(L0)]["per_delta"][k0]["slope_max"]
@@ -1211,6 +1221,8 @@ def markdown(results: dict) -> str:
             add0 = lay["certified"]["additive_slope_max"][str(L0)]["no_floor"]
             add1 = lay["certified"]["additive_slope_max"][str(L1)]["no_floor"]
             lasts = [lay["lengths"][str(L)]["per_delta"][k0]["last_slope_max"] for L in lengths]
+            growth_all.append(s1 / s0)
+            growth_last.append(lasts[-1] / lasts[0])
             sentences.append(
                 f"On the {arm} arm, block {lay['layer']}, the attacked slope at "
                 f"`delta = {k0_delta:g}` is {fmt(s0)} at L = {L0} and {fmt(s1)} at L = {L1}, a "
@@ -1236,9 +1248,11 @@ def markdown(results: dict) -> str:
         f"At `delta = {k0_delta:g}` the worst position is the last one in {at_last} of {len(pos)} "
         "(arm, block, length) cases"
         + (f"; otherwise it lies {_span(away)} positions before the end of the window" if away else "")
-        + ". Most of the change with `L` therefore comes from the attack finding a more sensitive "
-        "position among more positions, rather than from a longer history acting on one "
-        "position; the last-position column isolates the second effect. Across arms, blocks and "
+        + ". The last-position column isolates a longer history acting on one position: from "
+        f"L = {L0} to L = {L1} it grows by a factor of {_span(growth_last)}, against "
+        f"{_span(growth_all)} over all positions, so the change with `L` comes partly from the "
+        "attack finding a more sensitive position among more positions and partly from the longer "
+        "history. Across arms, blocks and "
         "lengths the data-free slope, which is the same at every length, is "
         + _span(ours_ratio) + " times the attacked slope, and "
         + _span(common_ratio) + f" times with the common-start term. At L = {L1} the additive "
@@ -1410,9 +1424,11 @@ def markdown(results: dict) -> str:
             + "."
         )
         md += [" ".join(parts), ""]
-        if loc["additive_reproduces_domains_json"] is not None:
-            md += ["The additive rule reproduces the `lipschitz` column of `domains.json`: "
-                   + fmt(loc["additive_reproduces_domains_json"]) + ".", ""]
+        if loc.get("additive_at_most_domains_json") is not None:
+            md += ["The additive rule here uses the tight slope of the timescale map, which on "
+                   "the bounded map is smaller than the slope behind the `lipschitz` column of "
+                   "`domains.json`; it is never above that column: "
+                   + fmt(loc["additive_at_most_domains_json"]) + ".", ""]
 
     md += [
         "## Where the end-to-end bound comes from",

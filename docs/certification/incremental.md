@@ -233,33 +233,33 @@ the windows: about 1 in l2, against the global constants above.
 
 ## The local domain with each recurrence rule
 
-Median certified output width over 4 held-out windows of length 100, perturbing the network input by `eps`, with the norm-propagation domain of `src/verification/lipschitz.py` and its recurrence step replaced. The additive rule reproduces that domain exactly. The running maximum is the local corollary, `E_t = max(E_{t-1}, dc_t + (e^rho_t - 1)|h_{t-1} - c_t|)`. The recursive rule is the one-step inequality in its proof, `E_t = K_t + a*_t (E_{t-1} - K_t)` with `K_t` the second argument of that maximum and `a*_t` the perturbed transition at its worst value in `[exp(-lam dt e^rho), exp(-lam dt e^-rho)]`; it is never larger than the running maximum, and with `rho = 0` it is the exact recursion of the forcing term. The endpoint rule, the reported one, bounds the error identity itself, `|e_t| <= s E_{t-1} + (1 - s) dc_t + |Abar_t - s| |h_{t-1} - c_t|` with `s` the perturbed transition, which is convex in `s`, and takes its larger value at the two ends of the interval that holds `s`: the intersection of the interval above with the one the additive bound on `|dt - dt~|` gives. It is never larger than the recursive rule or the additive rule, and it is finite for every `rho`.
+Median certified output width over 4 held-out windows of length 100, perturbing the network input by `eps`, with the norm-propagation domain of `src/verification/lipschitz.py` and its recurrence step replaced. The additive rule is that domain with the timescale's slope taken over the local box, the same as `lipschitz._delta` on softplus and never larger on the bounded map. The running maximum is the local corollary, `E_t = max(E_{t-1}, dc_t + (e^rho_t - 1)|h_{t-1} - c_t|)`. The recursive rule is the one-step inequality in its proof, `E_t = K_t + a*_t (E_{t-1} - K_t)` with `K_t` the second argument of that maximum and `a*_t` the perturbed transition at its worst value in `[exp(-lam dt e^rho), exp(-lam dt e^-rho)]`; it is never larger than the running maximum, and with `rho = 0` it is the exact recursion of the forcing term. The endpoint rule, the reported one, bounds the error identity itself, `|e_t| <= s E_{t-1} + (1 - s) dc_t + |Abar_t - s| |h_{t-1} - c_t|` with `s` the perturbed transition, which is convex in `s`, and takes its larger value at the two ends of the interval that holds `s`: the intersection of the interval above with the one the additive bound on `|dt - dt~|` gives. It is never larger than the recursive rule or the additive rule, and it is finite for every `rho`. The additive interval, endpoint rule takes the same maximum over the additive interval alone; it lies between the endpoint rule and the additive rule and isolates what `rho` adds.
 
-| arm | eps | additive | log-timescale, running maximum | log-timescale, recursive | log-timescale, endpoint |
-| --- | --- | --- | --- | --- | --- |
-| bounded | 1e-07 | 0.4799 | 0.1316 | 0.0409 | 0.0408 |
-| bounded | 1e-06 | inf | 10.1726 | 0.8564 | 0.8506 |
-| bounded | 1e-05 | inf | 5.383e+14 | 6.359e+10 | 5.728e+10 |
-| bounded | 0.0001 | inf | inf | inf | 7.822e+28 |
-| bounded | 0.0010 | inf | inf | inf | inf |
-| bounded | 0.0100 | inf | inf | inf | inf |
-| bounded | 0.1000 | inf | inf | inf | inf |
-| softplus | 1e-07 | 0.7646 | 11.3295 | 0.3306 | 0.3267 |
-| softplus | 1e-06 | 1.517e+12 | 3.75e+12 | 67.6375 | 61.1721 |
-| softplus | 1e-05 | inf | inf | 3.368e+18 | 1.668e+17 |
-| softplus | 0.0001 | inf | inf | inf | inf |
-| softplus | 0.0010 | inf | inf | inf | inf |
-| softplus | 0.0100 | inf | inf | inf | inf |
-| softplus | 0.1000 | inf | inf | inf | inf |
+| arm | eps | additive | log-timescale, running maximum | log-timescale, recursive | additive interval, endpoint | log-timescale, endpoint |
+| --- | --- | --- | --- | --- | --- | --- |
+| bounded | 1e-07 | 0.0490 | 0.1316 | 0.0409 | 0.0408 | 0.0408 |
+| bounded | 1e-06 | 1.2915 | 10.1726 | 0.8564 | 0.8514 | 0.8503 |
+| bounded | 1e-05 | inf | 5.383e+14 | 6.359e+10 | 6.43e+10 | 5.525e+10 |
+| bounded | 0.0001 | inf | inf | inf | 8.1e+28 | 7.455e+28 |
+| bounded | 0.0010 | inf | inf | inf | inf | inf |
+| bounded | 0.0100 | inf | inf | inf | inf | inf |
+| bounded | 0.1000 | inf | inf | inf | inf | inf |
+| softplus | 1e-07 | 0.7646 | 11.3295 | 0.3306 | 0.3276 | 0.3267 |
+| softplus | 1e-06 | 1.517e+12 | 3.75e+12 | 67.6375 | 68.4174 | 61.1721 |
+| softplus | 1e-05 | inf | inf | 3.368e+18 | 2.333e+17 | 1.668e+17 |
+| softplus | 0.0001 | inf | inf | inf | inf | inf |
+| softplus | 0.0010 | inf | inf | inf | inf | inf |
+| softplus | 0.0100 | inf | inf | inf | inf | inf |
+| softplus | 0.1000 | inf | inf | inf | inf | inf |
 
 Per block, the local Lipschitz bound on the block's contribution around the realised normalised input, for any perturbation of it of sup-norm `eps`, against the largest sampled ratio at `eps = 1e-4`:
 
-| arm | layer | sampled | additive @ 1e-06 | maximum @ 1e-06 | recursive @ 1e-06 | endpoint @ 1e-06 | additive @ 0.0001 | maximum @ 0.0001 | recursive @ 0.0001 | endpoint @ 0.0001 | additive @ 0.01 | maximum @ 0.01 | recursive @ 0.01 | endpoint @ 0.01 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| bounded | 0 | 1.0634 | 145.3782 | 91.2983 | 46.8824 | 46.8002 | 150.3255 | 91.8144 | 47.0774 | 46.9917 | 1.142e+23 | 156.6958 | 72.0186 | 71.2295 |
-| bounded | 1 | 1.0443 | 35.0222 | 30.3014 | 20.0030 | 19.9888 | 35.8066 | 30.5293 | 20.0947 | 20.0800 | 1.396e+17 | 59.2551 | 32.2204 | 32.0721 |
-| softplus | 0 | 3.1906 | 221.1907 | 505.3958 | 168.9724 | 168.2221 | 222.7077 | 507.5770 | 169.6445 | 168.8430 | 574.4966 | 769.7997 | 254.5843 | 244.9514 |
-| softplus | 1 | 1.2526 | 90.4989 | 174.4459 | 73.0029 | 72.8102 | 91.1185 | 175.2929 | 73.3266 | 73.1183 | 219.1212 | 278.0274 | 114.7608 | 111.7384 |
+| arm | layer | sampled | additive @ 1e-06 | maximum @ 1e-06 | recursive @ 1e-06 | additive endpoint @ 1e-06 | endpoint @ 1e-06 | additive @ 0.0001 | maximum @ 0.0001 | recursive @ 0.0001 | additive endpoint @ 0.0001 | endpoint @ 0.0001 | additive @ 0.01 | maximum @ 0.01 | recursive @ 0.01 | additive endpoint @ 0.01 | endpoint @ 0.01 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| bounded | 0 | 1.0634 | 53.5224 | 91.2983 | 46.8824 | 46.8002 | 46.8002 | 53.8259 | 91.8144 | 47.0774 | 46.9930 | 46.9913 | 105.1590 | 156.6958 | 72.0186 | 71.6299 | 71.1441 |
+| bounded | 1 | 1.0443 | 20.6427 | 30.3014 | 20.0030 | 19.9889 | 19.9888 | 20.7559 | 30.5293 | 20.0947 | 20.0801 | 20.0799 | 39.9342 | 59.2551 | 32.2204 | 32.1173 | 32.0478 |
+| softplus | 0 | 3.1906 | 221.1907 | 505.3958 | 168.9724 | 168.2226 | 168.2221 | 222.7077 | 507.5770 | 169.6445 | 168.8898 | 168.8430 | 574.4966 | 769.7997 | 254.5843 | 256.7469 | 244.9514 |
+| softplus | 1 | 1.2526 | 90.4989 | 174.4459 | 73.0029 | 72.8103 | 72.8102 | 91.1185 | 175.2929 | 73.3266 | 73.1282 | 73.1183 | 219.1212 | 278.0274 | 114.7608 | 114.1230 | 111.7384 |
 
 ## Scope
 

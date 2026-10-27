@@ -138,21 +138,24 @@ common-start term.
 
 The local rules on the same windows, median end-to-end width at the model input:
 
-| arm | eps | additive | running maximum | recursion | endpoint |
-| --- | --- | --- | --- | --- | --- |
-| bounded | 1e-7 | 0.4799 | 0.1316 | 0.0409 | 0.0408 |
-| bounded | 1e-6 | inf | 10.17 | 0.8564 | 0.8506 |
-| bounded | 1e-5 | inf | 5.383e14 | 6.359e10 | 5.728e10 |
-| bounded | 1e-4 | inf | inf | inf | 7.822e28 |
-| softplus | 1e-7 | 0.7646 | 11.33 | 0.3306 | 0.3267 |
-| softplus | 1e-6 | 1.517e12 | 3.75e12 | 67.64 | 61.17 |
-| softplus | 1e-5 | inf | inf | 3.368e18 | 1.668e17 |
+| arm | eps | additive | running maximum | recursion | additive endpoint | endpoint |
+| --- | --- | --- | --- | --- | --- | --- |
+| bounded | 1e-7 | 0.0490 | 0.1316 | 0.0409 | 0.0408 | 0.0408 |
+| bounded | 1e-6 | 1.291 | 10.17 | 0.8564 | 0.8514 | 0.8503 |
+| bounded | 1e-5 | inf | 5.383e14 | 6.359e10 | 6.43e10 | 5.525e10 |
+| bounded | 1e-4 | inf | inf | inf | 8.1e28 | 7.455e28 |
+| softplus | 1e-7 | 0.7646 | 11.33 | 0.3306 | 0.3276 | 0.3267 |
+| softplus | 1e-6 | 1.517e12 | 3.75e12 | 67.64 | 68.42 | 61.17 |
+| softplus | 1e-5 | inf | inf | 3.368e18 | 2.333e17 | 1.668e17 |
 
-At `eps = 1e-6` the endpoint bound is 5.67e5 times the attacked sensitivity of the prediction on
+The additive rule now takes the timescale's slope over the local box; on the bounded arm that
+makes it finite at `eps = 1e-6`, where the slope of `lipschitz._delta` sent it past the float32
+range. At `eps = 1e-6` the endpoint bound is 5.67e5 times the attacked sensitivity of the prediction on
 the bounded arm and 1.61e7 times on the softplus arm. Of the `eps` values of `domains.json`,
 `1e-6` to `1e-1`, it is below the global certified width only at `1e-6` on the bounded arm; at
 `eps = 1e-7` it is below it on both arms. Around a block's own normalised input it is 3.37 to 12.6 times
-the attacked block slope at `delta = 1e-6`, against 4.04 to 61.3 for the additive rule. See
+the attacked block slope at `delta = 1e-6`, against 3.41 to 18.0 for the additive rule, and the
+additive endpoint rule lies within 0.034 per cent of it for `delta <= 1e-4`. See
 [`certification/incremental.md`](certification/incremental.md) and
 [`certification/incremental_attack.md`](certification/incremental_attack.md).
 
@@ -173,9 +176,10 @@ the attacked block slope at `delta = 1e-6`, against 4.04 to 61.3 for the additiv
 | data-free additive slope without floor, over the log-timescale slope | 379 to 1.69e6 at `L = 1`, 3.88e5 to 1.73e9 at `L = 1024` |
 | data-free bound over the attacked change, `delta = 1e-6` | 4.79e12 to 3.82e16 |
 | attacked slope, `delta = 1e-6` | 133.4 to 2.71e4 |
-| local bound over attacked slope, `delta = 1e-6`: additive / running maximum / recursion / endpoint | 61.95 to 607.9 / 205.9 to 1.63e5 / 92.7 to 1134 / 59.96 to 496 |
+| local bound over attacked slope, `delta = 1e-6`: additive / running maximum / recursion / additive endpoint / endpoint | 61.95 to 607.9 / 205.9 to 1.63e5 / 92.7 to 1134 / 59.96 to 496.1 / 59.96 to 496 |
 | pairs with the endpoint rule below the additive one, `delta = 1e-6`, `1e-4`, `1e-2` | 72 of 72 at each |
 | endpoint over additive where both are finite, `delta = 1e-6` | 0.679 to 0.973 |
+| endpoint over additive endpoint (what the log-timescale interval adds), `delta = 1e-6` / `1e-4` / `1e-2` | 0.99935 to 0.99999 / 0.916 to 0.998 / 0.607 to 0.9995 |
 | additive rule infinite, `delta = 1e-2` | 72 of 72 pairs |
 | endpoint bound on the change over the largest realised output, `delta = 1e-6` / `1e-4` / `1e-2` | 0.0023 to 0.066 / 0.26 to 7.5 / 2.4e4 to 6.7e6 |
 

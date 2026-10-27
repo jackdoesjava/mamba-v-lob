@@ -141,7 +141,7 @@ scripts 13 and 14 write. It recomputes nothing and runs in seconds.
 
 4. Bound the released model's timescale more tightly. Interval propagation gives the timescale
    pre-activation a box 92 to 255 times wider than its realised range, which makes the data-free
-   certificate vacuous. The float32 rounding of transformers' slow path is also unbounded.
+   certificate uninformative. The float32 rounding of transformers' slow path is also unbounded.
 
 5. Train independent arms. The two Mamba arms share a seed and differ mainly in the selected
    step. `scripts/02_train_models.py` takes `--seed`; one Mamba run takes about 72 minutes on a CPU.
@@ -166,7 +166,7 @@ is wrong. A bounded signal is also not a bounded loss: the certified output rang
 cannot emit an arbitrarily large prediction, and says nothing about whether the prediction is
 right or what happens when it is traded.
 
-On the released model the data-free certificate is sound and vacuous, the local certificate is
+On the released model the data-free certificate is sound and uninformative, the local certificate is
 informative at `delta = 1e-6`, borderline at `1e-4` and useless at `1e-2`, the bounds cover the float64 map and not
 transformers' float32 rounding, and the text was typed from memory without being checked against
 a printed edition.

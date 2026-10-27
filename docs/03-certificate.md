@@ -218,7 +218,7 @@ float32 casts of transformers' slow path. Each layer is certified with respect t
 output for every input of the layer, with the fused RMSNorm bound above, the interval domain for the
 rest, and the Euler invariant radius `G sup|B u| / lam`, `G = Psi(lam dt_hi)`.
 
-The data-free certificate is sound and vacuous. Every realised quantity on 1024 tokens of
+The data-free certificate is sound and uninformative. Every realised quantity on 1024 tokens of
 `data/text/public_domain_sample.txt` lies in its box at every layer, but interval propagation gives
 the timescale pre-activation a box reaching about `[-2800, 2616]` against a realised `[-27.5, 9.9]`.
 The ceiling `dt_hi` is then 1015 to 2616 per layer, `lam` reaches `2.8e8`, `G` reaches `4.5e11`, and

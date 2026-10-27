@@ -149,7 +149,7 @@ softplus arm, and of the `eps` values tested end to end from `1e-6` up it is bel
 certified width only at `1e-6` on the bounded arm. The two Mamba arms share seed, initialisation
 and batch order and were selected at different steps, so they are not independent models and
 support no conclusion about the parametrisation. On the released model the data-free certificate
-is finite and vacuous, and the bounds cover the float64 map, not the float32 rounding in
+is finite and uninformative, and the bounds cover the float64 map, not the float32 rounding in
 transformers' implementation. The Isabelle sensitivity draft has never been checked, and no
 external verifier has consumed the artefact. Set out in [docs/05-handoff.md](docs/05-handoff.md).
 

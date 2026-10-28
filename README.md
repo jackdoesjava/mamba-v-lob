@@ -1,63 +1,72 @@
-# A closed-form invariant for a selective state space model
+# A log-timescale perturbation bound for selective state space models
 
-The hidden state of a Mamba-style selective state space model stays inside a box we can write
-down in closed form from the model's own parameters. It holds at every step of every sequence,
-at any length. The reason is that the exact zero-order hold makes the state update a convex
-combination, so a bound on the drive is already a bound on the state. The same argument applied
-to the difference of two runs bounds how far a perturbed input can move the state, again at every
-length and with no floor on the timescale. Limit order book forecasting is the demonstration, and
-the released language model `state-spaces/mamba-130m-hf` is the second test case; the claims are
-about the architecture, not about finance.
+Code, results and LaTeX source for the paper *A Log-Timescale Perturbation Bound for Selective
+State Space Models at Every Sequence Length* by Jack Humphries and Daniel Midgley
+([paper/main.tex](paper/main.tex)).
 
-For diagonal `A < 0` the exact discretisation gives
+A Mamba model run on a stream, such as limit order book updates, carries its state far beyond its
+training windows. A bound on how far a small change of input moves that state therefore has to
+hold at every length. The closest bound we know of, Theorem 3.3(ii) of Cao, Liu, Chen and Qin
+(ICML 2026), measures the change of the timescale `dt` additively. It grows linearly with the
+length unless `dt` has a floor, and for Mamba's softplus timescale that floor can be tiny: about
+`1e-21` on one of our trained models.
+
+The paper's one result measures the change in `log dt` instead. Under the exact zero-order hold,
+one cell of the selective scan is
 
 ```
-Bbar = A^-1 (exp(dt A) - I) B = (1 - Abar) B / |A|       Abar = exp(dt A) in (0, 1)
-
-h_t = Abar_t h_{t-1} + (1 - Abar_t) c_t,     c_t = B_t u_t / |A|
+h_t = Abar_t h_{t-1} + (1 - Abar_t) c_t,     Abar_t = exp(-lambda dt_t),   c_t = B_t u_t / lambda
 ```
 
-If `|c_t| <= M` for every admissible input, then `|h_{t-1}| <= M` gives `|h_t| <= M`, and
-`h_0 = 0` starts inside. No unrolling, no geometric series, no constraint on `dt`. The usual
-bound `M_drive / (1 - sup Abar)` bounds `Abar` and `Bbar` separately, discarding the
-`(1 - Abar)` factor, which is why it diverges as `dt -> 0` when nothing is diverging.
+If `|log dt_t - log dt~_t| <= rho`, `|c~_t| <= M` and `|c_t - c~_t| <= eta`, two runs that start
+from the same state in `[-M, M]` stay within `eta + 2 M (e^rho - 1)` of each other at every
+length, with no floor (Theorem 3). The reason is Lemma 2: a change of `log dt` by at most `rho`
+moves the transition by at most `e^rho - 1` times the input weight `1 - Abar_t`, so the
+disturbance at each step shrinks with the step and the disturbances cannot pile up. A construction
+(Proposition 4) gives gaps arbitrarily close to `eta + 2 M tanh(rho/2)`, so the constant is within
+a factor `e^rho + 1` of the best possible, about 2 for small `rho`.
 
-The invariant is not new. It is Horbatko's Lemma 4.4 (arXiv:2604.18580), and the same per-cell
-radius follows from Theorem 3.3(i) of Cao, Liu, Chen and Qin (ICML 2026). The LayerNorm
-coordinate bound that discharges its premise is the Laguerre-Samuelson inequality. The paper's
-one new result is the cell theorem: with the timescale perturbation measured in `log dt`, two
-runs of one cell that start together stay within `eta + 2 M (e^rho - 1)` of each other at every
-length, with no lower bound on `dt`. It strengthens the time-warp part of Cao et al.'s Theorem
-3.3(ii), whose bound grows with the position unless `dt` has a floor, and it can be derived from
-their lemmas by a change of time variable. A construction in the paper shows that no bound below
-`eta + 2 M tanh(rho/2)` holds, so the constant is within a factor `e^rho + 1` of the best
-possible. The endpoint form of the local rule and the certification of the released model are
-applications of it. The code also uses `2 M tanh(rho/2)` as an upper bound for two runs from a
-common start ([docs/02-invariant.md](docs/02-invariant.md)); that direction is not part of the
-paper. The literature search behind these statements was not exhaustive.
+The bound on the state itself, `|h_t| <= M`, is not ours. It is Horbatko's Lemma 4.4
+(arXiv:2604.18580), and it also follows from Cao et al.'s Theorem 3.3(i). The theorem can also be
+derived from Cao et al.'s Lemma B.2 after a change of time variable (Appendix B of the paper). The
+literature search behind these statements was not exhaustive.
 
-## Headline numbers
+## Results in the paper
 
-Trained bounded-timescale model, `L = 100`, layer 0, input-independent unless stated.
+A two-block model trained on one day of SPY order book data, once with a bounded timescale and
+once with Mamba's softplus timescale. Certificates are per block and given as slopes, the limit of
+bound over perturbation size.
 
 | quantity | value |
 | --- | --- |
-| certified `sup abs(h)` from the invariant | `175.95` (layer 1: `137.22`) |
-| converged fixed point of the interval recursion | `1.682e4`, so the invariant is `95.6x` tighter |
-| dependence on sequence length | none; `175.95` at `L = 10` and at `L = 5000` |
-| dependence on the weights | only through the slowest pole; the ratio is `95.20` to `95.21` across 8 untrained seeds and `95.62` on the trained checkpoint |
-| induction residual | exactly `0`, and the zero-order hold identity checks exact |
-| certified output range, for any input at all | `[-3.5643, 3.1277]` |
-| adversarial search against the certificate | no violation found |
-| data-free sensitivity bound per block | the same at every length, `3.06e5` to `3.23e6` times the attacked slope |
-| local sensitivity bound per block, endpoint rule, `delta = 1e-6` | `3.37` to `12.6` times the attacked slope (additive rule `3.41` to `18.0`) |
-| what the log-timescale interval adds to that local bound, `delta <= 1e-4` | at most `0.034` per cent; the gain over the additive rule is the convex step's |
-| released model, local endpoint rule against the additive rule | tighter in 72 of 72 (layer, length) pairs at each of `delta = 1e-6, 1e-4, 1e-2` |
-| released model, what the log-timescale interval adds to the endpoint rule | at most `0.07` per cent at `delta = 1e-6`; the gain over the additive rule is the convex step's |
-| machine-checked lemmas, Z3 | 16 of 19 discharged, zero counterexamples |
+| one-cell search against `eta + 2 M tanh(rho/2)`, `T >= 300` | no gap above it; within 0.4 per cent from random starts and 0.01 per cent from starts shaped like the construction |
+| bounded timescale: steps for which the additive baseline is tighter | at most the first 8 |
+| bounded timescale: additive baseline at `L = 5000`, no floor | about 540 times ours |
+| bounded timescale: additive baseline with its certified floor, `L -> inf` | 22 to 23 times ours |
+| softplus timescale: additive baseline | larger at every length, about `2e4` times ours at `L = 5000` |
+| our certificate against gradient attacks, `delta = 1e-6` | `3.06e5` to `3.23e6` times the attack slope |
+| local bound around a realised input, `delta <= 1e-4` | at most 12.7 times the attack slope |
 
-The invariant needs no floor on `delta`: the softplus arm certifies at `287.39` while the
-geometric argument diverges. Numbers are in [docs/04-results.md](docs/04-results.md).
+Figure 1 of the paper ([scripts/17_mechanism_figure.py](scripts/17_mechanism_figure.py)) shows the
+idea and the construction. Every recorded number is in [docs/04-results.md](docs/04-results.md)
+and [docs/certification](docs/certification).
+
+## Beyond the paper
+
+The repository also holds work that the paper leaves out:
+
+- the invariant certificate on the trained model: certified `sup |h|` of `175.95` on layer 0,
+  `95.6` times tighter than the converged fixed point of generic interval propagation;
+- local certificates with four update rules, and the ablation showing that the log-timescale
+  interval changes the local bound by at most 0.034 per cent for `delta <= 1e-4`;
+- the released `state-spaces/mamba-130m-hf`, where the data-free certificate is finite but
+  uninformative;
+- an end-to-end local chain through the whole order book model;
+- Isabelle/HOL proofs of the invariant and the LayerNorm bounds, and Z3 checks of the interval
+  lemmas.
+
+The code also uses `2 M tanh(rho/2)` as an upper bound for two runs from a common start. Its
+proof is in an earlier draft and is not part of the paper ([docs/02-invariant.md](docs/02-invariant.md)).
 
 ## Layout
 
@@ -134,26 +143,23 @@ local. The purged three-way chronological split, 100 ticks at each boundary, giv
 windows, 682,372 validation and 682,473 test. Features are winsorised to train-split quantiles at
 inference, so the input box `[-22.48, 19.25]` is enforced rather than observed.
 
-None of the certification depends on any of this. The invariant is a statement about the
-architecture and the trained weights, and it holds for inputs no order book would produce. The
-predictive numbers only show that the certified model is a real model; one instrument on one day
-supports nothing beyond that.
+None of the theory depends on any of this. The theorem is a statement about the architecture,
+and the certificates hold for inputs no order book would produce. The predictive numbers only
+show that the certified model is a real model; one instrument on one day supports nothing beyond
+that.
 
 ## Limitations
 
-The certified radius is 162 times the largest state realised on held-out batches at layer 0 and
-382 times at layer 1, and 63 and 49 times what a gradient attack reaches. This bounds reachable
-state and output; it is not a robustness certificate, and a bounded output is not a bounded
-loss. The data-free sensitivity bound is sound at every length and 3.1e5 to 3.2e6 times the
-attacked sensitivity. With the endpoint rule the local block bound is within a factor of 13 of
-the attack, but end to end it is 5.7e5 times the attack on the bounded arm and 1.6e7 times on the
-softplus arm, and of the `eps` values tested end to end from `1e-6` up it is below the global
-certified width only at `1e-6` on the bounded arm. The two Mamba arms share seed, initialisation
-and batch order and were selected at different steps, so they are not independent models and
-support no conclusion about the parametrisation. On the released model the data-free certificate
-is finite and uninformative, and the bounds cover the float64 map, not the float32 rounding in
-transformers' implementation. The Isabelle sensitivity draft has never been checked, and no
-external verifier has consumed the artefact. Set out in [docs/05-handoff.md](docs/05-handoff.md).
+The theorem covers one scalar cell with a real transition in `(0, 1)`. It needs a diagonal `A`
+and does not cover the complex-valued update of Mamba-3. The certificates are per block, with
+respect to the normalised input, and are not composed through the residual stream and the head.
+They are computed in floating point without outward rounding, so they are real-number bounds only
+up to rounding; at `delta = 1e-6` a float32 scan is covered only once a rounding term is added.
+The data-free certificates are `3e5` to `3e6` times what gradient attacks find. The trained models
+use the exact zero-order hold, not the exponential-Euler step of the released Mamba code, and the
+two arms are single training runs from one set-up on one instrument and one day. The Isabelle
+sensitivity draft has never been checked. Set out in Section 7 of the paper and in
+[docs/05-handoff.md](docs/05-handoff.md).
 
 ## Documentation
 

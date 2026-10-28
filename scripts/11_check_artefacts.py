@@ -26,6 +26,12 @@ CELL_TIGHTNESS_SOURCES = [
     "src/verification/intervals.py", "src/models/mamba.py",
 ]
 
+# scripts/17_mechanism_figure.py, closed form, with the bounds and style of script 16
+MECHANISM_FIGURE_SOURCES = [
+    "scripts/17_mechanism_figure.py", "scripts/16_cell_tightness.py",
+    "src/verification/incremental.py",
+]
+
 PRODUCED: dict[str, list[str]] = {
     "docs/certification/bounds.json": [
         "scripts/06_certify.py", "src/verification/invariant.py", "src/verification/certify.py",
@@ -98,6 +104,7 @@ PRODUCED: dict[str, list[str]] = {
     ],
     "docs/certification/cell_tightness.json": CELL_TIGHTNESS_SOURCES,
     "docs/figures/cell_tightness.pdf": CELL_TIGHTNESS_SOURCES,
+    "docs/figures/mechanism.pdf": MECHANISM_FIGURE_SOURCES,
 }
 
 # Written by the same run as their JSON, so they are current exactly when it is. A table

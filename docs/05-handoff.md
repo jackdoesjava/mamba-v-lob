@@ -103,7 +103,7 @@ every intermediate and the output.
 
 `src/verification/incremental.py` bounds the difference of two runs of a block: data-free, from
 the cell theorem with the time-warp term `2 M (e^rho - 1)`, or with the sharper common-start
-term `2 M tanh(rho/2)`, which the paper states only as a lower bound (Proposition 3.3); and
+term `2 M tanh(rho/2)`, which the paper states only as a lower bound (Proposition 4); and
 locally, around a realised input, with one of five recurrence rules. The endpoint rule is the
 reported one. The additive rule, the running maximum, the recursion and the additive endpoint
 rule are kept as `COMPARISON_RULES`; the last is the endpoint step on the interval of transitions

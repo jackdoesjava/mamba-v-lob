@@ -71,8 +71,8 @@
   },
   "definitions": {
     "G": "largest |h_{T-1} - h~_{T-1}| found, re-run by the plain recursion",
-    "B": "eta + 2 M (e^rho - 1), Theorem 3.2 from a common start",
-    "common_start_constant": "eta + 2 M tanh(rho/2), the value of the construction of Proposition 3.3 (cell_bound_common_start)",
+    "B": "eta + 2 M (e^rho - 1), Theorem 3 from a common start",
+    "common_start_constant": "eta + 2 M tanh(rho/2), the value of the construction of Proposition 4 (cell_bound_common_start)",
     "additive_no_floor": "eq:additive with dt_lo = 0: eta + 2 M lam eta_dt T",
     "additive_floor": "eq:additive with dt_lo = dt(inf Z)",
     "crossing": "real L at which eq:additive reaches the theorem's bound",

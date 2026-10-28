@@ -199,7 +199,7 @@ perturbation additively, `|a - a~| <= lam exp(-lam dt_min) |dt - dt~|`, is the b
 
 **A sharper constant from a common start (only its lower bound is in the paper).** When both
 runs start from the same state, as they do here, the time-warp term improves to
-`2 M tanh(rho/2)`, and that is attained in a chattering limit. The paper's Proposition 3.3 gives
+`2 M tanh(rho/2)`, and that is attained in a chattering limit. The paper's Proposition 4 gives
 the chattering construction, so no constant below `eta + 2 M tanh(rho/2)` can hold; the upper
 bound below is not in the paper. The cleanest
 statement is in terms of hazards. Unrolled, `h_t` is a weighted sum of the equilibria `c_s` with

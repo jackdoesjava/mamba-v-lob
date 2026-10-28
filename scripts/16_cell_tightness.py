@@ -6,7 +6,7 @@ with a_t = exp(-x_t) and x_t = lam dt_t. The nominal timescale x_t is free in [1
 perturbed one satisfies |log x~_t - log x_t| <= rho, |c~_t| <= M, |c_t - c~_t| <= eta, and both
 runs start from h_{-1} = 0. The gap G is set against the theorem's bound
 B = eta + 2 M (e^rho - 1) and against eta + 2 M tanh(rho/2), the value that the construction of
-Proposition 3.3 approaches. The paper proves only that no smaller bound holds;
+Proposition 4 approaches. The paper proves only that no smaller bound holds;
 `cell_bound_common_start` also uses the value as an upper bound, which the paper does not state.
 
 Part B does the same under the paper's perturbation model: dt = map(z) for the bounded map and
@@ -90,6 +90,19 @@ plt.rcParams.update(
 WIDE = (6.5, 2.7)
 
 
+DEFINITIONS = {
+    "G": "largest |h_{T-1} - h~_{T-1}| found, re-run by the plain recursion",
+    "B": "eta + 2 M (e^rho - 1), Theorem 3 from a common start",
+    "common_start_constant": "eta + 2 M tanh(rho/2), the value of the construction of "
+                             "Proposition 4 (cell_bound_common_start)",
+    "additive_no_floor": "eq:additive with dt_lo = 0: eta + 2 M lam eta_dt T",
+    "additive_floor": "eq:additive with dt_lo = dt(inf Z)",
+    "crossing": "real L at which eq:additive reaches the theorem's bound",
+    "part_b_model": "z_t in Z, |z~_t - z_t| <= zeta with z~_t in Z, |c_t| <= M, eta = 0; "
+                    "rho = zeta sup_Z |(log dt)'|, eta_dt = zeta sup_Z |dt'|",
+}
+
+
 class BoundViolation(RuntimeError):
     """A search found a gap above a bound that should hold; carries the witness."""
 
@@ -127,12 +140,12 @@ def scan_loop(x, c, h0: float = 0.0) -> np.ndarray:
 
 
 def theorem_bound(eta: float, m: float, rho: float) -> float:
-    """eta + 2 M (e^rho - 1), Theorem 3.2 from a common start (`cell_bound` with e0 = 0)."""
+    """eta + 2 M (e^rho - 1), Theorem 3 from a common start (`cell_bound` with e0 = 0)."""
     return float(cell_bound(eta, m, rho))
 
 
 def common_start_constant(eta: float, m: float, rho: float) -> float:
-    """eta + 2 M tanh(rho/2), which Proposition 3.3's construction approaches."""
+    """eta + 2 M tanh(rho/2), which Proposition 4's construction approaches."""
     return float(cell_bound_common_start(eta, m, rho))
 
 
@@ -479,12 +492,12 @@ def markdown(results: dict) -> str:
         "`+` runs and the slower on the `-` runs, at a grid of base timescales. The best iterate "
         "of every restart is also evaluated with every variable that enters through `tanh` set "
         "to its sign. The winning sequence is re-run with the plain recursion, and that value is "
-        "the one reported. Part A searches the hypothesis class of Theorem 3.2 with the nominal "
+        "the one reported. Part A searches the hypothesis class of Theorem 3 with the nominal "
         f"timescale `x_t = lam dt_t` free in `[{s['x_range'][0]:g}, {s['x_range'][1]:g}]`. "
         "Part B searches the perturbation model of the paper, `dt = map(z)` with `z` in a box `Z` "
         "and `|z~ - z| <= zeta` in `Z`, with `eta = 0`. `B = eta + 2 M (e^rho - 1)` is the "
         "theorem's bound and `eta + 2 M tanh(rho/2)` is the value that the construction of "
-        "Proposition 3.3 approaches, below which the paper proves no bound holds; "
+        "Proposition 4 approaches, below which the paper proves no bound holds; "
         "`cell_bound_common_start` also uses it as an upper bound, which the paper does not state. "
         "A search is a lower bound on the worst case, not the worst case itself.",
         "",
@@ -524,7 +537,7 @@ def markdown(results: dict) -> str:
             "",
             f"`zeta = {k['zeta']:.6g}`, `sup_Z |(log dt)'| = {k['sup_abs_log_dt_slope']:.6g}`, "
             f"`sup_Z |dt'| = {k['sup_abs_dt_slope']:.6g}`, so `rho = {k['rho']:.6g}` and "
-            f"`eta_dt = {k['eta_dt']:.6g}`. Floor `dt(inf Z) = {k['dt_floor']:.6g}`. Theorem 3.2: "
+            f"`eta_dt = {k['eta_dt']:.6g}`. Floor `dt(inf Z) = {k['dt_floor']:.6g}`. Theorem 3: "
             f"`{k['theorem_bound']:.6g}` at every length; common-start constant "
             f"`{k['common_start_constant']:.6g}`; floored additive baseline as `L -> inf`: "
             f"`{k['additive_floor_limit']:.6g}`. The additive baseline reaches the theorem's bound "
@@ -554,8 +567,11 @@ def figure(results: dict, path: Path) -> None:
         k = part["constants"]
         T = np.array([r["T"] for r in part["rows"]], dtype=float)
         Tf = np.geomspace(T[0], T[-1], 200)
+        # eta = 0 in Part B, so the trivial bound 2M + eta of two runs from a common start is 2M
+        ax.loglog(Tf, np.full_like(Tf, 2.0 * M), color="0.6", linewidth=1.0, linestyle=":",
+                  label=r"trivial bound $2M$")
         ax.loglog(Tf, np.full_like(Tf, k["theorem_bound"]), color=OURS, linewidth=2.0,
-                  label="Theorem 3.2")
+                  label="Theorem 3")
         ax.loglog(Tf, [additive_baseline(0.0, M, LAM, k["eta_dt"], 0.0, L) for L in Tf],
                   color=OTHER, linewidth=1.4, linestyle="--", label="additive, no floor")
         ax.loglog(Tf, [additive_baseline(0.0, M, LAM, k["eta_dt"], k["dt_floor"], L) for L in Tf],
@@ -576,7 +592,7 @@ def figure(results: dict, path: Path) -> None:
         ax.semilogx(rho_f, [common_start_constant(eta, M, r) / theorem_bound(eta, M, r)
                             for r in rho_f], color=LOCAL, linewidth=2.4, alpha=0.45,
                     solid_capstyle="butt",
-                    label=r"$\eta + 2M\tanh(\rho/2)$, over $E$" if eta == s["etas"][0] else None)
+                    label=r"$(\eta + 2M\tanh(\rho/2))/E$" if eta == s["etas"][0] else None)
         rows = sorted((r for r in results["part_a"]["rows"]
                        if r["eta"] == eta and r["T"] == T_max), key=lambda r: r["rho"])
         ax.semilogx([r["rho"] for r in rows], [r["G_over_B"] for r in rows], color=INK,
@@ -588,7 +604,7 @@ def figure(results: dict, path: Path) -> None:
     ax.set_title("hypothesis class", fontsize=9, loc="left", color=INK)
     ax.legend(loc="lower left", frameon=False, fontsize=6.5, handlelength=1.6)
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="outside lower center", ncol=4, frameon=False)
+    fig.legend(handles, labels, loc="outside lower center", ncol=5, frameon=False)
     save(fig, path)
 
 
@@ -653,17 +669,7 @@ def main() -> None:
     results = {
         "provenance": provenance(args.seed),
         "settings": settings,
-        "definitions": {
-            "G": "largest |h_{T-1} - h~_{T-1}| found, re-run by the plain recursion",
-            "B": "eta + 2 M (e^rho - 1), Theorem 3.2 from a common start",
-            "common_start_constant": "eta + 2 M tanh(rho/2), the value of the construction of "
-                                     "Proposition 3.3 (cell_bound_common_start)",
-            "additive_no_floor": "eq:additive with dt_lo = 0: eta + 2 M lam eta_dt T",
-            "additive_floor": "eq:additive with dt_lo = dt(inf Z)",
-            "crossing": "real L at which eq:additive reaches the theorem's bound",
-            "part_b_model": "z_t in Z, |z~_t - z_t| <= zeta with z~_t in Z, |c_t| <= M, eta = 0; "
-                            "rho = zeta sup_Z |(log dt)'|, eta_dt = zeta sup_Z |dt'|",
-        },
+        "definitions": DEFINITIONS,
         "part_a": {"rows": part_a},
         "part_b": part_b,
         "checks": {

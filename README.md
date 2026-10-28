@@ -71,7 +71,8 @@ src/utils/         config, seeding and provenance, overlap-aware statistics
 scripts/           01 features, 02 train, 03 evaluate, 04 export, 05 figures, 06 certify,
                    07 attack, 08 domains, 09 lemmas, 10 sweep, 11 artefact check,
                    12 sensitivity bound, 13 attack on it, 14 released model,
-                   15 local-certificate figures, 16 worst cases of the cell theorem
+                   15 local-certificate figures, 16 worst cases of the cell theorem,
+                   17 the figure of the theorem's idea and the lower-bound construction
 tests/             unit tests for the maths, the domain and the models
 data/text/         public_domain_sample.txt, the text the released model is certified on
 isabelle/          the machine-checked invariant and LayerNorm bounds, Isabelle/HOL, and an
@@ -101,6 +102,7 @@ python -m scripts.13_incremental_attack      # attack that bound, about an hour 
 python -m scripts.14_released                # mamba-130m-hf, about 1.5 hours on a CPU
 python -m scripts.15_local_figures           # the local-certificate figures, from 13 and 14's output
 python -m scripts.16_cell_tightness          # worst cases found against the cell theorem, minutes on a CPU
+python -m scripts.17_mechanism_figure        # the theorem's idea and the lower-bound construction, seconds
 python -m scripts.05_figures
 python -m scripts.11_check_artefacts         # nothing in docs/ is stale
 python -m pytest

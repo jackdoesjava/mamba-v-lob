@@ -1,6 +1,6 @@
 # Tightness of the cell theorem
 
-Written by `scripts/16_cell_tightness.py`. Everything is in float64 with `lam = 1.0`, `M = 1.0` and both runs started from `h_{-1} = 0`. Each gap is the largest `|h_{T-1} - h~_{T-1}|` that Adam ascent found over a batch of restarts (600 steps, learning rate 0.1 decaying to 0.002): 64 random starts and alternating starts in which `c~` follows a square wave with runs of length 1 to 16 and the perturbed timescale is the faster step on the `+` runs and the slower on the `-` runs, at a grid of base timescales. The best iterate of every restart is also evaluated with every variable that enters through `tanh` set to its sign. The winning sequence is re-run with the plain recursion, and that value is the one reported. Part A searches the hypothesis class of Theorem 3.2 with the nominal timescale `x_t = lam dt_t` free in `[0.0001, 10]`. Part B searches the perturbation model of the paper, `dt = map(z)` with `z` in a box `Z` and `|z~ - z| <= zeta` in `Z`, with `eta = 0`. `B = eta + 2 M (e^rho - 1)` is the theorem's bound and `eta + 2 M tanh(rho/2)` is the value that the construction of Proposition 3.3 approaches, below which the paper proves no bound holds; `cell_bound_common_start` also uses it as an upper bound, which the paper does not state. A search is a lower bound on the worst case, not the worst case itself.
+Written by `scripts/16_cell_tightness.py`. Everything is in float64 with `lam = 1.0`, `M = 1.0` and both runs started from `h_{-1} = 0`. Each gap is the largest `|h_{T-1} - h~_{T-1}|` that Adam ascent found over a batch of restarts (600 steps, learning rate 0.1 decaying to 0.002): 64 random starts and alternating starts in which `c~` follows a square wave with runs of length 1 to 16 and the perturbed timescale is the faster step on the `+` runs and the slower on the `-` runs, at a grid of base timescales. The best iterate of every restart is also evaluated with every variable that enters through `tanh` set to its sign. The winning sequence is re-run with the plain recursion, and that value is the one reported. Part A searches the hypothesis class of Theorem 3 with the nominal timescale `x_t = lam dt_t` free in `[0.0001, 10]`. Part B searches the perturbation model of the paper, `dt = map(z)` with `z` in a box `Z` and `|z~ - z| <= zeta` in `Z`, with `eta = 0`. `B = eta + 2 M (e^rho - 1)` is the theorem's bound and `eta + 2 M tanh(rho/2)` is the value that the construction of Proposition 4 approaches, below which the paper proves no bound holds; `cell_bound_common_start` also uses it as an upper bound, which the paper does not state. A search is a lower bound on the worst case, not the worst case itself.
 
 No gap exceeded a bound it should respect: largest `G/B` in Part A `0.9159`, largest gap `|h_t - h~_t|` over the smallest valid bound at its own length `t + 1` in Part B `0.4975`. Run time 290 s.
 
@@ -38,7 +38,7 @@ At the longest length, `T = 1000`:
 
 ### bounded map, `Z = [-8, 8]`
 
-`zeta = 0.00868589`, `sup_Z |(log dt)'| = 1.15129`, `sup_Z |dt'| = 0.0297033`, so `rho = 0.01` and `eta_dt = 0.000257999`. Floor `dt(inf Z) = 0.00100155`. Theorem 3.2: `0.0201003` at every length; common-start constant `0.00999992`; floored additive baseline as `L -> inf`: `0.514945`. The additive baseline reaches the theorem's bound at `L = 38.9542` without the floor and at `L = 39.7548` with it.
+`zeta = 0.00868589`, `sup_Z |(log dt)'| = 1.15129`, `sup_Z |dt'| = 0.0297033`, so `rho = 0.01` and `eta_dt = 0.000257999`. Floor `dt(inf Z) = 0.00100155`. Theorem 3: `0.0201003` at every length; common-start constant `0.00999992`; floored additive baseline as `L -> inf`: `0.514945`. The additive baseline reaches the theorem's bound at `L = 38.9542` without the floor and at `L = 39.7548` with it.
 
 | T | G | theorem | additive, no floor | additive, floor | G / theorem | median dt | best start |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -52,7 +52,7 @@ At the longest length, `T = 1000`:
 
 ### softplus map, `Z = [-48, 2]`
 
-`zeta = 0.01`, `sup_Z |(log dt)'| = 1`, `sup_Z |dt'| = 0.880797`, so `rho = 0.01` and `eta_dt = 0.00880797`. Floor `dt(inf Z) = 1.42516e-21`. Theorem 3.2: `0.0201003` at every length; common-start constant `0.00999992`; floored additive baseline as `L -> inf`: `1.23606e+19`. The additive baseline reaches the theorem's bound at `L = 1.1410` without the floor and at `L = 1.1410` with it.
+`zeta = 0.01`, `sup_Z |(log dt)'| = 1`, `sup_Z |dt'| = 0.880797`, so `rho = 0.01` and `eta_dt = 0.00880797`. Floor `dt(inf Z) = 1.42516e-21`. Theorem 3: `0.0201003` at every length; common-start constant `0.00999992`; floored additive baseline as `L -> inf`: `1.23606e+19`. The additive baseline reaches the theorem's bound at `L = 1.1410` without the floor and at `L = 1.1410` with it.
 
 | T | G | theorem | additive, no floor | additive, floor | G / theorem | median dt | best start |
 | --- | --- | --- | --- | --- | --- | --- | --- |

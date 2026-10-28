@@ -1,17 +1,21 @@
-% Verify every entry against the published record before posting.
-% Page numbers and volume/issue fields are deliberately omitted where not confirmed.
+% Entries above the block comment further down were completed on 2026-10-25 from their
+% publisher records (volume, pages, DOI); fields that could not be confirmed are omitted.
 
-@article{gu2023mamba,
-  author  = {Gu, Albert and Dao, Tri},
-  title   = {Mamba: Linear-Time Sequence Modeling with Selective State Spaces},
-  journal = {arXiv preprint arXiv:2312.00752},
-  year    = {2023},
+@inproceedings{gu2023mamba,
+  author    = {Gu, Albert and Dao, Tri},
+  title     = {Mamba: Linear-Time Sequence Modeling with Selective State Spaces},
+  booktitle = {First Conference on Language Modeling (COLM)},
+  year      = {2024},
+  note      = {arXiv:2312.00752},
 }
 
 @inproceedings{jacoby2020rnn,
   author    = {Jacoby, Yuval and Barrett, Clark and Katz, Guy},
   title     = {Verifying Recurrent Neural Networks Using Invariant Inference},
   booktitle = {Automated Technology for Verification and Analysis (ATVA)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {12302},
+  pages     = {57--74},
   year      = {2020},
   publisher = {Springer},
   note      = {Full version: arXiv:2004.02462},
@@ -24,6 +28,9 @@
                Dill, David L. and Kochenderfer, Mykel J. and Barrett, Clark},
   title     = {The {Marabou} Framework for Verification and Analysis of Deep Neural Networks},
   booktitle = {Computer Aided Verification (CAV)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {11561},
+  pages     = {443--452},
   year      = {2019},
   publisher = {Springer},
 }
@@ -35,13 +42,17 @@
   booktitle = {Hybrid Systems: Computation and Control (HSCC)},
   year      = {2023},
   publisher = {ACM},
+  doi       = {10.1145/3575870.3587128},
 }
 
 @article{bonassi2021gru,
   author  = {Bonassi, Fabio and Farina, Marcello and Scattolini, Riccardo},
   title   = {On the Stability Properties of Gated Recurrent Units Neural Networks},
   journal = {Systems \& Control Letters},
+  volume  = {157},
+  pages   = {105049},
   year    = {2021},
+  doi     = {10.1016/j.sysconle.2021.105049},
 }
 
 @book{nipkow2002isabelle,
@@ -57,6 +68,9 @@
   author    = {de Moura, Leonardo and Bj{\o}rner, Nikolaj},
   title     = {{Z3}: An Efficient {SMT} Solver},
   booktitle = {Tools and Algorithms for the Construction and Analysis of Systems (TACAS)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {4963},
+  pages     = {337--340},
   year      = {2008},
   publisher = {Springer},
 }
@@ -67,6 +81,7 @@
   journal = {Journal of Business \& Economic Statistics},
   volume  = {13},
   number  = {3},
+  pages   = {253--263},
   year    = {1995},
 }
 
@@ -76,6 +91,7 @@
   journal = {International Journal of Forecasting},
   volume  = {13},
   number  = {2},
+  pages   = {281--291},
   year    = {1997},
 }
 
@@ -88,4 +104,428 @@
   address   = {New York},
   pages     = {263--270},
   year      = {1992},
+}
+
+% ---------------------------------------------------------------------------
+% Entries added for the rewritten paper. Every field was checked on 2026-10-25
+% against the primary record named in the comment above each entry; fields that
+% could not be confirmed are omitted.
+% ---------------------------------------------------------------------------
+
+% ---------------------------------------------------------------------------
+% Selective state-space models: stability, robustness, discretisation
+% ---------------------------------------------------------------------------
+
+% PMLR v306 abstract page (cao26l) and its BibTeX block.
+@inproceedings{cao2026control,
+  author    = {Cao, Liang and Liu, Weide and Chen, Zhuo and Qin, Yan},
+  title     = {A Control-Theoretic View of {Mamba} on Stability and Robustness},
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {306},
+  pages     = {11350--11364},
+  publisher = {PMLR},
+  year      = {2026},
+}
+
+% arXiv API: v1 2026-04-20, v2 2026-04-21 ("main results unchanged"). Single author.
+@article{horbatko2026sessa,
+  author  = {Horbatko, Liubomyr},
+  title   = {{Sessa}: Selective State Space Attention},
+  journal = {arXiv preprint arXiv:2604.18580},
+  year    = {2026},
+}
+
+% OpenReview forum 7Vav53cDeN: "Accepted by TMLR", published 2026-07-09.
+% arXiv API journal_ref: "Transactions on Machine Learning Research (TMLR), 2026".
+@article{zubic2026selective,
+  author  = {Zubi{\'c}, Nikola and Scaramuzza, Davide},
+  title   = {Regularity and Stability Properties of Selective {SSMs} with Discontinuous Gating},
+  journal = {Transactions on Machine Learning Research},
+  issn    = {2835-8856},
+  year    = {2026},
+  url     = {https://openreview.net/forum?id=7Vav53cDeN},
+  note    = {arXiv:2505.11602},
+}
+
+% OpenReview forum wzsYQYs3dO: "Accepted by TMLR", published 2025-08-29.
+% Author forms from the arXiv API record (v3, 2025-08-29, comment "TMLR").
+@article{halloran2025lyapunov,
+  author  = {Halloran, John T. and Gulati, Manbir and Roysdon, Paul F.},
+  title   = {{Mamba} State-Space Models Are {Lyapunov}-Stable Learners},
+  journal = {Transactions on Machine Learning Research},
+  issn    = {2835-8856},
+  year    = {2025},
+  url     = {https://openreview.net/forum?id=wzsYQYs3dO},
+  note    = {arXiv:2406.00209},
+}
+
+% NeurIPS proceedings BibTeX (hash e6231c5f...) and Crossref DOI record.
+% The proceedings BibTeX gives the surname as "Muca Cirone"; Crossref splits it
+% as given "Nicola Muca", family "Cirone".
+@inproceedings{cirone2024theoretical,
+  author    = {Muca Cirone, Nicola and Orvieto, Antonio and Walker, Benjamin and
+               Salvi, Cristopher and Lyons, Terry},
+  title     = {Theoretical Foundations of Deep Selective State-Space Models},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {37},
+  pages     = {127226--127272},
+  publisher = {Curran Associates, Inc.},
+  year      = {2024},
+  doi       = {10.52202/079017-4041},
+  note      = {arXiv:2402.19047},
+}
+
+% IFAAMAS AAMAS 2025 table of contents (starts p. 978; next paper p. 988) and the
+% paper PDF (footer: editors Vorobeychik, Das, Nowe; last page numbered 987;
+% ACM reference format "10 pages").
+@inproceedings{hosseini2025ltl,
+  author    = {Hosseini, Mehran and Lomuscio, Alessio and Paoletti, Nicola},
+  title     = {{LTL} Verification of Memoryful Neural Agents},
+  booktitle = {Proceedings of the 24th International Conference on Autonomous Agents
+               and Multiagent Systems (AAMAS 2025)},
+  pages     = {978--987},
+  publisher = {International Foundation for Autonomous Agents and Multiagent Systems},
+  address   = {Detroit, Michigan, USA},
+  year      = {2025},
+  note      = {arXiv:2503.02512},
+}
+
+% OpenReview forum HwCvaJOiCj: "ICLR 2026 Oral". Author forms from the arXiv API record.
+@inproceedings{lahoti2026mamba3,
+  author    = {Lahoti, Aakash and Li, Kevin Y. and Chen, Berlin and Wang, Caitlin and
+               Bick, Aviv and Kolter, J. Zico and Dao, Tri and Gu, Albert},
+  title     = {{Mamba-3}: Improved Sequence Modeling using State Space Principles},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  url       = {https://openreview.net/forum?id=HwCvaJOiCj},
+  note      = {arXiv:2603.15569},
+}
+
+% NeurIPS 2021 proceedings BibTeX (hash 05546b0e...). The proceedings title has
+% "State Space Layers"; the arXiv title has "State-Space Layers". No DOI found.
+@inproceedings{gu2021lssl,
+  author    = {Gu, Albert and Johnson, Isys and Goel, Karan and Saab, Khaled and
+               Dao, Tri and Rudra, Atri and R{\'e}, Christopher},
+  title     = {Combining Recurrent, Convolutional, and Continuous-time Models with
+               Linear State Space Layers},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {34},
+  pages     = {572--585},
+  publisher = {Curran Associates, Inc.},
+  year      = {2021},
+  note      = {arXiv:2110.13985},
+}
+
+% ICLR 2018 conference schedule (poster session, 1 May 2018), linking OpenReview
+% forum SJcKhk-Ab. Title as published, in lower case.
+@inproceedings{tallec2018warp,
+  author    = {Tallec, Corentin and Ollivier, Yann},
+  title     = {Can recurrent neural networks warp time?},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018},
+  url       = {https://openreview.net/forum?id=SJcKhk-Ab},
+  note      = {arXiv:1804.11188},
+}
+
+% PMLR v202 abstract page (orvieto23a) and its BibTeX block.
+@inproceedings{orvieto2023lru,
+  author    = {Orvieto, Antonio and Smith, Samuel L. and Gu, Albert and Fernando, Anushan and
+               Gulcehre, Caglar and Pascanu, Razvan and De, Soham},
+  title     = {Resurrecting Recurrent Neural Networks for Long Sequences},
+  booktitle = {Proceedings of the 40th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {202},
+  pages     = {26670--26698},
+  publisher = {PMLR},
+  year      = {2023},
+  note      = {arXiv:2303.06349},
+}
+
+% OpenReview forum pymXpl4qvi: "ICLR 2025 Poster".
+@inproceedings{wang2025recency,
+  author    = {Wang, Peihao and Cai, Ruisi and Wang, Yuehao and Zhu, Jiajun and
+               Srivastava, Pragya and Wang, Zhangyang and Li, Pan},
+  title     = {Understanding and Mitigating Bottlenecks of State Space Models through
+               the Lens of Recency and Over-smoothing},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2025},
+  url       = {https://openreview.net/forum?id=pymXpl4qvi},
+  note      = {arXiv:2501.00658},
+}
+
+% arXiv API (v1 2026-10-02; the comment names the AIMS Workshop at COLM 2026) and OpenReview
+% forum 5SBa68bNuT (venue id colmweb.org/COLM/2026/Workshop/AIMS; workshop name
+% "First Workshop in AI Measurement Science: Toward Rigorous AI Evaluation").
+% Cited as the arXiv preprint; whether the workshop is archival was not established.
+@article{thapliyal2026contraction,
+  author  = {Thapliyal, Omanshu},
+  title   = {Bounded Reachability \& Jailbreak Detection via Contraction-Constrained
+             State Space Models},
+  journal = {arXiv preprint arXiv:2610.02853},
+  year    = {2026},
+  note    = {Accepted at the First Workshop in AI Measurement Science (AIMS), COLM 2026},
+}
+
+% IEEE Control Systems Letters record on Crossref; arXiv comment "Accepted for
+% publication in IEEE Control Systems Letters (L-CSS)". No issue number is registered.
+@article{decarli2026dgn,
+  author  = {De Carli, Stefano and Previtali, Davide and Mazzoleni, Mirko and Previdi, Fabio},
+  title   = {Chaos-Free Networks Are Stable Recurrent Neural Networks},
+  journal = {IEEE Control Systems Letters},
+  volume  = {10},
+  pages   = {751--756},
+  year    = {2026},
+  doi     = {10.1109/LCSYS.2026.3702800},
+  note    = {arXiv:2603.14106},
+}
+
+% arXiv API (v2 2026-06-11; comment "Preprint submitted to Automatica").
+% No published version found on Crossref.
+@article{decarli2026mgu,
+  author  = {De Carli, Stefano and Previtali, Davide and Mazzoleni, Mirko and Previdi, Fabio},
+  title   = {Stability properties of {Minimal Gated Unit} neural networks},
+  journal = {arXiv preprint arXiv:2603.03017},
+  year    = {2026},
+}
+
+% arXiv API (v1 2026-04-26; comment "Conference on Decision and Control 2026") and the
+% CDC 2026 tentative technical program (paper ThAT7.6). Proceedings not yet issued,
+% so there are no pages or DOI.
+@article{tang2026selective,
+  author  = {Tang, Alex and Ildiz, M. Emrullah and Kurt, Batin and Oymak, Samet and Ozay, Necmiye},
+  title   = {On the Generalization Properties of Selective State-Space Models for
+             Filtering Tasks for Unknown Systems},
+  journal = {arXiv preprint arXiv:2604.23818},
+  year    = {2026},
+  note    = {Accepted to the 65th IEEE Conference on Decision and Control (CDC 2026)},
+}
+
+% PMLR v48 abstract page (balduzzi16) and its BibTeX block.
+@inproceedings{balduzzi2016strongly,
+  author    = {Balduzzi, David and Ghifary, Muhammad},
+  title     = {Strongly-Typed Recurrent Neural Networks},
+  booktitle = {Proceedings of the 33rd International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {48},
+  pages     = {1292--1300},
+  publisher = {PMLR},
+  year      = {2016},
+  note      = {arXiv:1602.02218},
+}
+
+% NeurIPS proceedings BibTeX (hash fbb07254...) and Crossref DOI record.
+@inproceedings{zucchet2024recurrent,
+  author    = {Zucchet, Nicolas and Orvieto, Antonio},
+  title     = {Recurrent neural networks: vanishing and exploding gradients are not
+               the end of the story},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {37},
+  pages     = {139402--139443},
+  publisher = {Curran Associates, Inc.},
+  year      = {2024},
+  doi       = {10.52202/079017-4425},
+  note      = {arXiv:2405.21064},
+}
+
+% arXiv API (v1 2026-09-03). No venue found.
+@article{kozyrev2026deltanet,
+  author  = {Kozyrev, Sergii and Maiboroda, Davyd},
+  title   = {Why {Gated DeltaNet} Survives 4-Bit Quantization: {NVFP4} {W4A4} for the
+             Recurrent Half of a Hybrid {27B} {LLM}},
+  journal = {arXiv preprint arXiv:2609.04098},
+  year    = {2026},
+}
+
+% ---------------------------------------------------------------------------
+% Layer normalisation and the Laguerre--Samuelson inequality
+% ---------------------------------------------------------------------------
+
+% Crossref DOI record.
+@article{samuelson1968deviant,
+  author  = {Samuelson, Paul A.},
+  title   = {How Deviant Can You Be?},
+  journal = {Journal of the American Statistical Association},
+  volume  = {63},
+  number  = {324},
+  pages   = {1522--1525},
+  year    = {1968},
+  doi     = {10.1080/01621459.1968.10480944},
+}
+
+% NUMDAM record NAM_1880_2_19__161_1 (citation metadata and NUMDAM BibTeX).
+% The record and the byline ("par M. Laguerre") give only the surname. The forename
+% is from the Library of Congress name authority no2001073148, "Laguerre, E. (Edmond),
+% 1834-1886", which records "M. Laguerre" as a usage of that name. The article continues
+% under the same title at pp. 193--202 (NUMDAM NAM_1880_2_19__193_0); the inequality
+% used in the paper is on pp. 168--169, in the first part.
+@article{laguerre1880methode,
+  author  = {Laguerre, Edmond},
+  title   = {Sur une m{\'e}thode pour obtenir par approximation les racines d'une
+             {\'e}quation alg{\'e}brique qui a toutes ses racines r{\'e}elles},
+  journal = {Nouvelles Annales de Math{\'e}matiques, 2e s{\'e}rie},
+  volume  = {19},
+  pages   = {161--171},
+  year    = {1880},
+  url     = {https://www.numdam.org/item/NAM_1880_2_19__161_1/},
+}
+
+% arXiv API (v1 2024-05-07). Single author.
+@article{riechers2024layernorm,
+  author  = {Riechers, Paul M.},
+  title   = {Geometry and Dynamics of {LayerNorm}},
+  journal = {arXiv preprint arXiv:2405.04134},
+  year    = {2024},
+}
+
+% ACL Anthology BibTeX (2023.findings-acl.895) and Crossref DOI record.
+@inproceedings{brody2023layernorm,
+  author    = {Brody, Shaked and Alon, Uri and Yahav, Eran},
+  title     = {On the Expressivity Role of {LayerNorm} in Transformers' Attention},
+  booktitle = {Findings of the Association for Computational Linguistics: ACL 2023},
+  pages     = {14211--14221},
+  address   = {Toronto, Canada},
+  publisher = {Association for Computational Linguistics},
+  year      = {2023},
+  doi       = {10.18653/v1/2023.findings-acl.895},
+  note      = {arXiv:2305.02582},
+}
+
+% ---------------------------------------------------------------------------
+% Machine-checked neural-network verification
+% ---------------------------------------------------------------------------
+
+% Crossref DOI record (chapter, pp. 427--444) and Springer volume page (LNCS 14000).
+@inproceedings{brucker2023isabelle,
+  author    = {Brucker, Achim D. and Stell, Amy},
+  title     = {Verifying Feedforward Neural Networks for Classification in {Isabelle/HOL}},
+  booktitle = {Formal Methods: 25th International Symposium, FM 2023},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {14000},
+  pages     = {427--444},
+  publisher = {Springer},
+  year      = {2023},
+  doi       = {10.1007/978-3-031-27481-7_24},
+}
+
+% arXiv API (v2 2026-05-24). Also an ICML 2026 AI4Math Workshop spotlight
+% (OpenReview forum EYHxPstNx0); cited as the arXiv preprint.
+@article{george2026torchlean,
+  author  = {George, Robert Joseph and Cruden, Jennifer and Adkisson, Will and
+             Zhong, Xiangru and Zhang, Huan and Anandkumar, Anima},
+  title   = {{TorchLean}: Formalizing Neural Networks in {Lean}},
+  journal = {arXiv preprint arXiv:2602.22631},
+  year    = {2026},
+}
+
+% arXiv API (v4 2026-07-17). No venue found.
+@article{daggitt2026compositional,
+  author  = {Daggitt, Matthew L. and Komendantskaya, Ekaterina and Sirman, Alistair and
+             Bruni, Alessandro and Teuber, Samuel and Smart, Josh and Passmore, Grant},
+  title   = {Compositional Neural-Cyber-Physical System Verification in the Interactive
+             Theorem Prover of Your Choice},
+  journal = {arXiv preprint arXiv:2605.02790},
+  year    = {2026},
+}
+
+% ---------------------------------------------------------------------------
+% Time change and contraction
+% ---------------------------------------------------------------------------
+
+% Library of Congress catalogue record (LCCN 99030372: "2nd ed.", New York, Wiley,
+% c1999, ix + 277 p.) and Crossref DOI record for the e-book. Crossref lists
+% edition-number 1 for this DOI; the LoC record and the ISBN establish the second edition.
+@book{billingsley1999convergence,
+  author    = {Billingsley, Patrick},
+  title     = {Convergence of Probability Measures},
+  edition   = {Second},
+  series    = {Wiley Series in Probability and Statistics},
+  publisher = {Wiley},
+  address   = {New York},
+  year      = {1999},
+  isbn      = {978-0-471-19745-4},
+  doi       = {10.1002/9780470316962},
+}
+
+% Crossref DOI record.
+@article{lohmiller1998contraction,
+  author  = {Lohmiller, Winfried and Slotine, Jean-Jacques E.},
+  title   = {On Contraction Analysis for Non-linear Systems},
+  journal = {Automatica},
+  volume  = {34},
+  number  = {6},
+  pages   = {683--696},
+  year    = {1998},
+  doi     = {10.1016/S0005-1098(98)00019-3},
+}
+
+% Author's book website: "Edition 1.3, Jan 1, 2026", Kindle Direct Publishing,
+% ISBN 979-8836646806, with the author's own citation block. Theorem numbers can
+% change between editions; cite results by the number in edition 1.3.
+@book{bullo2026contraction,
+  author    = {Bullo, Francesco},
+  title     = {Contraction Theory for Dynamical Systems},
+  note      = {Edition 1.3},
+  publisher = {Kindle Direct Publishing},
+  year      = {2026},
+  isbn      = {979-8836646806},
+  url       = {https://fbullo.github.io/ctds},
+}
+
+
+% Added in revision 3 (entries verified 2026-10-26).
+
+% Journal version: Crossref DOI 10.1109/TIT.2017.2685505 (vol. 63, no. 6, pp. 4037--4049, June 2017).
+% Remark A.1(b) (TV-distance bound for (eps,delta)-DP mechanisms) was confirmed in Appendix A of
+% arXiv:1311.0776v4; it is absent from the ICML 2015 version (PMLR v37, pp. 1376--1385).
+% The journal text was not inspected (paywalled), so the paper should cite the remark via the arXiv version.
+@article{kairouz2017composition,
+  author        = {Kairouz, Peter and Oh, Sewoong and Viswanath, Pramod},
+  title         = {The Composition Theorem for Differential Privacy},
+  journal       = {IEEE Transactions on Information Theory},
+  volume        = {63},
+  number        = {6},
+  pages         = {4037--4049},
+  year          = {2017},
+  doi           = {10.1109/TIT.2017.2685505},
+  eprint        = {1311.0776},
+  archivePrefix = {arXiv},
+  note          = {Extended version arXiv:1311.0776v4, Appendix A, Remark A.1(b)}
+}
+
+@article{piaseczny2026distributed,
+  author        = {Piaseczny, Adam and Shisher, Md Kamran Chowdhury and Wang, Shiqiang and Brinton, Christopher G.},
+  title         = {Distributed Learning with Selective State Space Models: Architecture-Aware Convergence Analysis},
+  journal       = {arXiv preprint arXiv:2610.02659},
+  year          = {2026},
+  eprint        = {2610.02659},
+  archivePrefix = {arXiv}
+}
+
+@article{mxnorm2026,
+  author        = {McLean, Callum and Prince, Luke Y. and Payot, Alexandre and Balan{\c{c}}a, Paul and Luschi, Carlo},
+  title         = {{MXNorm}: Reusing {MXFP} Block Scales for Efficient Tensor Normalisation},
+  journal       = {arXiv preprint arXiv:2603.13180},
+  year          = {2026},
+  eprint        = {2603.13180},
+  archivePrefix = {arXiv}
+}
+
+@misc{eckner2019algorithms,
+  author      = {Eckner, Andreas},
+  title       = {Algorithms for Unevenly Spaced Time Series: Moving Averages and Other Rolling Operators},
+  howpublished = {Working paper},
+  year        = {2019},
+  month       = apr,
+  url         = {http://www.eckner.com/papers/Algorithms%20for%20Unevenly%20Spaced%20Time%20Series.pdf},
+  note        = {First version January 2010; current version 10 April 2019}
+}
+
+@article{matsubara2026exponential,
+  author        = {Matsubara, Takuo and Jiang, Peiwen and Chen, Wilson Ye and Tran, Minh-Ngoc},
+  title         = {Exponential Smoothing for Time Series of Random Objects},
+  journal       = {arXiv preprint arXiv:2609.20274},
+  year          = {2026},
+  eprint        = {2609.20274},
+  archivePrefix = {arXiv}
 }
